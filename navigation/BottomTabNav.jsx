@@ -2,6 +2,7 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { Text, View, TouchableOpacity } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 
 import HomeScreen from '../screens/HomeScreen';
 import RecipesScreen from '../screens/RecipesScreen';
@@ -10,12 +11,15 @@ import ShoppingListScreen from '../screens/ShoppingListScreen';
 import InventoryScreen from '../screens/InventoryScreen';
 
 function HeaderRight() {
+
+  const navigation = useNavigation();
+
   return (
     <View style={{ flexDirection: 'row', marginRight: 10 }}>
       <TouchableOpacity style={{ marginHorizontal: 10 }}>
         <Icon name="notifications-outline" size={25} color="#000" />
       </TouchableOpacity>
-      <TouchableOpacity style={{ marginHorizontal: 10 }}>
+      <TouchableOpacity style={{ marginHorizontal: 10 }} onPress={() => navigation.navigate('Profil')}>
         <Icon name="person-circle-outline" size={25} color="#000" />
       </TouchableOpacity>
     </View>
@@ -32,26 +36,26 @@ export default function BottomTabNavigator() {
         headerTitle: "LetMeCook",
         tabBarIcon: ({ color, size }) => {
           let iconName;
-          if (route.name === 'Home') {
+          if (route.name === 'Accueil') {
             iconName = 'home-outline';
-          } else if (route.name === 'Recipes') {
+          } else if (route.name === 'Recettes') {
             iconName = 'book-outline';
           } else if (route.name === 'Planning') {
             iconName = 'calendar-outline';
-          } else if (route.name === 'ShoppingList') {
+          } else if (route.name === 'ListeDeCourse') {
             iconName = 'cart-outline';
-          } else if (route.name === 'Inventory') {
+          } else if (route.name === 'Inventaire') {
             iconName = 'cube-outline';
           }
           return <Icon name={iconName} size={size} color={color} />;
         },
       })}
     >
-      <Tab.Screen name="Home" component={HomeScreen} />
-      <Tab.Screen name="Recipes" component={RecipesScreen} />
+      <Tab.Screen name="Accueil" component={HomeScreen} />
+      <Tab.Screen name="Recettes" component={RecipesScreen} />
       <Tab.Screen name="Planning" component={PlanningScreen} />
-      <Tab.Screen name="ShoppingList" component={ShoppingListScreen} />
-      <Tab.Screen name="Inventory" component={InventoryScreen} />
+      <Tab.Screen name="ListeDeCourse" component={ShoppingListScreen} />
+      <Tab.Screen name="Inventaire" component={InventoryScreen} />
     </Tab.Navigator>
   );
 }

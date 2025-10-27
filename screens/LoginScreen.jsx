@@ -13,8 +13,6 @@ export default function Login() {
   const { user, login } = useUser();
 
   const handleSubmit = async () => {
-    console.log('current user:', user)
-    console.log('credentials:', email, password)
     try {
       const loggedUser = await login(email, password);
       console.log('Utilisateur connecté:', loggedUser);
@@ -62,8 +60,7 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f5f5f5',
+    alignItems: 'center'
   },
   container: {
     width: '90%',

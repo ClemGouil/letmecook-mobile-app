@@ -1,7 +1,7 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { Text, View, TouchableOpacity } from 'react-native';
+import { Text, View, TouchableOpacity, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 
 import HomeScreen from '../screens/HomeScreen';
@@ -34,6 +34,10 @@ export default function BottomTabNavigator() {
       screenOptions={({ route }) => ({
         headerRight: () => <HeaderRight />,
         headerTitle: "LetMeCook",
+        headerStyle: styles.header,
+        tabBarStyle: styles.tabBar,
+        tabBarActiveTintColor: '#000000ff', 
+        tabBarInactiveTintColor: '#3b3b3b',
         tabBarIcon: ({ color, size }) => {
           let iconName;
           if (route.name === 'Accueil') {
@@ -59,3 +63,12 @@ export default function BottomTabNavigator() {
     </Tab.Navigator>
   );
 }
+
+const styles = StyleSheet.create({
+  header: {
+    backgroundColor: '#858585',
+  },
+  tabBar: {
+    backgroundColor: '#858585',
+  },
+});

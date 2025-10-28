@@ -7,7 +7,7 @@ import { useNavigation } from '@react-navigation/native';
 import HomeScreen from '../screens/HomeScreen';
 import RecipesScreen from '../screens/RecipesScreen';
 import PlanningScreen from '../screens/PlanningScreen';
-import ShoppingListScreen from '../screens/ShoppingListScreen';
+import ShoppingListStack from '../navigation/ShoppingListStack';
 import InventoryScreen from '../screens/InventoryScreen';
 
 function HeaderRight() {
@@ -58,7 +58,7 @@ export default function BottomTabNavigator() {
       <Tab.Screen name="Accueil" component={HomeScreen} />
       <Tab.Screen name="Recettes" component={RecipesScreen} />
       <Tab.Screen name="Planning" component={PlanningScreen} />
-      <Tab.Screen name="ListeDeCourse" component={ShoppingListScreen} />
+      <Tab.Screen name="ListeDeCourse" component={ShoppingListStack} />
       <Tab.Screen name="Inventaire" component={InventoryScreen} />
     </Tab.Navigator>
   );

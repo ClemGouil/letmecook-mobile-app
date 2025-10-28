@@ -22,7 +22,6 @@ export function InventoryProvider({ children }) {
 
   const API_URL = "http://192.168.1.13:8080/api";
 
-  // Chargement de l'inventaire pour l'utilisateur ou le groupe
   async function loadInventory(userId, groupId) {
     try {
       let url = "";
@@ -40,7 +39,6 @@ export function InventoryProvider({ children }) {
     }
   }
 
-  // Liste des ingrédients
   async function loadIngredients() {
     try {
       const response = await axios.get(`${API_URL}/ingredients`, {
@@ -52,7 +50,6 @@ export function InventoryProvider({ children }) {
     }
   }
 
-  // Liste des unités
   async function loadUnits() {
     try {
       const response = await axios.get(`${API_URL}/units`, {
@@ -64,7 +61,6 @@ export function InventoryProvider({ children }) {
     }
   }
 
-  // Ajouter un item à l'inventaire
   async function addItem(dto) {
     try {
       const response = await axios.post(`${API_URL}/inventory-items`, dto, {
@@ -79,10 +75,7 @@ export function InventoryProvider({ children }) {
     }
   }
 
-  // Mettre à jour un item
   async function updateItem(itemId, dto) {
-    console.log('🧩 updateItem called with id:', itemId, 'and dto:', dto);
-    console.log('Token utilisé:', token);
     try {
       const response = await axios.put(`${API_URL}/inventory-items/${itemId}`, dto, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
@@ -95,7 +88,6 @@ export function InventoryProvider({ children }) {
     }
   }
 
-  // Supprimer un item
   async function deleteItem(itemId) {
     try {
       await axios.delete(`${API_URL}/inventory-items/${itemId}`, {
@@ -108,7 +100,6 @@ export function InventoryProvider({ children }) {
     }
   }
 
-  // Alimenter l'inventaire depuis une liste de courses
   async function feedFromShoppingList(shoppingListId, userId, groupId) {
     try {
       const params = {};

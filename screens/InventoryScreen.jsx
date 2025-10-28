@@ -1,18 +1,24 @@
 import * as React from 'react';
 import { Text, View, StyleSheet, FlatList, Keyboard, TouchableOpacity } from 'react-native';
 import { useInventory } from '../hooks/useInventory';
+import { useUser } from '../hooks/useUser'
+
 import SearchBar from '../components/SearchBar';
 import InventoryItemCard from '../components/InventoryItemCard';
 import EditItemForm from '../components/EditItemForm';
-import Modal from 'react-native-modal';
+import ReusableModal from '../components/ReusableModal';
+import FloatingButton  from '../components/FloatingButton';
 
 export default function InventoryScreen() {
 
   const [search, setSearch] = React.useState('');
 
-  const { inventory, units, updateItem, deleteItem } = useInventory();
+  const { user} = useUser();
+
+  const { inventory, units, ingredients, updateItem, addItem, deleteItem } = useInventory();
 
   const [editingItem, setEditingItem] = React.useState(null);
+  const [addingItem, setAddingItem] = React.useState(false);
 
   const filteredInventoryItems = inventory.items.filter((i) =>
     i.ingredient.name.toLowerCase().includes(search.toLowerCase())
@@ -29,14 +35,26 @@ export default function InventoryScreen() {
   };
 
   const handleSave = async (updatedItem) => {
-    console.log("Update :", updatedItem);
     await updateItem(updatedItem.id, {
+      inventoryId: inventory.id,
       quantity: updatedItem.quantity,
       unitId: updatedItem.unit.id,
       ingredientId: updatedItem.ingredient.id
     });
     setEditingItem(null);
   };
+
+  const handleAdd = async (item) => {
+  console.log("Ajouter :", item);
+  await addItem({
+    inventoryId: inventory.id,
+    ingredientId: item.ingredient.id,
+    quantity: item.quantity || 0,
+    unitId: item.unit.id,
+    updaterId: user.id
+  });
+  setAddingItem(false);
+};
 
   return (
     <View style={styles.container}>
@@ -68,36 +86,34 @@ export default function InventoryScreen() {
           </Text>
         </>
       )}
+      <FloatingButton onPress={() => setAddingItem(true)}/>
 
-      <Modal
-        isVisible={!!editingItem}
-        onBackdropPress={() => setEditingItem(null)}
-        onSwipeComplete={() => setEditingItem(null)}
-        swipeDirection={['down']}
-        style={styles.modal}
-        backdropTransitionOutTiming={0}
-        propagateSwipe={false}
-        useNativeDriverForBackdrop
+      <ReusableModal
+        visible={!!editingItem}
+        onClose={() => setEditingItem(null)}
       >
         {editingItem && (
-          <View style={styles.bottomSheet}>
-            <TouchableOpacity
-              activeOpacity={0.8}
-              onPress={() => setEditingItem(null)}
-              style={styles.dragBarContainer}
-            >
-              <View style={styles.dragBar} />
-            </TouchableOpacity>
-
-            <EditItemForm
-              item={editingItem}
-              unitsList={units}
-              onSave={handleSave}
-              onCancel={() => setEditingItem(null)}
-            />
-          </View>
+          <EditItemForm
+            item={editingItem}
+            unitsList={units}
+            onSave={handleSave}
+            onCancel={() => setEditingItem(null)}
+          />
         )}
-      </Modal>
+      </ReusableModal>
+
+      <ReusableModal
+        visible={addingItem}
+        onClose={() => setAddingItem(false)}
+      >
+        <EditItemForm
+          item={null}
+          unitsList={units}
+          ingredientsList= {ingredients}
+          onSave={handleAdd}
+          onCancel={() => setAddingItem(false)}
+        />
+      </ReusableModal>
     </View>
   );
 }

@@ -6,6 +6,7 @@ import RootNavigator from './navigation/RootNavigator';
 import { UserProvider } from './contexts/UserContext';
 import { RecipeProvider } from './contexts/RecipeContext';
 import { InventoryProvider } from './contexts/InventoryContext';
+import { ShoppingListProvider } from './contexts/ShoppingListContext';
 import { LinearGradient } from 'expo-linear-gradient';
 
 export default function App() {
@@ -13,17 +14,19 @@ export default function App() {
     <UserProvider>
       <RecipeProvider>
         <InventoryProvider>
-          <LinearGradient
-                  colors={['rgb(252, 228, 252)', 'rgb(218, 228, 255)']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={styles.container}
-                >
-            <NavigationContainer  
-                theme={MyTheme}>
-              <RootNavigator />
-            </NavigationContainer>
-          </LinearGradient>
+          <ShoppingListProvider>
+            <LinearGradient
+                    colors={['rgb(252, 228, 252)', 'rgb(218, 228, 255)']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.container}
+                  >
+              <NavigationContainer  
+                  theme={MyTheme}>
+                <RootNavigator />
+              </NavigationContainer>
+            </LinearGradient>
+          </ShoppingListProvider>
         </InventoryProvider>
       </RecipeProvider>
     </UserProvider>

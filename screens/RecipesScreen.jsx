@@ -14,13 +14,17 @@ export default function RecipesScreen() {
 
   const [search, setSearch] = React.useState('');
 
+  React.useEffect(() => {
+    console.log("Recettes :", privateRecipes);
+  }, [privateRecipes]);
+
   const filteredRecipes = privateRecipes.filter((r) => {
     const matchesSearch = r.name.toLowerCase().includes(search.toLowerCase());
     return matchesSearch;
   });
 
   const handlePressRecipe = (recipeId) => {
-    navigation.navigate('RecipeDetail', { recipeId });
+    navigation.navigate('RecipeDetail', { recipeId : recipeId });
   };
 
   return (

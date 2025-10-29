@@ -112,7 +112,6 @@ export function ShoppingListProvider({ children }) {
 
       const newIngredient = response.data;
 
-      // Mettre à jour le state local directement
       setShoppingLists((prevLists) =>
         prevLists.map((list) => {
           if (list.id === dto.shoppingListId) {

@@ -16,15 +16,14 @@ const EditItemForm = ({ item, unitsList, ingredientsList, onSave, onCancel }) =>
     : unitsList;
 
   const selectedUnit = compatibleUnits.find(u => u.id === unitId) || null;
+  const isEdit = !!item;
 
   useEffect(() => {
-    if (selectedIngredient) {
+    if (selectedIngredient && !isEdit) {
       setQuantity(selectedIngredient.defaultValue ?? 0);
       setUnitId(selectedIngredient.defaultUnit?.id ?? null);
     }
-  }, [selectedIngredient]);
-
-  const isEdit = !!item;
+  }, [selectedIngredient, isEdit]);
 
   return (
     <View style={styles.formContainer}>

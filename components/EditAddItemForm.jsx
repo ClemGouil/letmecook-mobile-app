@@ -3,7 +3,7 @@ import { View, TextInput, Button, StyleSheet, Text, TouchableOpacity, Image, Fla
 import { Picker } from '@react-native-picker/picker';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
-const EditItemForm = ({ item, unitsList, ingredientsList, onSave, onCancel }) => {
+const EditAddItemForm = ({ item, unitsList, ingredientsList, onSave, onCancel }) => {
 
   const [quantity, setQuantity] = useState(item?.quantity ?? 0);
   const [selectedIngredient, setSelectedIngredient] = useState(item?.ingredient ?? null);
@@ -250,4 +250,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default EditItemForm;
+export default EditAddItemForm;

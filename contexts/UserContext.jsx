@@ -8,7 +8,7 @@ export function UserProvider({children}) {
     const [user, setUser] = useState(null);
     const [token, setToken] = useState("");
 
-    const API_URL = "http://192.168.1.13:8080/api/users";
+    const API_URL = "http://192.168.1.82:8080/api/users";
 
     async function login(email, password) {
         try {

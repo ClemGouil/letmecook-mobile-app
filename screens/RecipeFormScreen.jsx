@@ -2,14 +2,19 @@ import React, { useState } from 'react';
 import { View, TextInput, Text, StyleSheet, FlatList, Image, TouchableOpacity, ScrollView } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useRecipe } from '../hooks/useRecipe'
+import { useNavigation} from '@react-navigation/native';
 
 import ReusableModal from '../components/ReusableModal'
-import EditItemForm from '../components/EditItemForm'
+import EditAddItemForm from '../components/EditAddItemForm'
 import * as ImagePicker from 'expo-image-picker';
+import ServingsControl from '../components/ServingsControl'
+import { Slider } from 'react-native-elements';
 
 export default function RecipeFormScreen({ route }) {
 
-  const { privateRecipes, ingredients, units, addIngredientToRecipe, addInstructionToRecipe, uploadImage, updateRecipe} = useRecipe();
+  const navigation = useNavigation();
+
+  const { privateRecipes, ingredients, units, addIngredientToRecipe, deleteAllIngredientsFromRecipe, addInstructionToRecipe, deleteAllInstructionsFromRecipe, uploadImage, updateRecipe} = useRecipe();
   const recipe = privateRecipes.find(r => r.id === route.params.recipeId);
 
   const [title, setTitle] = useState(recipe.name);
@@ -18,6 +23,9 @@ export default function RecipeFormScreen({ route }) {
   const [cookTime, setCookTime] = useState(recipe.cookTime);
   const [servings, setServings] = useState(recipe.servings);
   const [imageUrl, setImageUrl] = useState(recipe.imageUrl);
+
+  const [localIngredients, setLocalIngredients] = useState([...recipe.ingredients]);
+  const [localInstructions, setLocalInstructions] = useState([...recipe.instructions]);
 
   const [editingItem, setEditingItem] = React.useState(null);
   const [addingItem, setAddingItem] = React.useState(false);
@@ -30,36 +38,6 @@ export default function RecipeFormScreen({ route }) {
   }, [recipe]);
   
   const handleEdit = (item) => setEditingItem(item);
-
-  const handleAddIngredient = async (item) => {
-    console.log("Ajouter :", item);
-    await addIngredientToRecipe({
-      recipeId: recipe.id,
-      ingredientId: item.ingredient.id,
-      quantity: item.quantity,
-      unitId: item.unit.id,
-    });
-    setAddingItem(false);
-  };
-
-  const handleEditIngredient = async (item) => {
-    console.log("Update :", item);
-    setEditingItem(null);
-  };
-
-  const handleAddInstruction = async () => {
-    await addInstructionToRecipe({
-      recipeId: recipe.id,
-      stepNumber: recipe.instructions.length + 1,
-      description: newInstructionText,
-    });
-    setNewInstructionText("");
-    setAddingInstruction(false);
-  };
-
-  const handleEditInstruction = async (item) => {
-    console.log("Update :", item);
-  };
 
   const handleSaveRecipe = async () => {
     try {
@@ -77,7 +55,29 @@ export default function RecipeFormScreen({ route }) {
         imageUrl : finalImageUrl,
       };
       await updateRecipe(recipe.id, dto);
-      alert("Recette mise à jour !");
+
+      await deleteAllIngredientsFromRecipe(recipe.id);
+      await deleteAllInstructionsFromRecipe(recipe.id);
+
+      for (const ing of localIngredients) {
+        await addIngredientToRecipe({
+          recipeId: recipe.id,
+          ingredientId: ing.ingredient.id,
+          quantity: ing.quantity,
+          unitId: ing.unit.id,
+        });
+      }
+
+      for (let i = 0; i < localInstructions.length; i++) {
+        const inst = localInstructions[i];
+        await addInstructionToRecipe({
+          recipeId: recipe.id,
+          stepNumber: inst.stepNumber,
+          description: inst.description,
+        });
+      }
+
+      navigation.goBack();
     } catch (err) {
       console.error(err);
       alert("Erreur lors de la mise à jour de la recette");
@@ -103,67 +103,171 @@ export default function RecipeFormScreen({ route }) {
     }
   };
 
+  const handleEditIngredient = (updatedItem) => {
+    setLocalIngredients(prev =>
+      prev.map(item =>
+        item.id === updatedItem.id
+          ? { ...item, quantity: updatedItem.quantity, unit: updatedItem.unit }
+          : item
+      )
+    );
+    setEditingItem(null);
+  };
+
+  const handleAddIngredient = (newItem) => {
+    const tempId = `temp-${Date.now()}`;
+    setLocalIngredients(prev => [
+      ...prev,{ 
+        ...newItem, 
+        id: tempId 
+      }
+    ]);
+    setAddingItem(false);
+  };
+
+  const handleDeleteIngredient = (id) => {
+    setLocalIngredients(prev => prev.filter(item => item.id !== id));
+  };
+
+  const handleEditInstruction = (params) => {
+    setLocalInstructions(prev =>
+      prev.map(item =>
+        item.id === params.id
+          ? { ...item, description: params.description }
+          : item
+      )
+    );
+  };
+
+  const handleAddInstruction = (params) => {
+    const tempId = `temp-${Date.now()}`;
+    setLocalInstructions(prev => [
+      ...prev,
+      { id: tempId, stepNumber: prev.length + 1, description: params.description}
+    ]);
+    setAddingInstruction(false);
+    setNewInstructionText("");
+  };
+
+  const handleDeleteInstruction = (id) => {
+    setLocalInstructions(prev => prev.filter(item => item.id !== id));
+  };
+
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingVertical: 20 }}>
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingVertical: 10 }}>
+
+      <View style={styles.headerButtons}>
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+          <Icon name="arrow-back" size={20} color="#fff" />
+          <Text style={styles.backButtonText}>Retour</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.saveButton} onPress={handleSaveRecipe}>
+          <Text style={styles.saveButtonText}>Enregistrer</Text>
+        </TouchableOpacity>
+      </View>
+
       <View style={styles.cardContainer}>
         <Text style={styles.label}>Recette</Text>
-        <Text style={styles.stepText}>Title</Text>
+        <Text style={styles.subTitleText}>Title</Text>
         <TextInput
           style={styles.input}
           onChangeText={setTitle}
           value={title}
         />
-        <Text style={styles.stepText}>Catégorie</Text>
+        <Text style={styles.subTitleText}>Catégorie</Text>
         <TextInput 
           style={styles.input} 
           value={category} 
           onChangeText={setCategory} 
           placeholder="Catégorie" 
         />
-        <Text style={styles.stepText}>Temps de préparation</Text>
-        <TextInput 
-          style={styles.input} 
-          value={prepTime} 
-          onChangeText={setPrepTime} 
-          placeholder="Temps de préparation" 
+        <Text style={styles.subTitleText}>Temps de préparation</Text>
+        <View style={styles.sliderContainer}>
+          <Slider
+            style={styles.slider}
+            value={Number(prepTime)}
+            onValueChange={setPrepTime}
+            maximumValue={90}
+            minimumValue={0}
+            step={1}
+            trackStyle={styles.sliderTrack}
+            thumbStyle={styles.sliderThumb}
+            minimumTrackTintColor="rgb(180, 180, 230)"
+            maximumTrackTintColor="rgba(180,180,230,0.3)"
+            thumbProps={{
+              children: (
+                <Icon
+                  name="bicycle"
+                  size={20}
+                  color="white"
+                  style={styles.iconStyle}
+                />
+              ),
+            }}
+          />
+          <Text style={styles.valueText}>{prepTime} min</Text>
+        </View>
+
+        <Text style={styles.subTitleText}>Temps de cuisson</Text>
+        <View style={styles.sliderContainer}>
+        <Slider
+          style={styles.slider}
+          value={Number(cookTime)}
+          onValueChange={setCookTime}
+          maximumValue={90}
+          minimumValue={0}
+          step={1}
+          trackStyle={styles.sliderTrack}
+          thumbStyle={styles.sliderThumb}
+          minimumTrackTintColor="rgb(180, 180, 230)"
+            maximumTrackTintColor="rgba(180,180,230,0.3)"
+          thumbProps={{
+            children: (
+              <Icon
+                name="bicycle"
+                size={20}
+                color="white"
+                style={styles.iconStyle}
+              />
+            ),
+          }}
         />
-        <Text style={styles.stepText}>Temps de cuisson</Text>
-        <TextInput 
-          style={styles.input} 
-          value={cookTime} 
-          onChangeText={setCookTime} 
-          placeholder="Temps de cuisson" 
-        />
-        <Text style={styles.stepText}>Portions</Text>
-        <TextInput 
-          style={styles.input} 
-          value={servings.toString()} 
-          onChangeText={text => setServings(Number(text))} 
-          placeholder="Portions" 
+        <Text style={styles.valueText}>{cookTime} min</Text>
+        </View>
+        
+        <Text style={styles.subTitleText}>Portions</Text>
+        
+        <ServingsControl
+          servings={servings}
+          onIncrease={() => setServings(prev => prev + 1)}
+          onDecrease={() => setServings(prev => Math.max(prev - 1, 1))}
         />
         <Image source={{ uri: imageUrl }} style={styles.image} />
         <TouchableOpacity style={styles.addButton} onPress={pickImage}>
           <Text style={styles.addButtonText}>Changez l'image</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.addButton} onPress={handleSaveRecipe}>
-          <Text style={styles.addButtonText}>Sauvegarder</Text>
-        </TouchableOpacity>
       </View>
 
       <View style={styles.cardContainer}>
         <Text style={styles.label}>Ingrédients</Text>
         <FlatList
               scrollEnabled={false}
-              data={recipe.ingredients}
+              data={localIngredients}
               keyExtractor={(item) => item.ingredientId}
               renderItem={({ item }) => (
-                <TouchableOpacity style={styles.ingredientItem} onPress={() => handleEdit(item)}>
-                  <Image source={item.ingredient.imageUrl} style={styles.ingredientImage} />
-                  <Text style={styles.ingredientText}>
-                    {item.ingredient.name} - {item.quantity} {item.unit.symbol}
-                  </Text>
-                </TouchableOpacity>
+                <View style={styles.ingredientItem}>
+                  <TouchableOpacity style={styles.ingredientInfo} onPress={() => handleEdit(item)}>
+                    <Image source={item.ingredient.imageUrl} style={styles.ingredientImage} />
+                    <Text style={styles.ingredientText}>
+                      {item.ingredient.name} - {item.quantity} {item.unit.symbol}
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.deleteButton} onPress={() => handleDeleteIngredient(item.id)}>
+                    <Icon name="trash-outline" size={15} color="rgb(180, 180, 230)" />
+                  </TouchableOpacity>
+                </View>
               )}
             />
           <TouchableOpacity style={styles.addButton} onPress={() => setAddingItem(true)}>
@@ -177,15 +281,21 @@ export default function RecipeFormScreen({ route }) {
           <Text style={styles.label}>Instructions</Text>
           <FlatList
               scrollEnabled={false}
-              data={recipe.instructions}
+              data={localInstructions}
               keyExtractor={(item) => item.stepNumber.toString()}
               renderItem={({ item }) => (
                 <View style={styles.instructionItem}>
-                  <Text style={styles.stepText}>Étape {item.stepNumber}</Text>
+                  <View style={styles.instructionHeader}>
+                  <Text style={styles.subTitleText}>Étape {item.stepNumber}</Text>
+                  <TouchableOpacity  style={styles.deleteButton} onPress={() => handleDeleteInstruction(item.id)}>
+                    <Icon name="trash-outline" size={15} color="rgb(180, 180, 230)" />
+                  </TouchableOpacity>
+                  </View>
                   <TextInput
                     style={styles.input}
                     multiline
                     value={item.description}
+                    onChangeText={(text) => handleEditInstruction({ id: item.id, description: text })}
                   />
                 </View>
               )}
@@ -193,7 +303,7 @@ export default function RecipeFormScreen({ route }) {
 
           {addingInstruction && (
             <View style={styles.newInstructionContainer}>
-              <Text style={styles.stepText}>Étape {recipe.instructions.length + 1}</Text>
+              <Text style={styles.subTitleText}>Étape {recipe.instructions.length + 1}</Text>
               
               <TextInput
                 style={styles.input}
@@ -204,7 +314,7 @@ export default function RecipeFormScreen({ route }) {
               />
               <TouchableOpacity
                 style={styles.addButton}
-                onPress={handleAddInstruction}
+                onPress={() => handleAddInstruction({ description: newInstructionText })}
               >
                 <Text style={styles.addButtonText}>Valider</Text>
               </TouchableOpacity>
@@ -224,7 +334,7 @@ export default function RecipeFormScreen({ route }) {
             onClose={() => setEditingItem(null)}
         >
             {editingItem && (
-            <EditItemForm
+            <EditAddItemForm
                 item={editingItem}
                 unitsList={units}
                 onSave={handleEditIngredient}
@@ -237,7 +347,7 @@ export default function RecipeFormScreen({ route }) {
         visible={addingItem}
         onClose={() => setAddingItem(false)}
       >
-        <EditItemForm
+        <EditAddItemForm
           item={null}
           unitsList={units}
           ingredientsList= {ingredients}
@@ -253,7 +363,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 16,
-    paddingTop: 16,
     margin: 5,
   },
   cardContainer: {
@@ -278,7 +387,6 @@ const styles = StyleSheet.create({
     borderColor: 'rgb(180, 180, 230)',
     borderRadius: 8,
     padding: 8,
-    marginBottom: 16,
   },
   image: {
     width: '100%',
@@ -290,19 +398,37 @@ const styles = StyleSheet.create({
   ingredientItem: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: 8,
-    paddingBottom: 8,
+    paddingVertical: 8,
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
+  },
+  ingredientInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  ingredientText: {
+    fontSize: 16,
+    marginLeft: 12,
+    flexShrink: 1,
   },
   ingredientImage: {
     width: 40,
     height: 40,
-    marginRight: 12,
     borderRadius: 4,
   },
-  ingredientText: {
-    fontSize: 16,
+  instructionItem: {
+    padding: 10,
+    borderRadius: 8,
+    backgroundColor: '#fff',
+  },
+  instructionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
   },
   addButton: {
   paddingVertical: 4,
@@ -313,11 +439,91 @@ const styles = StyleSheet.create({
   flexDirection: 'row',
   alignItems: 'center',
   alignSelf: 'flex-start',
-  marginTop: 2,
-},
-addButtonText: {
-  color: 'rgb(180, 180, 230)',
-  fontWeight: 'bold',
-  marginLeft: 8,
-},
+  marginTop: 10,
+  },
+  addButtonText: {
+    color: 'rgb(180, 180, 230)',
+    fontWeight: 'bold',
+    marginLeft: 8,
+  },
+  sliderTrack: {
+    height: 5,
+    backgroundColor: 'rgba(180, 180, 230, 0.3)',
+  },
+  sliderThumb: {
+    height: 35,
+    width: 35,
+    backgroundColor: 'rgb(180, 180, 230)',
+    borderRadius: 15,
+    borderWidth: 2,
+    borderColor: 'white',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  sliderContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  slider: {
+    flex: 1,
+  },
+  valueText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginLeft: 10,
+    minWidth: 50,
+    textAlign: 'center',
+    color: '#333',
+  },
+  subTitleText: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 8,
+    marginTop: 16,
+    color: '#555',
+  },
+  deleteButton : {
+    width: 30,
+    height: 30,
+    borderWidth: 2,
+    borderColor: 'rgb(180, 180, 230)',
+    borderRadius: 4,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  headerButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgb(180, 180, 230)',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+  },
+
+  backButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    marginLeft: 6,
+    fontSize : 16
+  },
+
+  saveButton: {
+    backgroundColor: 'rgb(100, 149, 237)',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+  },
+
+  saveButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize : 16
+  },
 });

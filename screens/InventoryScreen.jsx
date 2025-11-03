@@ -5,7 +5,7 @@ import { useUser } from '../hooks/useUser'
 
 import SearchBar from '../components/SearchBar';
 import InventoryItemCard from '../components/InventoryItemCard';
-import EditItemForm from '../components/EditItemForm';
+import EditAddItemForm from '../components/EditAddItemForm';
 import ReusableModal from '../components/ReusableModal';
 import FloatingButton  from '../components/FloatingButton';
 
@@ -45,16 +45,16 @@ export default function InventoryScreen() {
   };
 
   const handleAdd = async (item) => {
-  console.log("Ajouter :", item);
-  await addItem({
-    inventoryId: inventory.id,
-    ingredientId: item.ingredient.id,
-    quantity: item.quantity || 0,
-    unitId: item.unit.id,
-    updaterId: user.id
-  });
-  setAddingItem(false);
-};
+    console.log("Ajouter :", item);
+    await addItem({
+      inventoryId: inventory.id,
+      ingredientId: item.ingredient.id,
+      quantity: item.quantity || 0,
+      unitId: item.unit.id,
+      updaterId: user.id
+    });
+    setAddingItem(false);
+  };
 
   return (
     <View style={styles.container}>
@@ -93,7 +93,7 @@ export default function InventoryScreen() {
         onClose={() => setEditingItem(null)}
       >
         {editingItem && (
-          <EditItemForm
+          <EditAddItemForm
             item={editingItem}
             unitsList={units}
             onSave={handleSave}
@@ -106,7 +106,7 @@ export default function InventoryScreen() {
         visible={addingItem}
         onClose={() => setAddingItem(false)}
       >
-        <EditItemForm
+        <EditAddItemForm
           item={null}
           unitsList={units}
           ingredientsList= {ingredients}

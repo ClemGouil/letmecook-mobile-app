@@ -1,18 +1,23 @@
 import React from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity} from 'react-native';
 import { useShoppingList } from '../hooks/useShoppingList';
+import { useUser } from '../hooks/useUser'
 
 import IngredientListCard  from '../components/IngredientListCard';
 import ReusableModal from '../components/ReusableModal';
-import EditItemForm from '../components/EditItemForm';
+import EditAddItemForm from '../components/EditAddItemForm';
+import FloatingButton  from '../components/FloatingButton';
 
 export default function ShoppingListDetailScreen({ route }) {
 
-  const { shoppingLists, units, updateIngredientToShoppingList} = useShoppingList();
+  const { shoppingLists, units, ingredients, addIngredientToShoppingList, updateIngredientToShoppingList} = useShoppingList();
 
   const shoppingList = shoppingLists.find(sl => sl.id === route.params.shoppingListId);
 
+  const { user} = useUser();
+
   const [editingItem, setEditingItem] = React.useState(null);
+  const [addingItem, setAddingItem] = React.useState(false);
 
   const handleEdit = (item) => setEditingItem(item);
 
@@ -50,6 +55,18 @@ export default function ShoppingListDetailScreen({ route }) {
     setEditingItem(null);
   };
 
+  const handleAdd = async (item) => {
+    console.log("Ajouter :", item);
+    await addIngredientToShoppingList({
+      shoppingListId: shoppingList.id,
+      ingredientId: item.ingredient.id,
+      quantity: item.quantity || 0,
+      unitId: item.unit.id,
+      updaterId: user.id
+    });
+    setAddingItem(false);
+  };
+
   return (
     <View style={styles.container}>
       <FlatList
@@ -75,18 +92,33 @@ export default function ShoppingListDetailScreen({ route }) {
         )}
         showsVerticalScrollIndicator={false}
       />
-        <ReusableModal
-            visible={!!editingItem}
-            onClose={() => setEditingItem(null)}
+      <FloatingButton onPress={() => setAddingItem(true)}/>
+
+      <ReusableModal
+          visible={!!editingItem}
+          onClose={() => setEditingItem(null)}
+      >
+          {editingItem && (
+          <EditAddItemForm
+              item={editingItem}
+              unitsList={units}
+              onSave={handleSave}
+              onCancel={() => setEditingItem(null)}
+          />
+          )}
+      </ReusableModal>
+
+      <ReusableModal
+          visible={addingItem}
+          onClose={() => setAddingItem(false)}
         >
-            {editingItem && (
-            <EditItemForm
-                item={editingItem}
-                unitsList={units}
-                onSave={handleSave}
-                onCancel={() => setEditingItem(null)}
-            />
-            )}
+          <EditAddItemForm
+            item={null}
+            unitsList={units}
+            ingredientsList= {ingredients}
+            onSave={handleAdd}
+            onCancel={() => setAddingItem(false)}
+          />
       </ReusableModal>
     </View>
   );

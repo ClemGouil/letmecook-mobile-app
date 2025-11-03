@@ -1,0 +1,240 @@
+import React, { useState, useEffect } from 'react';
+import { Text, View, StyleSheet, TouchableOpacity, ScrollView, Image} from 'react-native';
+import Icon from 'react-native-vector-icons/Ionicons';
+import { useMealPlanning } from '../hooks/useMealPlanning';
+import { useUser } from '../hooks/useUser'
+import { useRecipe } from '../hooks/useRecipe'
+
+export default function MealPlanningScreen() {
+
+  const { user} = useUser();
+  const { mealPlannings, loadMealPlanning } = useMealPlanning();
+  const { privateRecipes } = useRecipe();
+
+  const [startDate, setStartDate] = React.useState(new Date());
+  const [endDate, setEndDate] = React.useState(new Date());
+  const [groupedMealPlannings, setGroupedMealPlannings] = useState([]);
+  const [recipesMap, setRecipesMap] = useState({});
+
+  useEffect(() => {
+    const start = new Date();
+    start.setDate(start.getDate() - start.getDay() + 1);
+    const end = new Date(start);
+    end.setDate(start.getDate() + 6);
+    setStartDate(start);
+    setEndDate(end);
+  }, []);
+
+  useEffect(() => {
+    const map = {};
+    privateRecipes.forEach((r) => {
+      map[r.id] = r;
+    });
+    setRecipesMap(map);
+  }, [privateRecipes]);
+
+  useEffect(() => {
+    if (user && startDate && endDate) {
+      const startStr = formatDateToLocalYYYYMMDD(startDate);
+      const endStr = formatDateToLocalYYYYMMDD(endDate);
+      loadMealPlanning(user.id, startStr, endStr);
+      console.log(mealPlannings);
+    }
+  }, [user, startDate, endDate]);
+
+  useEffect(() => {
+    if (recipesMap && mealPlannings.length > 0) {
+      groupMealPlanning();
+    } else {
+      const days = [];
+      for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+        days.push({ date: formatDateToLocalYYYYMMDD(d), meals: {} });
+      }
+      setGroupedMealPlannings(days);
+    }
+  }, [mealPlannings, recipesMap, startDate, endDate]);
+
+  const moveBackward = () => {
+    const newStart = new Date(startDate);
+    const newEnd = new Date(endDate);
+    const days = (newEnd.getTime() - newStart.getTime()) / (1000 * 60 * 60 * 24);
+
+    newStart.setDate(startDate.getDate() - days - 1);
+    newEnd.setDate(endDate.getDate() - days - 1);
+
+    setStartDate(newStart);
+    setEndDate(newEnd);
+  }
+
+  const moveForward = () => {
+    const newStart = new Date(startDate);
+    const newEnd = new Date(endDate);
+    const days = (newEnd.getTime() - newStart.getTime()) / (1000 * 60 * 60 * 24);
+
+    newStart.setDate(startDate.getDate() + days + 1);
+    newEnd.setDate(endDate.getDate() + days + 1);
+
+    setStartDate(newStart);
+    setEndDate(newEnd);
+  }
+
+  const formatDateRange = () => {
+    const options = { day: 'numeric', month: 'short' };
+    return `${startDate.toLocaleDateString(undefined, options)} - ${endDate.toLocaleDateString(undefined, options)}`;
+  };
+
+  const formatDateToLocalYYYYMMDD = (date) => {
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  const groupMealPlanning = () => {
+    const days = [];
+    for(let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+      const dateStr = formatDateToLocalYYYYMMDD(d);
+      days.push({
+        date: dateStr,
+        meals: {}
+      });
+    }
+
+    mealPlannings.forEach(mp => {
+      const date = new Date(mp.date);
+      const dateStr = formatDateToLocalYYYYMMDD(date);
+      const day = days.find(d => d.date === dateStr);
+      if(day) {
+        day.meals[mp.mealType] = { 
+          recipe: recipesMap[mp.recipeId], 
+          servings: mp.servings ?? recipesMap[mp.recipeId].servings };;
+      }
+    });
+    setGroupedMealPlannings(days);
+  }
+
+  const getDayLabel = (dateStr) => {
+    const date = new Date(dateStr);
+    const jours = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+    const mois = [
+      'janvier', 'février', 'mars', 'avril', 'mai', 'juin',
+      'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'
+    ];
+    return `${jours[date.getDay()]} ${date.getDate()} ${mois[date.getMonth()]}`;
+  };
+
+  const getMealType = (mt) => {
+    const mealtype = { BREAKFAST : 'Petit-déjeuner', LUNCH : 'Déjeuner', DINNER : 'Dîner'}
+    return mealtype[mt];
+  };
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.bannerTop}>
+        <TouchableOpacity style={styles.moveButton} onPress={() => moveBackward()}>
+          <Icon name="chevron-back-outline" size={30} color="rgb(180, 180, 230)" style={styles.iconStyle}/>
+        </TouchableOpacity>
+        <Text style={styles.dateText}> {formatDateRange()} </Text>
+        <TouchableOpacity style={styles.moveButton} onPress={() => moveForward()}>
+          <Icon name="chevron-forward-outline" size={30} color="rgb(180, 180, 230)" style={styles.iconStyle}/>
+        </TouchableOpacity>
+      </View>
+
+      <ScrollView style={{ marginTop: 10 }} showsVerticalScrollIndicator={false}>
+        {groupedMealPlannings.map((day, index) => (
+          <View key={index} style={styles.dayCard}>
+            <Text style={styles.dayTitle}>{getDayLabel(day.date)}</Text>
+            {Object.entries(day.meals).map(([mealType, meal], idx) => (
+              <View key={idx} style={styles.mealCard}>
+                <Image
+                  source={{ uri: meal.recipe.imageUrl }}
+                  style={styles.recipeImage}
+                />
+                <View style={styles.mealInfo}>
+                  <Text style={styles.recipeTitle}>{meal.recipe.name }</Text>
+                  <Text style={styles.mealType}>{getMealType(mealType)}</Text>
+                </View>
+              </View>
+            ))}
+          </View>
+        ))}
+      </ScrollView>
+    </View>
+    
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    marginTop:10,
+    flex: 1,
+    padding: 8,
+  },
+  bannerTop: {
+    flexDirection: 'row',
+    backgroundColor : '#fff',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding : 8,
+    borderRadius : 50,
+  },
+  moveButton: {
+    padding: 5,
+  },
+  iconStyle: {
+    // Ajoutez si besoin
+  },
+  dateText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  dayCard: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 12,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 3,
+  },
+  dayTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    color: '#333',
+  },
+  mealCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+    borderRadius: 12,
+    overflow: 'hidden',
+    backgroundColor: '#fafafa',
+    borderWidth : 2,
+    borderColor : 'rgb(180, 180, 230)'
+  },
+  recipeImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 12,
+  },
+  mealInfo: {
+    flex: 1,
+    marginLeft: 10,
+  },
+  recipeTitle: {
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  mealType: {
+    color: '#666',
+    marginTop: 2,
+    textTransform: 'capitalize',
+  },
+  servings: {
+    color: '#888',
+    fontSize: 12,
+    marginTop: 4,
+  },
+});

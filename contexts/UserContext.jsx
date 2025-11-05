@@ -45,8 +45,59 @@ export function UserProvider({children}) {
         setToken("");
     }
 
+    async function updateUser(id ,updatedUser) {
+        try {
+            const response = await axios.put(`${API_URL}/${id}`, updatedUser, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            setUser(response.data);
+            return response.data;
+            } catch (err) {
+            console.error("Update user error:", err.response?.data || err.message);
+            throw err;
+        }
+    }
+
+    async function deleteAccount() {
+        if (!user?.id) throw new Error("Utilisateur non connecté");
+        try {
+            await axios.delete(`${API_URL}/${user.id}`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            setUser(null);
+            setToken("");
+            } catch (err) {
+            console.error("Delete account error:", err.response?.data || err.message);
+            throw err;
+        }
+    }
+
+    async function changePassword(currentPassword, newPassword) {
+        if (!user?.id) throw new Error("Utilisateur non connecté");
+        try {
+            await axios.post(
+                `${API_URL}/change-password`,
+                { userId: user.id, currentPassword, newPassword },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            } catch (err) {
+            console.error("Change password error:", err.response?.data || err.message);
+            throw err;
+        }
+    }
+
     return (
-        <UserContext.Provider value= {{user, token, login, register, logout}}>
+        <UserContext.Provider 
+        value= {
+            {user,
+            token,
+            login,
+            register,
+            logout,
+            updateUser,
+            deleteAccount,
+            changePassword
+        }}>
             {children}
         </UserContext.Provider>
     )

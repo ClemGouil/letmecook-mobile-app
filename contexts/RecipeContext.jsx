@@ -180,29 +180,46 @@ export function RecipeProvider({ children }) {
     }
   }
 
-  async function uploadImage(fileUri) {
+  async function deleteAllInstructionsFromRecipe(id) {
     try {
-      const filename = fileUri.split('/').pop();
-      const match = /\.(\w+)$/.exec(filename);
-      const type = match ? `image/${match[1]}` : `image`;
-
-      const formData = new FormData();
-      formData.append('file', {
-        uri: fileUri,
-        name: filename,
-        type,
+      await axios.delete(`${API_URL}/recipe-instructions/deleteAll/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
       });
-
-      const response = await axios.post(`${API_URL}/images/upload`, formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-
-      return response.data.imageUrl;
+      setPrivateRecipes((prevRecipe) =>
+        prevRecipe.map((recipe) => {
+          if (recipe.id === id) {
+            return {
+              ...recipe,
+              instructions: [],
+            };
+          }
+          return recipe;
+        })
+      );
     } catch (err) {
-      console.error("Erreur lors de l'upload de l'image :", err);
+      console.error(err);
+      throw err;
+    }
+  }
+
+  async function deleteAllIngredientsFromRecipe(id) {
+    try {
+      await axios.delete(`${API_URL}/recipe-ingredients/deleteAll/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setPrivateRecipes((prevRecipe) =>
+        prevRecipe.map((recipe) => {
+          if (recipe.id === id) {
+            return {
+              ...recipe,
+              ingredients: [],
+            };
+          }
+          return recipe;
+        })
+      );
+    } catch (err) {
+      console.error(err);
       throw err;
     }
   }
@@ -219,11 +236,12 @@ export function RecipeProvider({ children }) {
         loadPrivateRecipes,
         loadGroupRecipes,
         addRecipe,
+        deleteAllIngredientsFromRecipe,
+        deleteAllInstructionsFromRecipe,
         updateRecipe,
         deleteRecipe,
         addIngredientToRecipe,
         addInstructionToRecipe,
-        uploadImage,
       }}
     >
       {children}

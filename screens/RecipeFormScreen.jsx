@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, TextInput, Text, StyleSheet, FlatList, Image, TouchableOpacity, ScrollView } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useRecipe } from '../hooks/useRecipe'
+import { useImage } from '../hooks/useImage'
 import { useNavigation} from '@react-navigation/native';
 
 import ReusableModal from '../components/ReusableModal'
@@ -14,7 +15,8 @@ export default function RecipeFormScreen({ route }) {
 
   const navigation = useNavigation();
 
-  const { privateRecipes, ingredients, units, addIngredientToRecipe, deleteAllIngredientsFromRecipe, addInstructionToRecipe, deleteAllInstructionsFromRecipe, uploadImage, updateRecipe} = useRecipe();
+  const { privateRecipes, ingredients, units, addIngredientToRecipe, deleteAllIngredientsFromRecipe, addInstructionToRecipe, deleteAllInstructionsFromRecipe, updateRecipe} = useRecipe();
+  const {  uploadImage } = useImage();
   const recipe = privateRecipes.find(r => r.id === route.params.recipeId);
 
   const [title, setTitle] = useState(recipe.name);
@@ -95,6 +97,8 @@ export default function RecipeFormScreen({ route }) {
     // Ouvre la librairie
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
       quality: 0.8,
     });
 
@@ -431,15 +435,15 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   addButton: {
-  paddingVertical: 4,
-  paddingHorizontal: 6,
-  borderRadius: 8,
-  borderWidth: 2,
-  borderColor: 'rgb(180, 180, 230)',
-  flexDirection: 'row',
-  alignItems: 'center',
-  alignSelf: 'flex-start',
-  marginTop: 10,
+    paddingVertical: 4,
+    paddingHorizontal: 6,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: 'rgb(180, 180, 230)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    marginTop: 10,
   },
   addButtonText: {
     color: 'rgb(180, 180, 230)',

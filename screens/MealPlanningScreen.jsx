@@ -128,14 +128,35 @@ export default function MealPlanningScreen() {
     return mealtype[mt];
   };
 
+  const isToday =  (dateStr) => {
+    const today = new Date();
+    const todayStr = formatDateToLocalYYYYMMDD(today);
+    return todayStr === dateStr;
+  }
+
+  const isTomorrow =  (dateStr) => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowStr = formatDateToLocalYYYYMMDD(tomorrow);
+    return tomorrowStr === dateStr;
+  }
+
+  const handleAddPlanning = () => {
+    
+  };
+
+  const handleDeletePlanning = (mealType) => {
+    
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.bannerTop}>
-        <TouchableOpacity style={styles.moveButton} onPress={() => moveBackward()}>
+        <TouchableOpacity style={styles.moveButtonLeft} onPress={() => moveBackward()}>
           <Icon name="chevron-back-outline" size={30} color="rgb(180, 180, 230)" style={styles.iconStyle}/>
         </TouchableOpacity>
         <Text style={styles.dateText}> {formatDateRange()} </Text>
-        <TouchableOpacity style={styles.moveButton} onPress={() => moveForward()}>
+        <TouchableOpacity style={styles.moveButtonRight} onPress={() => moveForward()}>
           <Icon name="chevron-forward-outline" size={30} color="rgb(180, 180, 230)" style={styles.iconStyle}/>
         </TouchableOpacity>
       </View>
@@ -143,7 +164,12 @@ export default function MealPlanningScreen() {
       <ScrollView style={{ marginTop: 10 }} showsVerticalScrollIndicator={false}>
         {groupedMealPlannings.map((day, index) => (
           <View key={index} style={styles.dayCard}>
-            <Text style={styles.dayTitle}>{getDayLabel(day.date)}</Text>
+            <View style={styles.dateContainer}>
+              <Text style={styles.dayTitle}>{isToday(day.date) ? "Aujourd'hui" : isTomorrow(day.date) ? "Demain" : getDayLabel(day.date)}</Text>
+              <TouchableOpacity  style={styles.addButton} onPress={() => handleAddPlanning()}>
+                <Icon name="add-outline" size={20} color="rgb(180, 180, 230)"/>
+              </TouchableOpacity>
+            </View>
             {Object.entries(day.meals).map(([mealType, meal], idx) => (
               <View key={idx} style={styles.mealCard}>
                 <Image
@@ -154,6 +180,9 @@ export default function MealPlanningScreen() {
                   <Text style={styles.recipeTitle}>{meal.recipe.name }</Text>
                   <Text style={styles.mealType}>{getMealType(mealType)}</Text>
                 </View>
+                <TouchableOpacity  style={styles.deleteButton} onPress={() => handleDeletePlanning(mealType)}>
+                  <Icon name="trash-outline" size={20} color="rgb(180, 180, 230)"/>
+                </TouchableOpacity>
               </View>
             ))}
           </View>
@@ -175,11 +204,20 @@ const styles = StyleSheet.create({
     backgroundColor : '#fff',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding : 8,
+    padding : 4,
     borderRadius : 50,
   },
-  moveButton: {
-    padding: 5,
+  moveButtonRight: {
+    padding: 4,
+    borderLeftWidth: 2,
+    borderRadius : 5,
+    borderColor : 'rgb(180, 180, 230)'
+  },
+  moveButtonLeft: {
+    padding: 4,
+    borderRightWidth: 2,
+    borderRadius : 5,
+    borderColor : 'rgb(180, 180, 230)'
   },
   iconStyle: {
     // Ajoutez si besoin
@@ -199,20 +237,20 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   dayTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
-    marginBottom: 10,
     color: '#333',
   },
   mealCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 8,
     borderRadius: 12,
     overflow: 'hidden',
     backgroundColor: '#fafafa',
     borderWidth : 2,
-    borderColor : 'rgb(180, 180, 230)'
+    borderColor : 'rgb(180, 180, 230)',
+    paddingHorizontal: 10
   },
   recipeImage: {
     width: 80,
@@ -225,9 +263,10 @@ const styles = StyleSheet.create({
   },
   recipeTitle: {
     fontWeight: 'bold',
-    fontSize: 16,
+    fontSize: 14,
   },
   mealType: {
+    fontSize: 12,
     color: '#666',
     marginTop: 2,
     textTransform: 'capitalize',
@@ -237,4 +276,28 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 4,
   },
+  deleteButton : {
+    width: 30,
+    height: 30,
+    borderWidth: 2,
+    borderColor: 'rgb(180, 180, 230)',
+    borderRadius: 4,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  dateContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 10,
+    paddingVertical: 6
+  },
+  addButton : {
+    width: 25,
+    height: 25,
+    borderWidth: 2,
+    borderColor: 'rgb(180, 180, 230)',
+    borderRadius: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+  }
 });

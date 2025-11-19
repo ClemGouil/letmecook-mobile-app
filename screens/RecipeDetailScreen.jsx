@@ -9,8 +9,8 @@ export default function RecipeDetailScreen({ route }) {
 
   const navigation = useNavigation();
 
-  const { privateRecipes } = useRecipe();
-  const recipe = privateRecipes.find(r => r.id === route.params.recipeId);
+  const { privateRecipes, groupRecipes } = useRecipe();
+  const recipe = privateRecipes.find(r => r.id === route.params.recipeId) || groupRecipes.find(r => r.recipe.id === route.params.recipeId).recipe ;
 
   const [activeTab, setActiveTab] = useState('ingredients');
   const [servings, setServings] = useState(recipe.servings);

@@ -6,12 +6,13 @@ import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import * as ImagePicker from 'expo-image-picker';
 import AccordionSection from '../components/AccordionSection'
+import { useGroup } from '../hooks/useGroup';
 
 export default function ProfileScreen() {
 
     const navigation = useNavigation();
 
-    const { user, logout, updateUser } = useUser();
+    const { user, logout, updateUser, changePassword } = useUser();
     const {  uploadImage } = useImage();
 
     const [editingProfile, setEditingProfile] = React.useState(false);
@@ -24,18 +25,7 @@ export default function ProfileScreen() {
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
 
-    const groups = [
-      {
-        id: 'g1',
-        name: 'Groupe 1',
-        members: [{ user: { id: '1' }, role: 'admin', joinedAt: '2023-01-01' }],
-      },
-      {
-        id: 'g2',
-        name: 'Groupe 2',
-        members: [{ user: { id: '1' }, role: 'member', joinedAt: '2023-02-15' }],
-      },
-    ];
+    const { groups } = useGroup();
 
     const handleLogout = async () => {
     try {
@@ -116,15 +106,24 @@ export default function ProfileScreen() {
   };
 
   const handleSubmitPassword  = async () => {
-    if (newPassword === confirmPassword) {
-      pass
-    } else {
-     pass
+    if (newPassword !== confirmPassword) {
+      alert("Les mots de passe ne correspondent pas.");
+      return;
     }
-  }
+    try {
+      await changePassword(currentPassword, newPassword);
+      alert("Mot de passe modifié avec succès !");
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (err) {
+      console.error(err);
+      alert("Erreur lors du changement de mot de passe.");
+    }
+  };
 
   const handleShowDetailsGroup = () => {
-
+    navigation.navigate('Groups')
   }
 
   const getUserRole = (group) =>  {
@@ -315,7 +314,7 @@ export default function ProfileScreen() {
             </View>
             <TouchableOpacity
               style={styles.button}
-              onPress={() => {handleShowDetailsGroup}}
+              onPress={handleShowDetailsGroup}
             >
               <Icon name="information-circle-outline" size={20} color="rgb(180, 180, 230)" />
               <Text style={styles.buttonText}>Voir Détails</Text>
@@ -364,7 +363,7 @@ export default function ProfileScreen() {
 
           <TouchableOpacity
             style={styles.button}
-            onPress={() => {handleSubmitPassword}}
+            onPress={handleSubmitPassword}
           >
             <Icon name="swap-horizontal-outline" size={20} color="rgb(180, 180, 230)" />
             <Text style={styles.buttonText}>Changer</Text>

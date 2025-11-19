@@ -1,25 +1,33 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, Modal, TextInput, TouchableOpacity, StyleSheet } from "react-native";
 
-const ShoppingListForm = ({ onSubmit, onCancel }) => {
+const ChooseNameModal = ({ visible, title, placeholder, onSubmit, onCancel }) => {
 
-  const [shoppingListName, setShoppingListName] = useState('');
+  const [name, setName] = useState('');
 
   const handleSubmit = () => {
-    if (shoppingListName.trim() !== "") {
-        onSubmit(shoppingListName.trim());
-        setShoppingListName("");
+    if (name.trim() !== "") {
+        onSubmit(name.trim());
+        setName("");
     }
   }
 
   return (
-    <View style={styles.formContainer}>
-        <Text style={styles.label}>Nom de la liste :</Text>
+
+    <Modal
+      visible={visible}
+      transparent={true}
+      animationType="fade"
+      onRequestClose={() => onClose()}
+    >
+    <View style={styles.modalBackground}>
+      <View style={styles.modalContainer}>
+        <Text style={styles.label}>{title}</Text>
         <TextInput
             style={styles.input}
-            placeholder="Ex : Courses du week-end"
-            value={shoppingListName}
-            onChangeText={setShoppingListName}
+            placeholder={placeholder}
+            value={name}
+            onChangeText={setName}
         />
         <View style={styles.buttonRow}>
             <TouchableOpacity style={styles.saveButton} onPress={handleSubmit}>
@@ -30,17 +38,25 @@ const ShoppingListForm = ({ onSubmit, onCancel }) => {
                 <Text style={styles.cancelText}>Annuler</Text>
             </TouchableOpacity>
         </View>
-    </View>
+      </View>
+      </View>
+    </Modal>
   );
 };
 
 const styles = StyleSheet.create({
-  formContainer: {
-    padding: 20,
+  modalBackground: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.3)', 
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    paddingTop: 40,
+  },
+  modalContainer: {
+    width: '90%',
     backgroundColor: '#fff',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    elevation: 5,
+    borderRadius: 10,
+    padding: 15,
   },
   label: {
     marginBottom: 6,
@@ -88,4 +104,4 @@ const styles = StyleSheet.create({
   }
 });
 
-export default ShoppingListForm;
+export default ChooseNameModal;

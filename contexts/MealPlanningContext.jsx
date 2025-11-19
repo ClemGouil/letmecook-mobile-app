@@ -18,9 +18,17 @@ export function MealPlanningProvider({ children }) {
 
   const API_URL = "http://192.168.1.13:8080/api";
 
-  async function loadMealPlanning(userId, start, end) {
+  async function loadMealPlanning(userId, start, end, groupId) {
     try {
-      const params = { userId, start, end };
+      let url = "";
+      let params = {};
+      if (groupId) {
+        url = `${API_URL}/mealPlanning/group`;
+        params = { groupId, start, end };
+      } else if (userId) {
+        url = `${API_URL}/mealPlanning/user`;
+        params = { userId, start, end };
+      }
       const response = await axios.get(`${API_URL}/mealPlanning/user`, {
         headers: {
           Authorization: `Bearer ${token}`,

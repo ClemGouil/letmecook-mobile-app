@@ -117,7 +117,11 @@ export function ShoppingListProvider({ children }) {
           if (list.id === dto.shoppingListId) {
             return {
               ...list,
-              items: [...list.items, newIngredient],
+              items: list.items.map((item) =>
+                item.ingredient.id === newIngredient.ingredient.id
+                  ? { ...item, ...newIngredient }
+                  : item
+              ),
             };
           }
           return list;
@@ -131,9 +135,9 @@ export function ShoppingListProvider({ children }) {
     }
   }
 
-  async function updateIngredientToShoppingList(dto) {
+  async function updateIngredientToShoppingList(id, dto) {
     try {
-      const response = await axios.post(`${API_URL}/shopping-list-ingredients/update`, dto, {
+      const response = await axios.put(`${API_URL}/shopping-list-ingredients/${id}`, dto, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
 
@@ -162,6 +166,31 @@ export function ShoppingListProvider({ children }) {
     }
   }
 
+  async function generateShoppingListFromRecipes(recipesList, userId, groupId = null) {
+    try {
+      const params = {};
+      if (userId) params.userId = userId;
+      if (groupId) params.groupId = groupId;
+
+      const response = await axios.post(
+        `${API_URL}/shopping-list/generate-from-recipes-list`,
+        recipesList,
+        {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+          params,
+        }
+      );
+
+      const newList = response.data;
+
+      setShoppingLists((prev) => [...prev, newList]);
+      return newList;
+    } catch (err) {
+      console.error("Erreur lors de la génération de la liste de courses à partir des recettes:", err);
+      throw err;
+    }
+  }
+
   return (
     <ShoppingListContext.Provider
       value={{
@@ -175,6 +204,7 @@ export function ShoppingListProvider({ children }) {
         deleteShoppingList,
         addIngredientToShoppingList,
         updateIngredientToShoppingList,
+        generateShoppingListFromRecipes,
       }}
     >
       {children}

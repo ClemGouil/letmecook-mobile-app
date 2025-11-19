@@ -1,5 +1,5 @@
-import * as React from 'react';
-import { Text, View, StyleSheet, FlatList } from 'react-native';
+import React, { useState } from 'react';
+import { Text, View, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import { useNavigation} from '@react-navigation/native';
 import { useShoppingList } from '../hooks/useShoppingList';
 import { useUser } from '../hooks/useUser'
@@ -8,7 +8,8 @@ import SearchBar from '../components/SearchBar';
 import ShoppingListCard from '../components/ShoppingListCard';
 import FloatingButton  from '../components/FloatingButton';
 import ReusableModal from '../components/ReusableModal';
-import ShoppingListForm from '../components/ShoppingListForm';
+import ChooseNameModal from '../components/ChooseNameModal';
+import GenerateFromRecipeModal from '../components/GenerateFromRecipeModal';
 
 export default function ShoppingListScreen() {
 
@@ -19,7 +20,10 @@ export default function ShoppingListScreen() {
   const [search, setSearch] = React.useState('');
   const [addingShoppingList, setAddingShoppingList] = React.useState(false);
 
-  const { shoppingLists, addShoppingList } = useShoppingList();
+  const [showModalAdd, setShowModalAdd] = useState(false);
+  const [showModalGenerateFromRecipe, setShowModalGenerateFromRecipe] = useState(false);
+
+  const { shoppingLists, addShoppingList, updateShoppingList, deleteShoppingList, generateShoppingListFromRecipes } = useShoppingList();
 
   const filteredShoppingLists = shoppingLists.filter((sl) => {
     const matchesSearch = sl.name.toLowerCase().includes(search.toLowerCase());
@@ -39,7 +43,29 @@ export default function ShoppingListScreen() {
           items: [],
         });
       setAddingShoppingList(false);
+      setShowModalAdd(false)
       navigation.navigate('ShoppingListDetail', { shoppingListId: newList.id });
+    } catch (err) {
+      console.error('Erreur lors de la création de la liste :', err);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    console.log(id);
+    try {
+      await deleteShoppingList(id);
+    } catch (err) {
+      console.error('Erreur lors de la suppression de la liste :', err);
+    }
+  };
+
+  const handleGenerateFromRecipe = async (selectedRecipes) => {
+    console.log(selectedRecipes);
+    try {
+      const newList = await generateShoppingListFromRecipes(selectedRecipes, user.id)
+      console.log(newList);
+      setShowModalGenerateFromRecipe(false);
+      // navigation.navigate('ShoppingListDetail', { shoppingListId: newList.id });
     } catch (err) {
       console.error('Erreur lors de la création de la liste :', err);
     }
@@ -62,6 +88,7 @@ export default function ShoppingListScreen() {
               <ShoppingListCard
                 shoppingList={item}
                 onPress={() => handlePressShoppingList(item)}
+                onDelete={() => handleDelete(item.id)}
               />
               )}
             contentContainerStyle={styles.list}
@@ -76,11 +103,32 @@ export default function ShoppingListScreen() {
         visible={addingShoppingList}
         onClose={() => setAddingShoppingList(false)}
       >
-        <ShoppingListForm
-          onSubmit={handleAdd}
-          onCancel={() => setAddingShoppingList(false)}
-        />
+        <View style={styles.buttonRow}>
+          <TouchableOpacity style={styles.button} onPress={() => {setShowModalAdd(true); setAddingShoppingList(false);}}>
+              <Text style={styles.buttonText}>Créer une nouvelle liste de course</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.button} onPress={() => {setShowModalGenerateFromRecipe(true); setAddingShoppingList(false);}}>
+              <Text style={styles.buttonText}>Générer une liste de course à partir de recettes</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.button} onPress={() => {setAddingShoppingList(false);}}>
+              <Text style={styles.buttonText}>Générer une liste de course à partir du planning</Text>
+          </TouchableOpacity>
+      </View>
       </ReusableModal>
+
+      <ChooseNameModal
+        visible={showModalAdd}
+        title={"Nom de la liste de course :"}
+        placeholder={"Course du week-end"} 
+        onSubmit={handleAdd}
+        onCancel={() => {setShowModalAdd(false)}}
+      />
+
+      <GenerateFromRecipeModal
+        visible={showModalGenerateFromRecipe}
+        onSubmit={handleGenerateFromRecipe}
+        onCancel={() => {setShowModalGenerateFromRecipe(false)}}
+      />
     </View>
   );
 
@@ -113,5 +161,28 @@ const styles = StyleSheet.create({
     color: '#333',
     marginVertical: 8,
     textAlign: 'center',
-  }
+  },
+  buttonRow: {
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'space-around',
+    paddingVertical: 20,
+    backgroundColor: '#fff',
+  },
+  button: {
+    paddingVertical: 12,
+    borderRadius: 8,
+    marginVertical: 2,
+    marginHorizontal: 2,
+    width: '90%',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgb(180, 180, 230)',
+  },
+  buttonText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: 'rgb(180, 180, 230)',
+    textAlign: 'center',
+  },
 });

@@ -5,6 +5,7 @@ import RegisterScreen from '../screens/RegisterScreen';
 import BottomTabNavigator from './BottomTabNav';
 import { useUser } from '../hooks/useUser';
 import ProfileScreen from '../screens/ProfileScreen';
+import GroupScreen from '../screens/GroupScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -18,6 +19,7 @@ export default function RootNavigator() {
          <>
           <Stack.Screen name="AppTabs" component={BottomTabNavigator} />
           <Stack.Screen name="Profil" component={ProfileScreen}/>
+          <Stack.Screen name="Groups" component={GroupScreen}/>
         </>
       ) : (
         <>

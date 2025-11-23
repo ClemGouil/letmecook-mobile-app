@@ -33,6 +33,22 @@ export default function GroupScreen() {
         g.members.some(m => m.user.id === user.id && m.status === "ACTIVE")
     );
 
+    const canDeleteGroup = (userId, group) => {
+      return group.ownerId === userId;
+    }
+
+    const canQuitGroup = (userId, group) => {
+      return true;
+    }
+
+    const canInvite = (userRole) => {
+      return userRole === "OWNER" || userRole === "ADMIN";
+    }
+
+    const canEditGroup =(userRole) => {
+      return userRole === "OWNER" || userRole === "ADMIN";
+    }
+
     const handleAdd = async (name) => {
       console.log(name);
       try {
@@ -67,7 +83,7 @@ export default function GroupScreen() {
       if (!member || member.status !== 'PENDING') return;
 
       try {
-        await removeUserFromGroup(member.id);
+        await removeUserFromGroup(group.id, member.id);
       } catch (err) {
         console.error("Erreur refus invitation :", err);
       }
@@ -119,7 +135,7 @@ export default function GroupScreen() {
               style: "destructive",
               onPress: async () => {
                 try {
-                  await removeUserFromGroup(member.id);
+                  await removeUserFromGroup(group.id, member.id);
                 } catch (err) {
                   console.error("Erreur quitter groupe :", err);
                 }
@@ -134,7 +150,7 @@ export default function GroupScreen() {
       try {
         const member = group.members.find(m => m.user.id === user.id);
         await transferOwnership(group.id, newOwnerId);
-        await removeUserFromGroup(member.id);
+        await removeUserFromGroup(group.id, member.id);
 
         setTransferingOwnership(false);
         setTransferGroup(null);
@@ -174,67 +190,76 @@ export default function GroupScreen() {
         )}
 
         {activeGroups.length > 0 ? (
-          activeGroups.map(group => (
-            <>
-                <AccordionSection title={group.name}>
+            activeGroups.map(group => {
+
+              const member = group.members.find(m => m.user.id === user.id);
+              const role = member?.role;
+
+              return (
+                <AccordionSection title={group.name} key={group.id}>
 
                   <View style={styles.actionsRow}>
-                      <TouchableOpacity
-                        style={styles.actionButton}
-                        onPress={() => console.log("Modifier", group.id)}
-                      >
-                        <Icon name="create-outline" size={20} color="#3f51b5" />
-                        <Text style={styles.actionLabel}>Modifier</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={styles.actionButton}
-                        onPress={() => leaveGroup(group)}
-                      >
-                        <Icon name="exit-outline" size={20} color="orange" />
-                        <Text style={[styles.actionLabel, { color: "orange" }]}>Quitter</Text>
-                      </TouchableOpacity>
-                    </View>
-                    
-                    <View style={styles.table}>
+                    <TouchableOpacity
+                      style={[styles.actionButton,!canEditGroup(role) && { opacity: 0.2 }]}
+                      onPress={() => console.log("Modifier", group.id)}
+                      disabled={!canEditGroup(role)}
+                    >
+                      <Icon name="create-outline" size={20} color="#3f51b5" />
+                      <Text style={styles.actionLabel}>Modifier</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={[styles.actionButton,!canQuitGroup(user.id, group) && { opacity: 0.2 }]}
+                      onPress={() => leaveGroup(group)}
+                      disabled={!canQuitGroup(user.id, group)}
+                    >
+                      <Icon name="exit-outline" size={20} color="orange" />
+                      <Text style={[styles.actionLabel, { color: "orange" }]}>Quitter</Text>
+                    </TouchableOpacity>
+                  </View>
+
+                  <View style={styles.table}>
                     <View style={[styles.row, styles.headerRow]}>
-                        <Text style={[styles.cell, styles.headerCell, styles.borderRight]}>Nom</Text>
-                        <Text style={[styles.cell, styles.headerCell, styles.borderRight]}>Rôle</Text>
-                        <Text style={[styles.cell, styles.headerCell]}>Adhésion</Text>
+                      <Text style={[styles.cell, styles.headerCell, styles.borderRight]}>Nom</Text>
+                      <Text style={[styles.cell, styles.headerCell, styles.borderRight]}>Rôle</Text>
+                      <Text style={[styles.cell, styles.headerCell]}>Adhésion</Text>
                     </View>
+
                     {group.members.map((member) => (
-                        <View key={member.id} style={styles.row}>
+                      <View key={member.id} style={styles.row}>
                         <Text style={[styles.cell, styles.borderRight]}>{member.user.username}</Text>
                         <Text style={[styles.cell, styles.borderRight]}>{member.role}</Text>
                         <Text style={styles.cell}>{member.joinedAt}</Text>
-                        </View>
+                      </View>
                     ))}
-                    </View>
+                  </View>
 
-                    <View style={styles.actionsRow}>
-                      <TouchableOpacity
-                        style={styles.actionButton}
-                        onPress={() => console.log("Inviter", group.id)}
-                      >
-                        <Icon name="person-add-outline" size={20} color="#3f51b5" />
-                        <Text style={styles.actionLabel}>Inviter</Text>
-                      </TouchableOpacity>
+                  <View style={styles.actionsRow}>
+                    <TouchableOpacity
+                      style={[styles.actionButton,!canInvite(role) && { opacity: 0.2 }]}
+                      onPress={() => console.log("Inviter", group.id)}
+                      disabled={!canInvite(role)}
+                    >
+                      <Icon name="person-add-outline" size={20} color="#3f51b5" />
+                      <Text style={styles.actionLabel}>Inviter</Text>
+                    </TouchableOpacity>
 
-                      {group.ownerId === user.id && (
-                        <TouchableOpacity
-                          style={styles.actionButton}
-                          onPress={() => confirmDeleteGroup(group)}
-                        >
-                          <Icon name="trash-outline" size={20} color="red" />
-                          <Text style={[styles.actionLabel, { color: "red" }]}>Supprimer</Text>
-                        </TouchableOpacity>
-                      )}
-                    </View>               
+                    <TouchableOpacity
+                      style={[styles.actionButton,!canDeleteGroup(user.id, group) && { opacity: 0.2 }]}
+                      onPress={() => confirmDeleteGroup(group)}
+                      disabled={!canDeleteGroup(user.id, group)}
+                    >
+                      <Icon name="trash-outline" size={20} color="red" />
+                      <Text style={[styles.actionLabel, { color: "red" }]}>Supprimer</Text>
+                    </TouchableOpacity>
+                  </View>
+
                 </AccordionSection>
-            </>
-            ))
-            ) : (
+              );
+            })
+          ) : (
             <Text style={styles.noGroupText}>Vous ne faites partie d’aucun groupe.</Text>
-        )}
+          )}
 
         <ChooseNameModal
           visible={addingGroup}

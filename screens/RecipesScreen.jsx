@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Text, View, TouchableOpacity, StyleSheet, FlatList, Image, Dimensions, TextInput } from 'react-native';
 import { useRecipe } from '../hooks/useRecipe'
 import { useGroup } from '../hooks/useGroup';
+import { useUser } from '../hooks/useUser'
 import { useNavigation} from '@react-navigation/native';
 
 import SearchBar from '../components/SearchBar';
@@ -10,6 +11,7 @@ import RecipeCard from '../components/RecipeCard';
 export default function RecipesScreen() {
 
   const navigation = useNavigation();
+  const { user } = useUser();
 
   const { privateRecipes, groupRecipes, loadGroupRecipes} = useRecipe();
   const { groups} = useGroup();
@@ -39,8 +41,18 @@ export default function RecipesScreen() {
     return r.recipe.name.toLowerCase().includes(search.toLowerCase());
   });
 
-  const handlePressRecipe = (recipeId) => {
-    navigation.navigate('RecipeDetail', { recipeId : recipeId });
+  const handlePressRecipe = (item, isGroup) => {
+    const currentUserId = user.id;
+
+    const isOwner = isGroup 
+      ? item.recipe.ownerId === currentUserId 
+      : item.ownerId === currentUserId;
+
+    navigation.navigate('RecipeDetail', {
+      recipeId: isGroup ? item.recipe.id : item.id,
+      isOwner,
+      isGroupRecipe: isGroup
+    });
   };
 
   return (
@@ -77,7 +89,7 @@ export default function RecipesScreen() {
               renderItem={({ item }) => (
                 <RecipeCard
                   recipe={item}
-                  onPress={() => handlePressRecipe(item.id)}
+                  onPress={() => handlePressRecipe(item, false)}
                   width={CARD_WIDTH}
                 />
               )}
@@ -115,7 +127,7 @@ export default function RecipesScreen() {
                 renderItem={({ item }) => (
                   <RecipeCard
                     recipe={item.recipe}
-                    onPress={() => handlePressRecipe(item.recipe.id)}
+                    onPress={() => handlePressRecipe(item, true)}
                     width={CARD_WIDTH}
                   />
                 )}

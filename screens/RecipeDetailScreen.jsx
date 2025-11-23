@@ -2,18 +2,28 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, ScrollView } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 
+import { useUser } from '../hooks/useUser'
 import { useRecipe } from '../hooks/useRecipe'
+import { useShoppingList } from '../hooks/useShoppingList';
 import { useNavigation} from '@react-navigation/native';
+import AddIngredientToListModal  from '../components/AddIngredientToListModal';
 
 export default function RecipeDetailScreen({ route }) {
 
   const navigation = useNavigation();
+  const { user } = useUser();
 
   const { privateRecipes, groupRecipes } = useRecipe();
   const recipe = privateRecipes.find(r => r.id === route.params.recipeId) || groupRecipes.find(r => r.recipe.id === route.params.recipeId).recipe ;
 
+  const isGroupRecipe = route.params.isGroupRecipe;
+  const isOwner = route.params.isOwner;
+
+  const { shoppingLists, addRecipeToShoppingList} = useShoppingList();
+
   const [activeTab, setActiveTab] = useState('ingredients');
   const [servings, setServings] = useState(recipe.servings);
+  const [showModal, setShowModal] = useState(false);
 
   const getScaledQuantity = (originalQuantity) => {
     const ratio = servings / recipe.servings;
@@ -44,17 +54,56 @@ export default function RecipeDetailScreen({ route }) {
     navigation.navigate('RecipeForm', { recipeId : recipeId });
   };
 
+  const  handleAddRecipeToShoppingList = async (result) => {
+    try {
+      await addRecipeToShoppingList({
+        shoppingListId: result.listId,
+        recipeId: recipe.id,
+        userId: user.id,
+        ingredients: result.ingredients,
+        newList: result.newList,
+        serving : result.serving,
+    });
+      setShowModal(false);
+    } catch (err) {
+      console.error('Erreur lors de l ajout du planning :', err);
+    }
+  };
+
+  const handleShare = (recipeId) => {
+    
+  };
+
   return (
+    <>
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingVertical: 20 }}>
       <View style={styles.cardContainer}>
         <Text style={styles.title}>{recipe.name}</Text>
         <Image source={recipe.imageUrl} style={styles.image} />
+        {!isGroupRecipe && (
         <TouchableOpacity
           style={styles.editButton}
           onPress={() => handleEdit(recipe.id)}
         >
           <Text style={styles.editButtonText}>Modifier</Text>
         </TouchableOpacity>
+        )}
+        {!isGroupRecipe && (
+        <TouchableOpacity
+          style={styles.editButton}
+          onPress={() => handleShare(recipe.id)}
+        >
+          <Text style={styles.editButtonText}>Partager</Text>
+        </TouchableOpacity>
+        )}
+        {isGroupRecipe && isOwner && (
+          <TouchableOpacity
+            style={styles.editButton}
+            onPress={() => handleUnshare(recipe.id)}
+          >
+            <Text style={styles.editButtonText}>Retirer du groupe</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       
@@ -118,7 +167,7 @@ export default function RecipeDetailScreen({ route }) {
               </View>
             )}
           />
-          <TouchableOpacity style={styles.addToShoppingListButton} onPress={console.log('Click')}>
+          <TouchableOpacity style={styles.addToShoppingListButton} onPress={() => setShowModal(true)}>
             <Text style={styles.addToShoppingListButtonText}>Ajouter à une liste de course</Text>
           </TouchableOpacity>
           </>
@@ -139,6 +188,17 @@ export default function RecipeDetailScreen({ route }) {
         )}
       </View>
     </ScrollView>
+
+    <AddIngredientToListModal
+      visible={showModal}
+      data={{
+        items: recipe.ingredients,
+        serving: servings,}
+      }
+      onClose={handleAddRecipeToShoppingList}
+      shoppingLists={shoppingLists}
+    />
+    </>
   );
 }
 

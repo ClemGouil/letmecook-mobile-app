@@ -14,6 +14,8 @@ export default function ShoppingListDetailScreen({ route }) {
 
   const shoppingList = shoppingLists.find(sl => sl.id === route.params.shoppingListId);
 
+  const items = shoppingList?.items ?? [];
+
   const { user} = useUser();
 
   const [editingItem, setEditingItem] = React.useState(null);
@@ -22,7 +24,7 @@ export default function ShoppingListDetailScreen({ route }) {
   const handleEdit = (item) => setEditingItem(item);
 
   const categories = Object.entries(
-    shoppingList.items.reduce((acc, item) => {
+    items.reduce((acc, item) => {
       const category = item.ingredient.category || 'Autres';
       if (!acc[category]) acc[category] = [];
       acc[category].push(item);
@@ -69,6 +71,9 @@ export default function ShoppingListDetailScreen({ route }) {
 
   return (
     <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>{shoppingList.name}</Text>
+      </View>
       <FlatList
         data={categories}
         keyExtractor={([category]) => category}
@@ -155,5 +160,20 @@ const styles = StyleSheet.create({
   },
   ingredientCard: {
     paddingVertical: 4,
+  },
+  header: {
+    paddingVertical: 14,
+    alignItems: "center",
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    marginBottom: 16,
+    elevation: 3,
+  },
+  headerTitle: {
+    fontSize: 20,
+    textAlign: 'center',
+    fontWeight: "700",
+    color: "#222",
+    letterSpacing: 0.5,
   },
 });

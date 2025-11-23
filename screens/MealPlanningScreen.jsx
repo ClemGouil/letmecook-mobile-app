@@ -2,19 +2,28 @@ import React, { useState, useEffect } from 'react';
 import { Text, View, StyleSheet, TouchableOpacity, ScrollView, Image} from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useMealPlanning } from '../hooks/useMealPlanning';
+import SelectRecipeModal from '../components/SelectRecipeModal';
 import { useUser } from '../hooks/useUser'
 import { useRecipe } from '../hooks/useRecipe'
+import { useNavigation} from '@react-navigation/native';
 
 export default function MealPlanningScreen() {
 
+  const navigation = useNavigation();
   const { user} = useUser();
-  const { mealPlannings, loadMealPlanning } = useMealPlanning();
+  const { mealPlannings, loadMealPlanning ,addMealPlanning, deleteMealPlanning} = useMealPlanning();
   const { privateRecipes } = useRecipe();
 
   const [startDate, setStartDate] = React.useState(new Date());
   const [endDate, setEndDate] = React.useState(new Date());
   const [groupedMealPlannings, setGroupedMealPlannings] = useState([]);
   const [recipesMap, setRecipesMap] = useState({});
+
+  const [showModalSelectRecipe, setShowModalSelectRecipe] = useState(false);
+  const [selectedDay, setSelectedDay] = useState(null);
+
+  const [takenMealTypes, setTakenMealTypes] = useState([]);
+  const [availableMealTypes, setAvailableMealTypes] = useState([]);
 
   useEffect(() => {
     const start = new Date();
@@ -106,6 +115,7 @@ export default function MealPlanningScreen() {
       const day = days.find(d => d.date === dateStr);
       if(day) {
         day.meals[mp.mealType] = { 
+          id: mp.id,
           recipe: recipesMap[mp.recipeId], 
           servings: mp.servings ?? recipesMap[mp.recipeId].servings };;
       }
@@ -128,6 +138,11 @@ export default function MealPlanningScreen() {
     return mealtype[mt];
   };
 
+  const getReverseMealType = (mt) => {
+    const mealtype = { 'Petit-déjeuner' : 'BREAKFAST', 'Déjeuner' : 'LUNCH' , 'Dîner' : 'DINNER' }
+    return mealtype[mt];
+  };
+
   const isToday =  (dateStr) => {
     const today = new Date();
     const todayStr = formatDateToLocalYYYYMMDD(today);
@@ -141,12 +156,32 @@ export default function MealPlanningScreen() {
     return tomorrowStr === dateStr;
   }
 
-  const handleAddPlanning = () => {
-    
+  const  handleAddPlanning = async (selectedRecipe, selectedServings, mealType) => {
+    try {
+      await addMealPlanning({
+        userId: user.id,
+        recipeId: selectedRecipe.id,
+        servings: selectedServings,
+        mealType: getReverseMealType(mealType),
+        date: selectedDay,
+    });
+      setShowModalSelectRecipe(false);
+    } catch (err) {
+      console.error('Erreur lors de l ajout du planning :', err);
+    }
   };
 
-  const handleDeletePlanning = (mealType) => {
-    
+  const handleDeletePlanning = async (id) => {
+    console.log(id)
+    try {
+      await deleteMealPlanning(id);
+    } catch (err) {
+      console.error('Erreur lors de la suppresion du planning :', err);
+    }
+  };
+
+  const handlePressRecipe = (recipeId) => {
+    navigation.navigate('RecipeDetail', { recipeId : recipeId });
   };
 
   return (
@@ -162,32 +197,56 @@ export default function MealPlanningScreen() {
       </View>
 
       <ScrollView style={{ marginTop: 10 }} showsVerticalScrollIndicator={false}>
-        {groupedMealPlannings.map((day, index) => (
-          <View key={index} style={styles.dayCard}>
-            <View style={styles.dateContainer}>
-              <Text style={styles.dayTitle}>{isToday(day.date) ? "Aujourd'hui" : isTomorrow(day.date) ? "Demain" : getDayLabel(day.date)}</Text>
-              <TouchableOpacity  style={styles.addButton} onPress={() => handleAddPlanning()}>
-                <Icon name="add-outline" size={20} color="rgb(180, 180, 230)"/>
-              </TouchableOpacity>
-            </View>
-            {Object.entries(day.meals).map(([mealType, meal], idx) => (
-              <View key={idx} style={styles.mealCard}>
-                <Image
-                  source={{ uri: meal.recipe.imageUrl }}
-                  style={styles.recipeImage}
-                />
-                <View style={styles.mealInfo}>
-                  <Text style={styles.recipeTitle}>{meal.recipe.name }</Text>
-                  <Text style={styles.mealType}>{getMealType(mealType)}</Text>
-                </View>
-                <TouchableOpacity  style={styles.deleteButton} onPress={() => handleDeletePlanning(mealType)}>
-                  <Icon name="trash-outline" size={20} color="rgb(180, 180, 230)"/>
+        {groupedMealPlannings.map((day, index) => {
+          const possibleMealTypes = ["BREAKFAST", "LUNCH", "DINNER"];
+          const takenMealTypes = Object.keys(day.meals);
+          const availableMealTypes = possibleMealTypes.filter(
+            (type) => !takenMealTypes.includes(type)
+          );
+        return (
+            <View key={index} style={styles.dayCard}>
+              <View style={styles.dateContainer}>
+                <Text style={styles.dayTitle}>{isToday(day.date) ? "Aujourd'hui" : isTomorrow(day.date) ? "Demain" : getDayLabel(day.date)}</Text>
+                <TouchableOpacity  
+                  style={[ styles.addButton, availableMealTypes.length === 0 && { opacity : 0.2 }]} 
+                  onPress={() => {
+                    setSelectedDay(day.date);
+                    setTakenMealTypes(takenMealTypes);
+                    setAvailableMealTypes(availableMealTypes.map((mt) => getMealType(mt)));
+                    setShowModalSelectRecipe(true); }}
+                  disabled={availableMealTypes.length === 0}
+                    >
+                  <Icon name="add-outline" size={20} color="rgb(180, 180, 230)"/>
                 </TouchableOpacity>
               </View>
-            ))}
-          </View>
-        ))}
+              {Object.entries(day.meals).map(([mealType, meal], idx) => (
+                <TouchableOpacity key={idx} style={styles.mealCard} onPress={() => handlePressRecipe(meal.recipe.id)}>
+                    <Image
+                      source={{ uri: meal.recipe.imageUrl }}
+                      style={styles.recipeImage}
+                    />
+                    <View style={styles.mealInfo}>
+                      <Text style={styles.recipeTitle}>{meal.recipe.name }</Text>
+                      <Text style={styles.mealType}>{getMealType(mealType)}</Text>
+                      <Text style={styles.mealType}>{meal.servings} Personnes</Text>
+                    </View>
+                    <TouchableOpacity  style={styles.deleteButton} onPress={() => handleDeletePlanning(meal.id)}>
+                      <Icon name="trash-outline" size={20} color="rgb(180, 180, 230)"/>
+                    </TouchableOpacity>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )
+        })}
       </ScrollView>
+
+      <SelectRecipeModal
+        visible={showModalSelectRecipe}
+        availableMealTypes = {availableMealTypes}
+        onSubmit={handleAddPlanning}
+        onCancel={() => {setShowModalSelectRecipe(false)}}
+      />
+
     </View>
     
   );

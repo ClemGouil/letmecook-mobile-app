@@ -6,7 +6,7 @@ import { useNavigation } from '@react-navigation/native';
 
 import HomeScreen from '../screens/HomeScreen';
 import RecipeStack from '../navigation/RecipeStack';
-import MealPlanningScreen from '../screens/MealPlanningScreen';
+import PlanningStack from '../navigation/PlanningStack';
 import ShoppingListStack from '../navigation/ShoppingListStack';
 import InventoryScreen from '../screens/InventoryScreen';
 
@@ -57,7 +57,7 @@ export default function BottomTabNavigator() {
     >
       <Tab.Screen name="Accueil" component={HomeScreen} />
       <Tab.Screen name="Recettes" component={RecipeStack} />
-      <Tab.Screen name="Planning" component={MealPlanningScreen} />
+      <Tab.Screen name="Planning" component={PlanningStack} />
       <Tab.Screen name="ListeDeCourse" component={ShoppingListStack} />
       <Tab.Screen name="Inventaire" component={InventoryScreen} />
     </Tab.Navigator>

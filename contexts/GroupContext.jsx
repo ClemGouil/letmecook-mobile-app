@@ -128,57 +128,57 @@ export function GroupProvider ({ children }) {
     }
   }
 
-  async function updateUserInGroup(id, { userId, role, status}) {
+  async function updateUserInGroup(id, { userId, role, status }) {
     try {
-      const response = await axios.put(`${API_URL}/group-users/${id}`, null, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-        params: {
-          userId,
-          role,
-          status,
-        },
-      }
-    );
+      const response = await axios.put(
+        `${API_URL}/group-users/${id}`,
+        null,
+        {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+          params: { userId, role, status },
+        }
+      );
+
       const updatedMember = response.data;
 
-        setGroups((prevGroups) =>
-        prevGroups.map((group) => {
-            if (group.id === dto.groupId) {
-            return {
-                ...group,
-                members: group.members.map((member) =>
-                member.userId === updatedMember.userId
-                    ? { ...member, ...updatedMember }
-                    : member
-                ),
-            };
-            }
-            return group;
-        })
-        );
+      setGroups(prevGroups =>
+        prevGroups.map(group => ({
+          ...group,
+          members: group.members.map(member =>
+            member.id === id
+              ? { ...member, ...updatedMember }
+              : member
+          )
+        }))
+      );
 
-        return updatedMember;
+      return updatedMember;
     } catch (err) {
-        console.error("Erreur lors de la mise à jour du membre :", err);
-        throw err;
+      console.error("Erreur lors de la mise à jour du membre :", err);
+      throw err;
     }
   }
 
-  async function removeUserFromGroup(id, removerId) {
+  async function removeUserFromGroup(groupId, memberId, removerId) {
     try {
       const params = removerId ? { removerId } : {};
 
-      await axios.delete(`${API_URL}/group-users/${id}`, {
+      await axios.delete(`${API_URL}/group-users/${memberId}`, {
         params,
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      setGroups((prev) =>
-        prev.map((group) => ({
-          ...group,
-          members: group.members.filter((m) => m.id !== id),
-        }))
+      setGroups(prevGroups =>
+        prevGroups.map(group =>
+          group.id === groupId
+            ? {
+                ...group,
+                members: group.members.filter(m => m.id !== memberId),
+              }
+            : group
+        )
       );
+
     } catch (err) {
       console.error("Erreur suppression membre:", err);
       throw err;
@@ -195,7 +195,25 @@ export function GroupProvider ({ children }) {
         }
       );
 
-      await loadAllGroupsOfAnUser(user.id);
+    setGroups((prevGroups) =>
+        prevGroups.map((group) => {
+            if (group.id === groupId) {
+            return {
+                ...group,
+                members: group.members.map(member =>
+                  member.user.id === newOwnerId
+                    ? { ...member, role: "OWNER" }
+                    : member.user.id === group.ownerId
+                      ? { ...member, role: "ADMIN" }
+                      : member
+                ),
+                ownerId: newOwnerId,
+              };
+            }
+            return group;
+        })
+        );
+
     } catch (err) {
       console.error("Erreur transfert ownership :", err);
       throw err;

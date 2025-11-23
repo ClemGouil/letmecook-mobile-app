@@ -172,7 +172,7 @@ export function ShoppingListProvider({ children }) {
       if (userId) params.userId = userId;
       if (groupId) params.groupId = groupId;
 
-      const response = await axios.post(
+      const generatedList = await axios.post(
         `${API_URL}/shopping-list/generate-from-recipes-list`,
         recipesList,
         {
@@ -181,12 +181,58 @@ export function ShoppingListProvider({ children }) {
         }
       );
 
-      const newList = response.data;
+      const fullListResponse = await axios.get(
+        `${API_URL}/shopping-list/${generatedList.data.id}`,
+        {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        }
+      );
+
+      const newList = fullListResponse.data;
 
       setShoppingLists((prev) => [...prev, newList]);
       return newList;
     } catch (err) {
       console.error("Erreur lors de la génération de la liste de courses à partir des recettes:", err);
+      throw err;
+    }
+  }
+
+  async function addRecipeToShoppingList(dto) {
+    try {
+
+      const generatedList = await axios.post(
+        `${API_URL}/shopping-list/add-ingredient-from-recipe`,
+        dto,
+        {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        }
+      );
+
+      const fullListResponse = await axios.get(
+        `${API_URL}/shopping-list/${generatedList.data.id}`,
+        {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        }
+      );
+
+      const fullList = fullListResponse.data;
+
+      setShoppingLists((prevLists) => {
+        const exists = prevLists.some((list) => list.id === fullList.id);
+        if (exists) {
+          return prevLists.map((list) =>
+            list.id === fullList.id ? fullList : list
+          );
+        } else {
+          return [...prevLists, fullList];
+        }
+      });
+
+      return fullList;
+      
+    } catch (err) {
+      console.error("Erreur lors de l ajout a une liste de course:", err);
       throw err;
     }
   }
@@ -205,6 +251,7 @@ export function ShoppingListProvider({ children }) {
         addIngredientToShoppingList,
         updateIngredientToShoppingList,
         generateShoppingListFromRecipes,
+        addRecipeToShoppingList,
       }}
     >
       {children}

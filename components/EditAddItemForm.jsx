@@ -176,8 +176,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   pickerContainer: {
-    borderWidth: 1,
-    borderColor: '#ccc',
+    borderWidth: 2,
+    borderColor: 'rgb(180, 180, 230)',
     borderRadius: 8,
     marginBottom: 20,
     overflow: 'hidden',

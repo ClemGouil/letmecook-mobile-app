@@ -10,6 +10,16 @@ import ServingsControl from '../components/ServingsControl'
 
 const GenerateFromRecipeModal = ({ visible, onSubmit, onCancel }) => {
 
+  React.useEffect(() => {
+    if (visible) {
+      setSearch('');
+      setSelectedRecipes([]);
+      setRecipeSelected(false);
+      setActiveTab('privateRecipes');
+      setSubActiveTab(groups[0]?.id);
+    }
+  }, [visible, groups]);
+
   const [search, setSearch] = React.useState('');
 
   const { privateRecipes, groupRecipes, loadGroupRecipes} = useRecipe();

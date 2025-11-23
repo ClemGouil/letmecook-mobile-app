@@ -65,7 +65,7 @@ export default function ShoppingListScreen() {
       const newList = await generateShoppingListFromRecipes(selectedRecipes, user.id)
       console.log(newList);
       setShowModalGenerateFromRecipe(false);
-      // navigation.navigate('ShoppingListDetail', { shoppingListId: newList.id });
+      navigation.navigate('ShoppingListDetail', { shoppingListId: newList.id });
     } catch (err) {
       console.error('Erreur lors de la création de la liste :', err);
     }

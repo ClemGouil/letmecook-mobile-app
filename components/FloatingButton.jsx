@@ -1,10 +1,11 @@
 import React from 'react';
 import { TouchableOpacity, StyleSheet, Text } from 'react-native';
+import Icon from 'react-native-vector-icons/Ionicons';
 
-const FloatingButton = ({ onPress }) => {
+const FloatingButton = ({ onPress, iconName = "add-outline" , iconSize = 20, iconColor = "black" }) => {
   return (
     <TouchableOpacity style={styles.fab} onPress={onPress}>
-      <Text style={styles.fabText}>+</Text>
+      <Icon name={iconName} size={iconSize} color={iconColor}/>
     </TouchableOpacity>
   );
 };
@@ -25,12 +26,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 3,
-    zIndex: 100
-  },
-  fabText: {
-    fontSize: 24,
-    color: 'black',
-    fontWeight: 'bold',
   },
 });
 

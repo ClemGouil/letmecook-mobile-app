@@ -6,6 +6,7 @@ import SelectRecipeModal from '../components/SelectRecipeModal';
 import { useUser } from '../hooks/useUser'
 import { useRecipe } from '../hooks/useRecipe'
 import { useNavigation} from '@react-navigation/native';
+import FloatingButton  from '../components/FloatingButton';
 
 export default function MealPlanningScreen() {
 
@@ -184,6 +185,10 @@ export default function MealPlanningScreen() {
     navigation.navigate('RecipeDetail', { recipeId : recipeId });
   };
 
+  const handleGenerateShoppingList = () => {
+    
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.bannerTop}>
@@ -246,6 +251,11 @@ export default function MealPlanningScreen() {
         onSubmit={handleAddPlanning}
         onCancel={() => {setShowModalSelectRecipe(false)}}
       />
+
+      <FloatingButton
+        onPress={handleGenerateShoppingList}
+        iconName="receipt-outline"
+      ></FloatingButton>
 
     </View>
     

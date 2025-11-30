@@ -4,26 +4,41 @@ import Icon from 'react-native-vector-icons/Ionicons';
 
 import { useUser } from '../hooks/useUser'
 import { useRecipe } from '../hooks/useRecipe'
+import { useGroup } from '../hooks/useGroup';
 import { useShoppingList } from '../hooks/useShoppingList';
 import { useNavigation} from '@react-navigation/native';
 import AddIngredientToListModal  from '../components/AddIngredientToListModal';
+import SelectGroupForm from '../components/SelectGroupForm';
+import ReusableModal from '../components/ReusableModal';
 
 export default function RecipeDetailScreen({ route }) {
 
   const navigation = useNavigation();
   const { user } = useUser();
+  const { groups} = useGroup();
 
-  const { privateRecipes, groupRecipes } = useRecipe();
-  const recipe = privateRecipes.find(r => r.id === route.params.recipeId) || groupRecipes.find(r => r.recipe.id === route.params.recipeId).recipe ;
+  const { publicRecipes, privateRecipes, groupRecipes, addRecipe, addIngredientToRecipe, addInstructionToRecipe, deleteRecipe ,shareRecipeWithGroup, unshareRecipeFromGroup} = useRecipe();
+  const recipe = privateRecipes.find(r => r.id === route.params.recipeId) || groupRecipes.find(r => r.recipe.id === route.params.recipeId)?.recipe || publicRecipes.find(r => r.id === route.params.recipeId) ;
+
+  if (!recipe) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <Text>Recette introuvable</Text>
+      </View>
+    );
+  }
 
   const isGroupRecipe = route.params.isGroupRecipe;
   const isOwner = route.params.isOwner;
+  const isPublic = route.params.isPublic;
+  const groupId = route.params.groupId;
 
   const { shoppingLists, addRecipeToShoppingList} = useShoppingList();
 
   const [activeTab, setActiveTab] = useState('ingredients');
   const [servings, setServings] = useState(recipe.servings);
   const [showModal, setShowModal] = useState(false);
+  const [showGroupSelector, setShowGroupSelector] = useState(false);
 
   const getScaledQuantity = (originalQuantity) => {
     const ratio = servings / recipe.servings;
@@ -70,8 +85,86 @@ export default function RecipeDetailScreen({ route }) {
     }
   };
 
-  const handleShare = (recipeId) => {
+  const handleShare = async (recipeId, groupId) => {
+    try {
+      await shareRecipeWithGroup(
+        groupId,
+        recipeId, 
+        user.id
+      );
+      navigation.navigate('RecipeMain');
+    } catch (err) {
+      console.error('Erreur lors du partage de la recette :', err);
+    }
+  };
+
+  const handleUnshare = async (recipeId, groupId) => {
+    try {
+      await unshareRecipeFromGroup(
+        groupId,
+        recipeId, 
+        user.id
+      );
+      navigation.navigate('RecipeMain');
+    } catch (err) {
+      console.error('Erreur lors du departage de la recette :', err);
+    }
+  };
+
+  const handleClone = async (recipe) => {
+    try {
+      const dto = {
+        name: recipe.name,
+        category : recipe.category,
+        prepTime : recipe.prepTime,
+        cookTime : recipe.cookTime,
+        servings : recipe.servings,
+        imageUrl : recipe.imageUrl,
+        ownerId :  user.id 
+      };
+
+      const created = await addRecipe(dto);
+      const recipeId = created.id;
+      
+      for (const ing of recipe.ingredients) {
+        await addIngredientToRecipe({
+          recipeId,
+          ingredientId: ing.ingredient.id,
+          quantity: ing.quantity,
+          unitId: ing.unit.id,
+        });
+      }
+
+      for (const inst of recipe.instructions) {
+        await addInstructionToRecipe({
+          recipeId,
+          stepNumber: inst.stepNumber,
+          description: inst.description,
+        });
+      }
+
+      navigation.navigate('RecipeDetail', {
+        recipeId,
+        groupId: null,
+        isOwner : true,
+        isGroupRecipe: false
+      });
+    } catch (err) {
+      console.error(err);
+      alert("Erreur lors de la mise à jour de la recette");
+    }
     
+  };
+
+  const handleDelete = async (recipeId) => {
+    try {
+      await deleteRecipe(
+        recipeId
+      );
+      navigation.navigate('RecipeMain');
+    } catch (err) {
+      console.error('Erreur lors du departage de la recette :', err);
+    }
   };
 
   return (
@@ -80,33 +173,59 @@ export default function RecipeDetailScreen({ route }) {
       <View style={styles.cardContainer}>
         <Text style={styles.title}>{recipe.name}</Text>
         <Image source={recipe.imageUrl} style={styles.image} />
-        {!isGroupRecipe && (
-        <TouchableOpacity
-          style={styles.editButton}
-          onPress={() => handleEdit(recipe.id)}
-        >
-          <Text style={styles.editButtonText}>Modifier</Text>
-        </TouchableOpacity>
+        {!isGroupRecipe && isOwner && (
+            <TouchableOpacity
+              style={styles.editButton}
+              onPress={() => handleEdit(recipe.id)}
+            >
+              <View style={styles.buttonContent}>
+                <Icon name="create-outline" size={18} color="rgb(180, 180, 230)" />
+                <Text style={styles.editButtonText}>Modifier</Text>
+              </View>
+            </TouchableOpacity>
         )}
-        {!isGroupRecipe && (
-        <TouchableOpacity
-          style={styles.editButton}
-          onPress={() => handleShare(recipe.id)}
-        >
-          <Text style={styles.editButtonText}>Partager</Text>
-        </TouchableOpacity>
+        {!isGroupRecipe && isOwner && (
+          <TouchableOpacity
+            style={styles.editButton}
+            onPress={() => setShowGroupSelector(true)}
+          >
+            <View style={styles.buttonContent}>
+              <Icon name="share-social-outline" size={18} color="rgb(180, 180, 230)" />
+              <Text style={styles.editButtonText}>Partager</Text>
+            </View>
+          </TouchableOpacity>
         )}
         {isGroupRecipe && isOwner && (
           <TouchableOpacity
             style={styles.editButton}
-            onPress={() => handleUnshare(recipe.id)}
+            onPress={() => handleUnshare(recipe.id, groupId)}
           >
-            <Text style={styles.editButtonText}>Retirer du groupe</Text>
+            <View style={styles.buttonContent}>
+              <Icon name="remove-circle-outline" size={18} color="rgb(180, 180, 230)" />
+              <Text style={styles.editButtonText}>Retirer du groupe</Text>
+            </View>
+          </TouchableOpacity>
+        )}
+        {isPublic && !isOwner && !isGroupRecipe && (
+          <TouchableOpacity
+            style={styles.editButton}
+            onPress={() => handleClone(recipe)}
+          >
+            <View style={styles.buttonContent}>
+              <Icon name="copy-outline" size={18} color="rgb(180, 180, 230)" />
+              <Text style={styles.editButtonText}>Cloner</Text>
+            </View>
+          </TouchableOpacity>
+        )}
+        {!isPublic && isOwner && !isGroupRecipe && ( 
+          <TouchableOpacity style={styles.editButton} onPress={() => handleDelete(recipe.id)}>
+            <View style={styles.buttonContent}>
+            <Icon name="trash-outline" size={18} color="rgb(180, 180, 230)" />
+            <Text style={styles.editButtonText}>Supprimer</Text>
+            </View>
           </TouchableOpacity>
         )}
       </View>
-
-      
 
       <View style={styles.timeContainer}>
         <View style={styles.timeSection}>
@@ -198,6 +317,17 @@ export default function RecipeDetailScreen({ route }) {
       onClose={handleAddRecipeToShoppingList}
       shoppingLists={shoppingLists}
     />
+
+    <ReusableModal
+        visible={showGroupSelector}
+        onClose={() => {setShowGroupSelector(false);}}
+      >
+        <SelectGroupForm
+          groups={groups}
+          onSave={(selectedGroupId) => { handleShare(recipe.id, selectedGroupId); setShowGroupSelector(false);}}
+          onCancel={() => {setShowGroupSelector(false);}}
+        />
+    </ReusableModal>
     </>
   );
 }
@@ -366,6 +496,12 @@ const styles = StyleSheet.create({
   addToShoppingListButtonText: {
     color: 'rgb(180, 180, 230)',
     fontWeight: 'bold',
+  },
+  buttonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6
   },
   editButton: {
     paddingVertical: 12,

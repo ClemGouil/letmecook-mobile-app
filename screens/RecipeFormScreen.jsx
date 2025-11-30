@@ -10,14 +10,30 @@ import EditAddItemForm from '../components/EditAddItemForm'
 import * as ImagePicker from 'expo-image-picker';
 import ServingsControl from '../components/ServingsControl'
 import { Slider } from 'react-native-elements';
+import { useUser } from '../hooks/useUser';
 
 export default function RecipeFormScreen({ route }) {
 
   const navigation = useNavigation();
 
-  const { privateRecipes, ingredients, units, addIngredientToRecipe, deleteAllIngredientsFromRecipe, addInstructionToRecipe, deleteAllInstructionsFromRecipe, updateRecipe} = useRecipe();
+  const { privateRecipes, ingredients, units, addRecipe, addIngredientToRecipe, deleteAllIngredientsFromRecipe, addInstructionToRecipe, deleteAllInstructionsFromRecipe, updateRecipe} = useRecipe();
   const {  uploadImage } = useImage();
-  const recipe = privateRecipes.find(r => r.id === route.params.recipeId);
+  const { user } = useUser();
+
+  const isNew = !route.params?.recipeId;
+  const recipe = isNew
+  ? {
+      id: null,
+      name: "",
+      category: "",
+      prepTime: 0,
+      cookTime: 0,
+      servings: 1,
+      imageUrl: null,
+      ingredients: [],
+      instructions: [],
+    }
+  : privateRecipes.find(r => r.id === route.params.recipeId);
 
   const [title, setTitle] = useState(recipe.name);
   const [category, setCategory] = useState(recipe.category);
@@ -26,24 +42,21 @@ export default function RecipeFormScreen({ route }) {
   const [servings, setServings] = useState(recipe.servings);
   const [imageUrl, setImageUrl] = useState(recipe.imageUrl);
 
-  const [localIngredients, setLocalIngredients] = useState([...recipe.ingredients]);
-  const [localInstructions, setLocalInstructions] = useState([...recipe.instructions]);
+  const [localIngredients, setLocalIngredients] = useState(recipe.ingredients ?? []);
+  const [localInstructions, setLocalInstructions] = useState(recipe.instructions ?? []);
 
   const [editingItem, setEditingItem] = React.useState(null);
   const [addingItem, setAddingItem] = React.useState(false);
 
   const [newInstructionText, setNewInstructionText] = useState("");
   const [addingInstruction, setAddingInstruction] = useState(false);
-
-  React.useEffect(() => {
-    console.log("recette recu :", recipe);
-  }, [recipe]);
   
   const handleEdit = (item) => setEditingItem(item);
 
   const handleSaveRecipe = async () => {
     try {
       let finalImageUrl = imageUrl;
+      let recipeId = recipe?.id;
 
       if (imageUrl && imageUrl.startsWith("file://")) {
         finalImageUrl = await uploadImage(imageUrl);
@@ -55,15 +68,21 @@ export default function RecipeFormScreen({ route }) {
         cookTime,
         servings,
         imageUrl : finalImageUrl,
+        ownerId: isNew ? user.id : recipe.ownerId
       };
-      await updateRecipe(recipe.id, dto);
 
-      await deleteAllIngredientsFromRecipe(recipe.id);
-      await deleteAllInstructionsFromRecipe(recipe.id);
-
+      if (isNew) {
+        const created = await addRecipe(dto);
+        recipeId = created.id;
+      } else {
+        await updateRecipe(recipe.id, dto);
+        await deleteAllIngredientsFromRecipe(recipe.id);
+        await deleteAllInstructionsFromRecipe(recipe.id);
+      }
+      
       for (const ing of localIngredients) {
         await addIngredientToRecipe({
-          recipeId: recipe.id,
+          recipeId,
           ingredientId: ing.ingredient.id,
           quantity: ing.quantity,
           unitId: ing.unit.id,
@@ -73,7 +92,7 @@ export default function RecipeFormScreen({ route }) {
       for (let i = 0; i < localInstructions.length; i++) {
         const inst = localInstructions[i];
         await addInstructionToRecipe({
-          recipeId: recipe.id,
+          recipeId,
           stepNumber: inst.stepNumber,
           description: inst.description,
         });
@@ -259,7 +278,7 @@ export default function RecipeFormScreen({ route }) {
         <FlatList
               scrollEnabled={false}
               data={localIngredients}
-              keyExtractor={(item) => item.ingredientId}
+              keyExtractor={(item) => item.id.toString()}
               renderItem={({ item }) => (
                 <View style={styles.ingredientItem}>
                   <TouchableOpacity style={styles.ingredientInfo} onPress={() => handleEdit(item)}>
@@ -286,7 +305,7 @@ export default function RecipeFormScreen({ route }) {
           <FlatList
               scrollEnabled={false}
               data={localInstructions}
-              keyExtractor={(item) => item.stepNumber.toString()}
+              keyExtractor={(item) => item.id.toString()}
               renderItem={({ item }) => (
                 <View style={styles.instructionItem}>
                   <View style={styles.instructionHeader}>
@@ -307,7 +326,7 @@ export default function RecipeFormScreen({ route }) {
 
           {addingInstruction && (
             <View style={styles.newInstructionContainer}>
-              <Text style={styles.subTitleText}>Étape {recipe.instructions.length + 1}</Text>
+              <Text style={styles.subTitleText}>Étape {recipe.instructions.length + 2}</Text>
               
               <TextInput
                 style={styles.input}

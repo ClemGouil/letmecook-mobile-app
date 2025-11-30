@@ -7,6 +7,7 @@ import { useNavigation} from '@react-navigation/native';
 
 import SearchBar from '../components/SearchBar';
 import RecipeCard from '../components/RecipeCard';
+import FloatingButton  from '../components/FloatingButton';
 
 export default function RecipesScreen() {
 
@@ -21,13 +22,8 @@ export default function RecipesScreen() {
   const [subActiveTab, setSubActiveTab] = useState(groups[0].id);
 
   React.useEffect(() => {
-    console.log("Recettes :", privateRecipes);
-  }, [privateRecipes]);
-
-  React.useEffect(() => {
     if (activeTab === "groupRecipes" && subActiveTab) {
       loadGroupRecipes(subActiveTab);
-      console.log(groupRecipes)
     }
   }, [activeTab, subActiveTab]);
 
@@ -50,6 +46,7 @@ export default function RecipesScreen() {
 
     navigation.navigate('RecipeDetail', {
       recipeId: isGroup ? item.recipe.id : item.id,
+      groupId: isGroup ? item.groupId : null,
       isOwner,
       isGroupRecipe: isGroup
     });
@@ -140,6 +137,8 @@ export default function RecipesScreen() {
           }
         </>
       )}
+      
+      <FloatingButton onPress={() => navigation.navigate('RecipeForm')}/>
 
     </View>
   );

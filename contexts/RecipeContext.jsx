@@ -16,6 +16,7 @@ export function RecipeProvider({ children }) {
 
   useEffect(() => {
     if (user) {
+      loadPublicRecipes(user.id);
       loadPrivateRecipes(user.id);
       loadIngredients();
       loadUnits();
@@ -57,7 +58,11 @@ export function RecipeProvider({ children }) {
           Authorization: `Bearer ${token}`,
         },
       });
-      setGroupRecipes(response.data);
+
+      const data = response.data.map(r => ({
+      ...r, groupId: groupId})
+      );
+      setGroupRecipes(data);
     } catch (err) {
       console.error("Erreur lors du chargement des recettes de groupe:", err);
     }
@@ -224,6 +229,41 @@ export function RecipeProvider({ children }) {
     }
   }
 
+  async function shareRecipeWithGroup(groupId, recipeId, userId) {
+    try {
+      
+      const response = await axios.post(`${API_URL}/group-recipes/${groupId}/recipes/${recipeId}`, null, {
+        params: { userId },
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const newSharedRecipe = response.data;
+
+      loadGroupRecipes(groupId);
+
+      return newSharedRecipe;
+
+    } catch (err) {
+      console.error(err);
+      throw err;
+    }
+  }
+
+  async function unshareRecipeFromGroup(groupId, recipeId, userId) {
+    try {
+      await axios.delete(`${API_URL}/group-recipes/${groupId}/recipes/${recipeId}`, {
+          params: { userId },
+          headers: { Authorization: `Bearer ${token}` }
+      });
+
+      loadGroupRecipes(groupId);
+
+    } catch (err) {
+      console.error(err);
+      throw err;
+    }
+  }
+
   return (
     <RecipeContext.Provider
       value={{
@@ -242,6 +282,8 @@ export function RecipeProvider({ children }) {
         deleteRecipe,
         addIngredientToRecipe,
         addInstructionToRecipe,
+        shareRecipeWithGroup,
+        unshareRecipeFromGroup
       }}
     >
       {children}

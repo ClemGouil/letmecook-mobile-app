@@ -4,7 +4,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import { Text, View, TouchableOpacity, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 
-import HomeScreen from '../screens/HomeScreen';
+import HomeStack from '../navigation/HomeStack';
 import RecipeStack from '../navigation/RecipeStack';
 import PlanningStack from '../navigation/PlanningStack';
 import ShoppingListStack from '../navigation/ShoppingListStack';
@@ -55,7 +55,7 @@ export default function BottomTabNavigator() {
         },
       })}
     >
-      <Tab.Screen name="Accueil" component={HomeScreen} />
+      <Tab.Screen name="Accueil" component={HomeStack} />
       <Tab.Screen name="Recettes" component={RecipeStack} />
       <Tab.Screen name="Planning" component={PlanningStack} />
       <Tab.Screen name="ListeDeCourse" component={ShoppingListStack} />

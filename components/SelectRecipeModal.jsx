@@ -36,7 +36,6 @@ const SelectRecipeModal = ({ visible, availableMealTypes, onSubmit, onCancel }) 
   React.useEffect(() => {
     if (activeTab === "groupRecipes" && subActiveTab) {
       loadGroupRecipes(subActiveTab);
-      console.log(groupRecipes)
     }
   }, [activeTab, subActiveTab]);
 

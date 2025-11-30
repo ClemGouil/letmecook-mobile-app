@@ -35,7 +35,6 @@ export default function ShoppingListScreen() {
   };
 
   const handleAdd = async (name) => {
-    console.log(name);
     try {
       const newList = await addShoppingList(
         { name,
@@ -51,7 +50,6 @@ export default function ShoppingListScreen() {
   };
 
   const handleDelete = async (id) => {
-    console.log(id);
     try {
       await deleteShoppingList(id);
     } catch (err) {
@@ -60,10 +58,8 @@ export default function ShoppingListScreen() {
   };
 
   const handleGenerateFromRecipe = async (selectedRecipes) => {
-    console.log(selectedRecipes);
     try {
       const newList = await generateShoppingListFromRecipes(selectedRecipes, user.id)
-      console.log(newList);
       setShowModalGenerateFromRecipe(false);
       navigation.navigate('ShoppingListDetail', { shoppingListId: newList.id });
     } catch (err) {
@@ -109,9 +105,6 @@ export default function ShoppingListScreen() {
           </TouchableOpacity>
           <TouchableOpacity style={styles.button} onPress={() => {setShowModalGenerateFromRecipe(true); setAddingShoppingList(false);}}>
               <Text style={styles.buttonText}>Générer une liste de course à partir de recettes</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.button} onPress={() => {setAddingShoppingList(false);}}>
-              <Text style={styles.buttonText}>Générer une liste de course à partir du planning</Text>
           </TouchableOpacity>
       </View>
       </ReusableModal>

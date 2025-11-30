@@ -33,15 +33,10 @@ const GenerateFromRecipeModal = ({ visible, onSubmit, onCancel }) => {
       setSubActiveTab(groups[0].id);
     }
   }, [groups]);
-
-  React.useEffect(() => {
-      console.log("Recettes :", privateRecipes);
-    }, [privateRecipes]);
   
   React.useEffect(() => {
     if (activeTab === "groupRecipes" && subActiveTab) {
       loadGroupRecipes(subActiveTab);
-      console.log(groupRecipes)
     }
   }, [activeTab, subActiveTab]);
 

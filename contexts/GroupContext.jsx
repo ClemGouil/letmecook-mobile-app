@@ -62,7 +62,6 @@ export function GroupProvider ({ children }) {
   }
 
   async function deleteGroup(id) {
-    console.log('ICI')
     try {
       await axios.delete(`${API_URL}/group/${id}`, {
         headers: { Authorization: `Bearer ${token}` },

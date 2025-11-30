@@ -80,7 +80,6 @@ export default function ProfileScreen() {
       }
       
       setEditedUser({ ...editedUser, profilePhotoUrl: finalImageUrl })
-      console.log(user.id)
       await updateUser(user.id, editedUser);
 
       setEditingProfile(!editingProfile)
@@ -395,7 +394,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 10,
     width: '100%',
-    backgroundColor: '#fff',
+    backgroundColor: '#858585',
     elevation: 2,
     borderBottomWidth: 0.3,
     borderColor: '#ddd',

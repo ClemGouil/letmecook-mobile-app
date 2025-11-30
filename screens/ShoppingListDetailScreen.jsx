@@ -34,7 +34,6 @@ export default function ShoppingListDetailScreen({ route }) {
 
   const handleToggleChecked = async (item) => {
     const updatedItem = { ...item, checked: !item.checked };
-    console.log("Update :", updatedItem);
     await updateIngredientToShoppingList( item.id ,{
       shoppingListId: shoppingList.id,
       ingredientId: updatedItem.ingredient.id,
@@ -46,7 +45,6 @@ export default function ShoppingListDetailScreen({ route }) {
   };
 
   const handleSave = async (updatedItem) => {
-    console.log("Update :", updatedItem);
     await updateIngredientToShoppingList(updatedItem.id ,{
       shoppingListId: shoppingList.id,
       ingredientId: updatedItem.ingredient.id,
@@ -58,7 +56,6 @@ export default function ShoppingListDetailScreen({ route }) {
   };
 
   const handleAdd = async (item) => {
-    console.log("Ajouter :", item);
     await addIngredientToShoppingList({
       shoppingListId: shoppingList.id,
       ingredientId: item.ingredient.id,

@@ -56,7 +56,6 @@ export default function GroupScreen() {
     }
 
     const handleAdd = async (name) => {
-      console.log(name);
       try {
         const newGroup = await addGroup(
           { name,
@@ -490,7 +489,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 10,
     width: '100%',
-    backgroundColor: '#fff',
+    backgroundColor: '#858585',
     elevation: 2,
     borderBottomWidth: 0.3,
     borderColor: '#ddd',

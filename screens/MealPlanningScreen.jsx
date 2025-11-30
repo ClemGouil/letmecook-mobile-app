@@ -7,6 +7,8 @@ import { useUser } from '../hooks/useUser'
 import { useRecipe } from '../hooks/useRecipe'
 import { useNavigation} from '@react-navigation/native';
 import FloatingButton  from '../components/FloatingButton';
+import ReusableModal from '../components/ReusableModal';
+import {Calendar, LocaleConfig} from 'react-native-calendars';
 
 export default function MealPlanningScreen() {
 
@@ -21,10 +23,37 @@ export default function MealPlanningScreen() {
   const [recipesMap, setRecipesMap] = useState({});
 
   const [showModalSelectRecipe, setShowModalSelectRecipe] = useState(false);
+  const [generatingShoppingList, setGeneratingShoppingList] = React.useState(false);
+  const [showModalGeneratingShoppingListFromRange, setShowModalGeneratingShoppingListFromRange] = React.useState(false);
+
   const [selectedDay, setSelectedDay] = useState(null);
+  const [dateRange, setDateRange] = useState({ start: null, end: null });
 
   const [takenMealTypes, setTakenMealTypes] = useState([]);
   const [availableMealTypes, setAvailableMealTypes] = useState([]);
+
+  LocaleConfig.locales['fr'] = {
+    monthNames: [
+      'Janvier',
+      'Février',
+      'Mars',
+      'Avril',
+      'Mai',
+      'Juin',
+      'Juillet',
+      'Août',
+      'Septembre',
+      'Octobre',
+      'Novembre',
+      'Décembre'
+    ],
+    monthNamesShort: ['Janv.', 'Févr.', 'Mars', 'Avril', 'Mai', 'Juin', 'Juil.', 'Août', 'Sept.', 'Oct.', 'Nov.', 'Déc.'],
+    dayNames: ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'],
+    dayNamesShort: ['Dim.', 'Lun.', 'Mar.', 'Mer.', 'Jeu.', 'Ven.', 'Sam.'],
+    today: "Aujourd'hui"
+  };
+
+  LocaleConfig.defaultLocale = 'fr';
 
   useEffect(() => {
     const start = new Date();
@@ -48,7 +77,6 @@ export default function MealPlanningScreen() {
       const startStr = formatDateToLocalYYYYMMDD(startDate);
       const endStr = formatDateToLocalYYYYMMDD(endDate);
       loadMealPlanning(user.id, startStr, endStr);
-      console.log(mealPlannings);
     }
   }, [user, startDate, endDate]);
 
@@ -173,7 +201,6 @@ export default function MealPlanningScreen() {
   };
 
   const handleDeletePlanning = async (id) => {
-    console.log(id)
     try {
       await deleteMealPlanning(id);
     } catch (err) {
@@ -185,8 +212,49 @@ export default function MealPlanningScreen() {
     navigation.navigate('RecipeDetail', { recipeId : recipeId });
   };
 
-  const handleGenerateShoppingList = () => {
+  const handleGenerateWeekShoppingList = () => {
     
+  };
+
+  const handleGenerateShoppingListFromRange = () => {
+    console.log(dateRange)
+    setShowModalGeneratingShoppingListFromRange(false); 
+    setDateRange({ start: null, end: null });
+  };
+
+  const generateMarkedDates = (start, end) => {
+    if (!start) return {};
+
+    const markedDates = {};
+    let current = new Date(start);
+    const endDate = end ? new Date(end) : null;
+
+    if (!end) {
+      const dateStr = current.toISOString().split('T')[0];
+      markedDates[dateStr] = {
+        selected: true,
+        color: 'rgb(100, 100, 200)',
+        textColor: 'white',
+        borderRadius: 8,
+      };
+      return markedDates;
+    }
+
+    while (current <= endDate) {
+      const dateStr = current.toISOString().split('T')[0];
+      const isStart = dateStr === start;
+      const isEnd = dateStr === end;
+
+      markedDates[dateStr] = {
+        selected: true,
+        color: isStart ? 'rgb(100, 100, 200)' : isEnd ? 'rgb(50, 50, 150)' : 'rgb(180, 180, 230)',
+        textColor: 'white',
+        borderRadius: 8,
+      };
+
+      current.setDate(current.getDate() + 1);
+    }
+    return markedDates;
   };
 
   return (
@@ -252,10 +320,61 @@ export default function MealPlanningScreen() {
         onCancel={() => {setShowModalSelectRecipe(false)}}
       />
 
+      <ReusableModal
+        visible={generatingShoppingList}
+        onClose={() => setGeneratingShoppingList(false)}
+      >
+        <View style={styles.buttonRow}>
+          <TouchableOpacity style={styles.button} onPress={() => { handleGenerateWeekShoppingList; setGeneratingShoppingList(false);}}>
+              <Text style={styles.buttonText}>Générer la liste de course de la semaine</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.button} onPress={() => {setShowModalGeneratingShoppingListFromRange(true); setGeneratingShoppingList(false);}}>
+              <Text style={styles.buttonText}>Générer la liste de course à partir d'une plage</Text>
+          </TouchableOpacity>
+      </View>
+      </ReusableModal>
+
       <FloatingButton
-        onPress={handleGenerateShoppingList}
+        onPress={() => {setGeneratingShoppingList(true);}}
         iconName="receipt-outline"
       ></FloatingButton>
+
+      <ReusableModal
+        visible={showModalGeneratingShoppingListFromRange}
+        onClose={() => {setShowModalGeneratingShoppingListFromRange(false); setDateRange({ start: null, end: null }); }}
+      >
+        <View style={styles.modalContainer}>
+          <Calendar
+            markingType={'period'}
+            markedDates={{
+              ...generateMarkedDates(dateRange.start, dateRange.end),
+            }}
+            onDayPress={(day) => {
+              if (!dateRange.start || (dateRange.start && dateRange.end)) {
+                setDateRange({ start: day.dateString, end: null });
+              } else if (dateRange.start && !dateRange.end) {
+                if (day.dateString >= dateRange.start) {
+                  setDateRange({ ...dateRange, end: day.dateString });
+                } else {
+                  setDateRange({ start: day.dateString, end: null });
+                }
+              }
+            }}
+          />
+          <View style={styles.buttonRowModal}>
+              <TouchableOpacity 
+                style={[styles.saveButton, !(dateRange.start && dateRange.end) && styles.disabledButton]}
+                disabled={!(dateRange.start && dateRange.end)}
+                onPress={handleGenerateShoppingListFromRange}>
+                  <Text style={styles.saveText}>Générer</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.cancelButton} onPress={() => {setShowModalGeneratingShoppingListFromRange(false); setDateRange({ start: null, end: null }); }}>
+                  <Text style={styles.cancelText}>Annuler</Text>
+              </TouchableOpacity>
+          </View>
+        </View>
+      </ReusableModal>
 
     </View>
     
@@ -368,5 +487,68 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     justifyContent: 'center',
     alignItems: 'center',
-  }
+  },
+  modalContainer: {
+    padding: 20,
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    elevation: 5,
+  },
+  buttonRow: {
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'space-around',
+    paddingVertical: 20,
+    backgroundColor: '#fff',
+  },
+  button: {
+    paddingVertical: 12,
+    borderRadius: 8,
+    marginVertical: 2,
+    marginHorizontal: 2,
+    width: '90%',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgb(180, 180, 230)',
+  },
+  buttonText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: 'rgb(180, 180, 230)',
+    textAlign: 'center',
+  },
+  buttonRowModal: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  saveButton: {
+    flex: 1,
+    backgroundColor: 'rgb(100, 100, 200)',
+    paddingVertical: 12,
+    borderRadius: 8,
+    marginRight: 10,
+    alignItems: 'center',
+  },
+  disabledButton: {
+    opacity: 0.6,
+  },
+  cancelButton: {
+    flex: 1,
+    backgroundColor: '#ccc',
+    paddingVertical: 12,
+    borderRadius: 8,
+    marginLeft: 10,
+    alignItems: 'center',
+  },
+  saveText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 16,
+  },
+  cancelText: {
+    color: '#333',
+    fontWeight: '600',
+    fontSize: 16,
+  },
 });

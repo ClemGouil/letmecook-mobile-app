@@ -70,6 +70,11 @@ export default function RecipeDetailScreen({ route }) {
   };
 
   const  handleAddRecipeToShoppingList = async (result) => {
+    if (!result) {
+      setShowModal(false);
+      return;
+    }
+
     try {
       await addRecipeToShoppingList({
         shoppingListId: result.listId,

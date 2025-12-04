@@ -236,7 +236,6 @@ export function ShoppingListProvider({ children }) {
         delete dto.userId;
       }
 
-      console.log("DTO envoyé au backend :", dto);
 
       const generatedList = await axios.post(
         `${API_URL}/shopping-list/add-ingredient-from-recipe`,
@@ -245,7 +244,6 @@ export function ShoppingListProvider({ children }) {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
         }
       );
-      console.log("Réponse backend :", generatedList.data);
 
       const fullListResponse = await axios.get(
         `${API_URL}/shopping-list/${generatedList.data.id}`,

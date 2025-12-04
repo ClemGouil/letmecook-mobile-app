@@ -1,6 +1,7 @@
 import { createContext, useState, useEffect } from "react";
 import axios from "axios";
 import { useUser } from "../hooks/useUser";
+import { useAppContext } from "../hooks/useAppContext";
 
 export const ShoppingListContext = createContext();
 
@@ -11,15 +12,18 @@ export function ShoppingListProvider({ children }) {
   const [units, setUnits] = useState([]);
   const [loading, setLoading] = useState(false);
 
+  const { currentContext } = useAppContext();
   const { user, token } = useUser();
 
   useEffect(() => {
-    if (user) {
-      loadShoppingLists(user.id, null);
+    if (user && currentContext) {
+      const userId = currentContext.type === "user" ? currentContext.id : null;
+      const groupId = currentContext.type === "group" ? currentContext.id : null;
+      loadShoppingLists(userId, groupId);
       loadIngredients();
       loadUnits();
     }
-  }, [user]);
+  }, [user, currentContext]);
 
   const API_URL = "http://192.168.1.13:8080/api";
 
@@ -65,8 +69,20 @@ export function ShoppingListProvider({ children }) {
 
   async function addShoppingList(dto) {
     try {
+
+      if (currentContext?.type === "user") {
+        dto.userId = currentContext.id;
+        delete dto.groupId;
+      } else if (currentContext?.type === "group") {
+        dto.groupId = currentContext.id;
+        delete dto.userId;
+      }
+
+      const params = { adderId: user.id };
+
       const response = await axios.post(`${API_URL}/shopping-list`, dto, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
+        params,
       });
       setShoppingLists((prev) => [...prev, response.data]);
       return response.data;
@@ -80,6 +96,7 @@ export function ShoppingListProvider({ children }) {
     try {
       const response = await axios.put(`${API_URL}/shopping-list/${id}`, dto, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
+        params: { updaterId: user.id },
       });
       const updated = response.data;
       setShoppingLists((prev) =>
@@ -96,6 +113,7 @@ export function ShoppingListProvider({ children }) {
     try {
       await axios.delete(`${API_URL}/shopping-list/${id}`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
+        params: { removerId: user.id },
       });
       setShoppingLists((prev) => prev.filter((list) => list.id !== id));
     } catch (err) {
@@ -115,13 +133,18 @@ export function ShoppingListProvider({ children }) {
       setShoppingLists((prevLists) =>
         prevLists.map((list) => {
           if (list.id === dto.shoppingListId) {
+            const exists = list.items.some(
+              (item) => item.ingredient.id === newIngredient.ingredient.id
+            );
             return {
               ...list,
-              items: list.items.map((item) =>
-                item.ingredient.id === newIngredient.ingredient.id
-                  ? { ...item, ...newIngredient }
-                  : item
-              ),
+              items: exists
+                ? list.items.map((item) =>
+                    item.ingredient.id === newIngredient.ingredient.id
+                      ? { ...item, ...newIngredient }
+                      : item
+                  )
+                : [...list.items, newIngredient],
             };
           }
           return list;
@@ -135,9 +158,9 @@ export function ShoppingListProvider({ children }) {
     }
   }
 
-  async function updateIngredientToShoppingList(id, dto) {
+  async function updateIngredientToShoppingList(dto) {
     try {
-      const response = await axios.put(`${API_URL}/shopping-list-ingredients/${id}`, dto, {
+      const response = await axios.post(`${API_URL}/shopping-list-ingredients/update`, dto, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
 
@@ -166,11 +189,15 @@ export function ShoppingListProvider({ children }) {
     }
   }
 
-  async function generateShoppingListFromRecipes(recipesList, userId, groupId = null) {
+  async function generateShoppingListFromRecipes(recipesList) {
     try {
       const params = {};
-      if (userId) params.userId = userId;
-      if (groupId) params.groupId = groupId;
+      if (currentContext?.type === "user") {
+        params.userId = currentContext.id;
+      } else if (currentContext?.type === "group") {
+        params.groupId = currentContext.id;
+        params.userId = user.id;
+      }
 
       const generatedList = await axios.post(
         `${API_URL}/shopping-list/generate-from-recipes-list`,
@@ -201,6 +228,16 @@ export function ShoppingListProvider({ children }) {
   async function addRecipeToShoppingList(dto) {
     try {
 
+      if (currentContext?.type === "user") {
+        dto.userId = currentContext.id;
+        delete dto.groupId;
+      } else if (currentContext?.type === "group") {
+        dto.groupId = currentContext.id;
+        delete dto.userId;
+      }
+
+      console.log("DTO envoyé au backend :", dto);
+
       const generatedList = await axios.post(
         `${API_URL}/shopping-list/add-ingredient-from-recipe`,
         dto,
@@ -208,6 +245,7 @@ export function ShoppingListProvider({ children }) {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
         }
       );
+      console.log("Réponse backend :", generatedList.data);
 
       const fullListResponse = await axios.get(
         `${API_URL}/shopping-list/${generatedList.data.id}`,

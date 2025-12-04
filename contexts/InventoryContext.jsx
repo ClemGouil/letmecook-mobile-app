@@ -1,6 +1,7 @@
 import { createContext, useState, useEffect } from "react";
 import axios from "axios";
 import { useUser } from "../hooks/useUser";
+import { useAppContext } from "../hooks/useAppContext";
 
 export const InventoryContext = createContext();
 
@@ -10,15 +11,18 @@ export function InventoryProvider({ children }) {
   const [ingredients, setIngredients] = useState([]);
   const [units, setUnits] = useState([]);
 
+  const { currentContext } = useAppContext();
   const { user, token } = useUser();
 
    useEffect(() => {
-    if (user) {
-      loadInventory(user.id, null);
+    if (user && currentContext) {
+      const userId = currentContext.type === "user" ? currentContext.id : null;
+      const groupId = currentContext.type === "group" ? currentContext.id : null;
+      loadInventory(userId, groupId);
       loadIngredients();
       loadUnits();
     }
-  }, [user]);
+  }, [user, currentContext]);
 
   const API_URL = "http://192.168.1.13:8080/api";
 

@@ -2,27 +2,36 @@ import * as React from 'react';
 import { Text, View, StyleSheet, FlatList, Keyboard, TouchableOpacity } from 'react-native';
 import { useInventory } from '../hooks/useInventory';
 import { useUser } from '../hooks/useUser'
+import { useAppContext } from '../hooks/useAppContext';
 
 import SearchBar from '../components/SearchBar';
 import InventoryItemCard from '../components/InventoryItemCard';
 import EditAddItemForm from '../components/EditAddItemForm';
 import ReusableModal from '../components/ReusableModal';
 import FloatingButton  from '../components/FloatingButton';
+import ContextSelector from '../components/ContextSelector';
 
 export default function InventoryScreen() {
 
   const [search, setSearch] = React.useState('');
 
   const { user} = useUser();
+  const { currentContext } = useAppContext();
+
+  const screenTitle = !currentContext
+  ? "Inventaire"
+  : currentContext.type === "user"
+    ? "Mon Inventaire"
+    : `Inventaire de ${currentContext.name}`;
 
   const { inventory, units, ingredients, updateItem, addItem, deleteItem } = useInventory();
 
   const [editingItem, setEditingItem] = React.useState(null);
   const [addingItem, setAddingItem] = React.useState(false);
 
-  const filteredInventoryItems = inventory.items.filter((i) =>
+  const filteredInventoryItems = inventory?.items?.filter((i) =>
     i.ingredient.name.toLowerCase().includes(search.toLowerCase())
-  );
+  ) || [];
 
   const handleEdit = (item) => setEditingItem(item);
 
@@ -45,7 +54,6 @@ export default function InventoryScreen() {
   };
 
   const handleAdd = async (item) => {
-    console.log("Ajouter :", item);
     await addItem({
       inventoryId: inventory.id,
       ingredientId: item.ingredient.id,
@@ -58,6 +66,12 @@ export default function InventoryScreen() {
 
   return (
     <View style={styles.container}>
+
+      <View style={styles.headerRow}>
+        <Text style={styles.title}>{screenTitle}</Text>
+        <ContextSelector />
+      </View>
+
       <View style={styles.searchContainer}>
         <SearchBar search={search} setSearch={setSearch} />
       </View>
@@ -120,9 +134,21 @@ export default function InventoryScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: 20,
+    marginTop: 10,
     flex: 1,
     padding: 8,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
+    marginBottom: 10,
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#333',
   },
   searchContainer: {
     alignItems: 'center',

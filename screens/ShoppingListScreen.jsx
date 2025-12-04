@@ -3,6 +3,7 @@ import { Text, View, StyleSheet, FlatList, TouchableOpacity } from 'react-native
 import { useNavigation} from '@react-navigation/native';
 import { useShoppingList } from '../hooks/useShoppingList';
 import { useUser } from '../hooks/useUser'
+import { useAppContext } from '../hooks/useAppContext';
 
 import SearchBar from '../components/SearchBar';
 import ShoppingListCard from '../components/ShoppingListCard';
@@ -10,12 +11,21 @@ import FloatingButton  from '../components/FloatingButton';
 import ReusableModal from '../components/ReusableModal';
 import ChooseNameModal from '../components/ChooseNameModal';
 import GenerateFromRecipeModal from '../components/GenerateFromRecipeModal';
+import ContextSelector from '../components/ContextSelector';
 
 export default function ShoppingListScreen() {
 
   const navigation = useNavigation();
 
   const { user} = useUser();
+
+  const { currentContext } = useAppContext();
+
+  const screenTitle = !currentContext
+  ? "Listes de courses"
+  : currentContext.type === "user"
+    ? "Mes listes de courses"
+    : `Listes de ${currentContext.name}`;
 
   const [search, setSearch] = React.useState('');
   const [addingShoppingList, setAddingShoppingList] = React.useState(false);
@@ -59,7 +69,7 @@ export default function ShoppingListScreen() {
 
   const handleGenerateFromRecipe = async (selectedRecipes) => {
     try {
-      const newList = await generateShoppingListFromRecipes(selectedRecipes, user.id)
+      const newList = await generateShoppingListFromRecipes(selectedRecipes)
       setShowModalGenerateFromRecipe(false);
       navigation.navigate('ShoppingListDetail', { shoppingListId: newList.id });
     } catch (err) {
@@ -69,6 +79,11 @@ export default function ShoppingListScreen() {
 
   return (
     <View style={styles.container}>
+      <View style={styles.headerRow}>
+        <Text style={styles.title}>{screenTitle}</Text>
+        <ContextSelector />
+      </View>
+
       <View style={styles.searchContainer}>
         <SearchBar search={search} setSearch= {setSearch}/>
       </View>
@@ -129,9 +144,21 @@ export default function ShoppingListScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    marginTop:20,
+    marginTop:10,
     flex: 1,
     padding: 8,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
+    marginBottom: 10,
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#333',
   },
   searchContainer: {
     alignItems: 'center',

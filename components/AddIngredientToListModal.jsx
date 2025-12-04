@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, Modal, TouchableOpacity, FlatList, Image, Button, StyleSheet, Switch } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import ServingsControl from '../components/ServingsControl'
+import ContextSelector from '../components/ContextSelector';
 
 const AddIngredientToListModal = ({ visible, onClose, data, shoppingLists }) => {
   const [selectedListId, setSelectedListId] = useState('__new__');
@@ -69,6 +70,7 @@ const AddIngredientToListModal = ({ visible, onClose, data, shoppingLists }) => 
           </TouchableOpacity>
 
           <View style={styles.content}>
+            <ContextSelector />
             <Text style={styles.subtitle} >Choisir une liste de courses</Text>
             <View style={styles.pickerContainer}>
               <Picker

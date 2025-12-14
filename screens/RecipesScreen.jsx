@@ -52,6 +52,11 @@ export default function RecipesScreen() {
     });
   };
 
+  const getOwnerById = (groupMembers, ownerId) => {
+    const member = groupMembers.find(member => member.user.id === ownerId);
+    return member ? member.user : null;
+  };
+
   return (
     <View style={styles.container}>
 
@@ -121,13 +126,19 @@ export default function RecipesScreen() {
               <FlatList
                 data={filteredGroupRecipes}
                 keyExtractor={(recipe) => recipe.id.toString()}
-                renderItem={({ item }) => (
-                  <RecipeCard
-                    recipe={item.recipe}
-                    onPress={() => handlePressRecipe(item, true)}
-                    width={CARD_WIDTH}
-                  />
-                )}
+                renderItem={({ item }) => {
+                  const group = groups.find(g => g.id === item.groupId);
+                  const owner = group ? getOwnerById(group.members, item.recipe.ownerId) : null;
+                  return (
+                    <RecipeCard
+                      recipe={item.recipe}
+                      onPress={() => handlePressRecipe(item, true)}
+                      width={CARD_WIDTH}
+                      isGroup={true}
+                      owner={owner}
+                    />
+                  );
+                }}
                 numColumns={2}
                 columnWrapperStyle={styles.row}
                 contentContainerStyle={styles.list}
@@ -144,7 +155,7 @@ export default function RecipesScreen() {
   );
 }
 
-const CARD_MARGIN = 6;
+const CARD_MARGIN = 4;
 const CARD_WIDTH = (Dimensions.get('window').width / 2) - (CARD_MARGIN * 3);
 
 const styles = StyleSheet.create({
@@ -161,6 +172,7 @@ const styles = StyleSheet.create({
   },
   row: {
     justifyContent: 'space-between',
+    gap: 8,
   },
   image: {
     width: '100%',

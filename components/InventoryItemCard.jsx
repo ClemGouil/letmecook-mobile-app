@@ -15,7 +15,7 @@ const InventoryItemCard = ({ item, onEdit, onDelete }) => (
 
     <View style={styles.imageContainer}>
       <Image
-        source={item.ingredient.imageUrl}
+        source={{ uri: item.ingredient.imageUrl}}
         style={styles.ingredientImage}
         accessibilityLabel={item.ingredient.name}
       />

@@ -2,8 +2,6 @@ import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import ShoppingListScreen from '../screens/ShoppingListScreen';
 import ShoppingListDetailScreen from '../screens/ShoppingListDetailScreen';
-import { TouchableOpacity } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons';
 
 const Stack = createStackNavigator();
 

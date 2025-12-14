@@ -24,7 +24,7 @@ export default function Login() {
   return (
     <View style={styles.screen}>
       <View style={styles.container}>
-        <Text style={styles.title}>Login</Text>
+        <Text style={styles.title}>Se connecter</Text>
 
         <TextInput
           placeholder="Email"
@@ -35,7 +35,7 @@ export default function Login() {
         />
 
         <TextInput
-          placeholder="Password"
+          placeholder="Mot de passe"
           secureTextEntry
           style={styles.input}
           value={password}
@@ -43,12 +43,12 @@ export default function Login() {
         />
 
         <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-          <Text style={styles.buttonText}>Login</Text>
+          <Text style={styles.buttonText}>Se connecter</Text>
         </TouchableOpacity>
 
         <TouchableOpacity onPress={() => navigation.navigate('Register')}>
           <Text style={styles.signUpText}>
-            Don't have an account? <Text style={styles.signUpLink}>Sign Up</Text>
+            Vous n'avez pas de compte ? <Text style={styles.signUpLink}>Inscrivez-vous ici</Text>
           </Text>
         </TouchableOpacity>
       </View>

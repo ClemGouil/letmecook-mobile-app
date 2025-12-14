@@ -282,7 +282,7 @@ export default function RecipeFormScreen({ route }) {
               renderItem={({ item }) => (
                 <View style={styles.ingredientItem}>
                   <TouchableOpacity style={styles.ingredientInfo} onPress={() => handleEdit(item)}>
-                    <Image source={item.ingredient.imageUrl} style={styles.ingredientImage} />
+                    <Image source={{ uri: item.ingredient.imageUrl }} style={styles.ingredientImage} />
                     <Text style={styles.ingredientText}>
                       {item.ingredient.name} - {item.quantity} {item.unit.symbol}
                     </Text>

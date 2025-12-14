@@ -23,7 +23,6 @@ export default function SearchBar({ search, setSearch }) {
 const styles = StyleSheet.create({
   searchContainer: {
     alignItems: 'center',
-    marginBottom: 8,
   },
   searchBar: {
     flexDirection: 'row',

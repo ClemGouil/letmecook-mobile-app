@@ -6,7 +6,7 @@ const IngredientListCard = ({ ingredient, quantity, unit, checked, onToggleCheck
 
   return (
     <TouchableOpacity  style={styles.card} onPress={onPress}>
-      <Image source={ingredient.imageUrl} style={styles.image} />
+      <Image source={{ uri: ingredient.imageUrl }} style={styles.image} />
       <View style={styles.infoContainer}>
         <Text style={[
             styles.nameQuantityText,
@@ -32,8 +32,8 @@ const styles = StyleSheet.create({
     marginVertical: 1
   },
   image: {
-    width: 15,
-    height: 15,
+    width: 30,
+    height: 30,
     borderRadius: 6,
     marginRight: 8,
   },
@@ -41,7 +41,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   nameQuantityText: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '600',
     color: '#333',
   },

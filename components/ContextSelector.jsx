@@ -58,7 +58,9 @@ const ContextSelector = ({ showUserOption = true }) => {
 
 const styles = StyleSheet.create({
   pickerContainer: {
-    borderWidth: 2,
+    borderLeftWidth: 2,
+    borderRightWidth: 2,
+    borderBottomWidth: 2,
     borderColor: 'rgb(180, 180, 230)',
     borderRadius: 8
   },

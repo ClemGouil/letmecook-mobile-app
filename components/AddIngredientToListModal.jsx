@@ -163,6 +163,7 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     textAlign: 'center',
     color: '#333',
+    marginVertical: 6,
   },
   pickerContainer: {
     borderWidth: 2,
@@ -180,7 +181,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderRadius: 8,
     alignItems: 'center',
-    marginTop: 16,
+    marginVertical: 6,
     borderWidth: 2,
     borderColor: 'rgb(180, 180, 230)',
   },
@@ -192,16 +193,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginVertical: 15,
+    marginVertical: 10,
   },
   subtitle: {
     fontSize: 16,
     fontWeight: 'bold',
     color: '#555',
+    marginVertical : 6
   },
   ingredientSection: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginVertical : 6
   },
   checkboxContent: {
     flexDirection: 'row',

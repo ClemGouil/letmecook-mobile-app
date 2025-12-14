@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, ScrollView } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 
@@ -97,6 +97,7 @@ export default function RecipeDetailScreen({ route }) {
         recipeId, 
         user.id
       );
+      
       navigation.navigate('RecipeMain');
     } catch (err) {
       console.error('Erreur lors du partage de la recette :', err);
@@ -177,7 +178,7 @@ export default function RecipeDetailScreen({ route }) {
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingVertical: 20 }}>
       <View style={styles.cardContainer}>
         <Text style={styles.title}>{recipe.name}</Text>
-        <Image source={recipe.imageUrl} style={styles.image} />
+        <Image source={{ uri: recipe.imageUrl }} style={styles.image} />
         {!isGroupRecipe && isOwner && (
             <TouchableOpacity
               style={styles.editButton}
@@ -281,10 +282,10 @@ export default function RecipeDetailScreen({ route }) {
           <FlatList
             scrollEnabled={false}
             data={recipe.ingredients}
-            keyExtractor={(item) => item.ingredientId}
+            keyExtractor={(item) => item.ingredient.id}
             renderItem={({ item }) => (
               <View style={styles.ingredientItem}>
-                <Image source={item.ingredient.imageUrl} style={styles.ingredientImage} />
+                <Image source={{ uri:item.ingredient.imageUrl}} style={styles.ingredientImage} />
                 <Text style={styles.ingredientText}>
                   {item.ingredient.name} - {getScaledQuantity(item.quantity)} {item.unit.symbol}
                 </Text>

@@ -3,19 +3,34 @@ import { Text, View, StyleSheet, TouchableOpacity, ScrollView, Image} from 'reac
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useMealPlanning } from '../hooks/useMealPlanning';
 import SelectRecipeModal from '../components/SelectRecipeModal';
+
 import { useUser } from '../hooks/useUser'
 import { useRecipe } from '../hooks/useRecipe'
+import { useShoppingList } from '../hooks/useShoppingList';
 import { useNavigation} from '@react-navigation/native';
+import { useAppContext } from '../hooks/useAppContext';
+
 import FloatingButton  from '../components/FloatingButton';
 import ReusableModal from '../components/ReusableModal';
 import {Calendar, LocaleConfig} from 'react-native-calendars';
+import ContextSelector from '../components/ContextSelector';
 
 export default function MealPlanningScreen() {
 
   const navigation = useNavigation();
+
   const { user} = useUser();
+  const { currentContext } = useAppContext();
+
+  const screenTitle = !currentContext
+  ? "Inventaire"
+  : currentContext.type === "user"
+    ? "Mon planning"
+    : `Planning de ${currentContext.name}`;
+
   const { mealPlannings, loadMealPlanning ,addMealPlanning, deleteMealPlanning} = useMealPlanning();
   const { privateRecipes } = useRecipe();
+  const { generateShoppingListFromPlanning } = useShoppingList();
 
   const [startDate, setStartDate] = React.useState(new Date());
   const [endDate, setEndDate] = React.useState(new Date());
@@ -73,12 +88,14 @@ export default function MealPlanningScreen() {
   }, [privateRecipes]);
 
   useEffect(() => {
-    if (user && startDate && endDate) {
+    if (user && currentContext && startDate && endDate) {
       const startStr = formatDateToLocalYYYYMMDD(startDate);
       const endStr = formatDateToLocalYYYYMMDD(endDate);
-      loadMealPlanning(user.id, startStr, endStr);
+      const userId = currentContext.type === "user" ? currentContext.id : user.id;
+      const groupId = currentContext.type === "group" ? currentContext.id : null;
+      loadMealPlanning(userId, startStr, endStr, groupId);
     }
-  }, [user, startDate, endDate]);
+  }, [user, startDate, endDate, currentContext]);
 
   useEffect(() => {
     if (recipesMap && mealPlannings.length > 0) {
@@ -209,17 +226,37 @@ export default function MealPlanningScreen() {
   };
 
   const handlePressRecipe = (recipeId) => {
-    navigation.navigate('RecipeDetail', { recipeId : recipeId });
+    navigation.navigate('Recettes', {
+      screen: 'RecipeDetail',
+      params: { recipeId : recipeId }
+    });
   };
 
-  const handleGenerateWeekShoppingList = () => {
-    
+  const handleGenerateWeekShoppingList = async () => {
+    try {
+      const newList = await generateShoppingListFromPlanning( formatDateToLocalYYYYMMDD(startDate), formatDateToLocalYYYYMMDD(endDate))
+      navigation.navigate('ListeDeCourse', {
+        screen: 'ShoppingListDetail',
+        params: { shoppingListId: newList.id }
+      });
+    } catch (err) {
+      console.error('Erreur lors de la création de la liste :', err);
+    }
   };
 
-  const handleGenerateShoppingListFromRange = () => {
+  const handleGenerateShoppingListFromRange  = async () => {
     console.log(dateRange)
-    setShowModalGeneratingShoppingListFromRange(false); 
-    setDateRange({ start: null, end: null });
+    try {
+      const newList = await generateShoppingListFromPlanning(dateRange.start, dateRange.end)
+      setShowModalGeneratingShoppingListFromRange(false); 
+      setDateRange({ start: null, end: null });
+      navigation.navigate('ListeDeCourse', {
+        screen: 'ShoppingListDetail',
+        params: { shoppingListId: newList.id }
+      });
+    } catch (err) {
+      console.error('Erreur lors de la création de la liste :', err);
+    }
   };
 
   const generateMarkedDates = (start, end) => {
@@ -259,6 +296,12 @@ export default function MealPlanningScreen() {
 
   return (
     <View style={styles.container}>
+
+      <View style={styles.headerRow}>
+        <Text style={styles.title}>{screenTitle}</Text>
+        <ContextSelector />
+      </View>
+
       <View style={styles.bannerTop}>
         <TouchableOpacity style={styles.moveButtonLeft} onPress={() => moveBackward()}>
           <Icon name="chevron-back-outline" size={30} color="rgb(180, 180, 230)" style={styles.iconStyle}/>
@@ -325,7 +368,7 @@ export default function MealPlanningScreen() {
         onClose={() => setGeneratingShoppingList(false)}
       >
         <View style={styles.buttonRow}>
-          <TouchableOpacity style={styles.button} onPress={() => { handleGenerateWeekShoppingList; setGeneratingShoppingList(false);}}>
+          <TouchableOpacity style={styles.button} onPress={() => { handleGenerateWeekShoppingList(); setGeneratingShoppingList(false);}}>
               <Text style={styles.buttonText}>Générer la liste de course de la semaine</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.button} onPress={() => {setShowModalGeneratingShoppingListFromRange(true); setGeneratingShoppingList(false);}}>
@@ -387,6 +430,18 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 8,
   },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
+    marginBottom: 10,
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#333',
+  },
   bannerTop: {
     flexDirection: 'row',
     backgroundColor : '#fff',
@@ -444,6 +499,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 12,
+    marginVertical : 4
   },
   mealInfo: {
     flex: 1,

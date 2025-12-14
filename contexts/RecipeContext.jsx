@@ -23,7 +23,7 @@ export function RecipeProvider({ children }) {
     }
   }, [user]);
 
-  const API_URL = "http://192.168.1.13:8080/api";
+  const API_URL = `${process.env.EXPO_PUBLIC_URL_BACKEND}/api`;
 
   async function loadPublicRecipes(userId) {
     try {

@@ -1,6 +1,7 @@
 import { createContext, useState, useEffect } from "react";
 import axios from "axios";
 import { useUser } from "../hooks/useUser";
+import { useAppContext } from "../hooks/useAppContext";
 
 export const MealPlanningContext = createContext();
 
@@ -8,15 +9,16 @@ export function MealPlanningProvider({ children }) {
 
     const [mealPlannings, setMealPlannings] = useState([]);
 
+    const { currentContext } = useAppContext();
     const { user, token } = useUser();
 
     useEffect(() => {
-        if (user) {
+        if (user && currentContext) {
         
         }
     }, [user]);
 
-  const API_URL = "http://192.168.1.13:8080/api";
+  const API_URL = `${process.env.EXPO_PUBLIC_URL_BACKEND}/api`;
 
   async function loadMealPlanning(userId, start, end, groupId) {
     try {
@@ -29,7 +31,7 @@ export function MealPlanningProvider({ children }) {
         url = `${API_URL}/mealPlanning/user`;
         params = { userId, start, end };
       }
-      const response = await axios.get(`${API_URL}/mealPlanning/user`, {
+      const response = await axios.get(url, {
         headers: {
           Authorization: `Bearer ${token}`,
         }, params
@@ -42,6 +44,15 @@ export function MealPlanningProvider({ children }) {
 
   async function addMealPlanning(dto) {
     try {
+      
+      if (currentContext?.type === "user") {
+        dto.userId = currentContext.id;
+        delete dto.groupId;
+      } else if (currentContext?.type === "group") {
+        dto.groupId = currentContext.id;
+        delete dto.userId;
+      }
+
       const res = await axios.post(`${API_URL}/mealPlanning`, dto, {
         headers: { Authorization: `Bearer ${token}` },
       });

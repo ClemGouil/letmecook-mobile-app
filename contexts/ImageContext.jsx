@@ -6,7 +6,7 @@ export const ImageContext = createContext();
 
 export function ImageProvider({ children }) {
 
-    const API_URL = "http://192.168.1.13:8080/api";
+    const API_URL = `${process.env.EXPO_PUBLIC_URL_BACKEND}/api`;
 
     const { token } = useUser();
 

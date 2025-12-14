@@ -25,7 +25,7 @@ export function ShoppingListProvider({ children }) {
     }
   }, [user, currentContext]);
 
-  const API_URL = "http://192.168.1.13:8080/api";
+  const API_URL = `${process.env.EXPO_PUBLIC_URL_BACKEND}/api`;
 
   async function loadShoppingLists(userId, groupId) {
     try {
@@ -225,6 +225,43 @@ export function ShoppingListProvider({ children }) {
     }
   }
 
+  async function generateShoppingListFromPlanning(startDate, endDate) {
+    console.log(startDate, endDate)
+    try {
+      const params = { startDate, endDate};
+      if (currentContext?.type === "user") {
+        params.userId = currentContext.id;
+      } else if (currentContext?.type === "group") {
+        params.groupId = currentContext.id;
+        params.userId = user.id;
+      }
+
+      const generatedList = await axios.post(
+        `${API_URL}/shopping-list/generate-from-planning`,
+        {},
+        {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+          params,
+        }
+      );
+
+      const fullListResponse = await axios.get(
+        `${API_URL}/shopping-list/${generatedList.data.id}`,
+        {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        }
+      );
+
+      const newList = fullListResponse.data;
+
+      setShoppingLists((prev) => [...prev, newList]);
+      return newList;
+    } catch (err) {
+      console.error("Erreur lors de la génération de la liste de courses à partir du planning:", err);
+      throw err;
+    }
+  }
+
   async function addRecipeToShoppingList(dto) {
     try {
 
@@ -287,6 +324,7 @@ export function ShoppingListProvider({ children }) {
         addIngredientToShoppingList,
         updateIngredientToShoppingList,
         generateShoppingListFromRecipes,
+        generateShoppingListFromPlanning,
         addRecipeToShoppingList,
       }}
     >

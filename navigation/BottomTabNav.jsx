@@ -3,6 +3,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { Text, View, TouchableOpacity, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { useNotif } from '../hooks/useNotif'
 
 import HomeStack from '../navigation/HomeStack';
 import RecipeStack from '../navigation/RecipeStack';
@@ -14,10 +15,19 @@ function HeaderRight() {
 
   const navigation = useNavigation();
 
+  const { unreadCount } = useNotif();
+
   return (
     <View style={{ flexDirection: 'row', marginRight: 10 }}>
-      <TouchableOpacity style={{ marginHorizontal: 10 }}>
-        <Icon name="notifications-outline" size={25} color="#000" />
+      <TouchableOpacity style={{ marginHorizontal: 10 }} onPress={() => navigation.navigate('Notifs')}>
+        <View>
+          <Icon name="notifications-outline" size={25} color="#000" />
+          {unreadCount > 0 && (
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>{unreadCount}</Text>
+            </View>
+          )}
+        </View>
       </TouchableOpacity>
       <TouchableOpacity style={{ marginHorizontal: 10 }} onPress={() => navigation.navigate('Profil')}>
         <Icon name="person-circle-outline" size={25} color="#000" />
@@ -55,10 +65,46 @@ export default function BottomTabNavigator() {
         },
       })}
     >
-      <Tab.Screen name="Accueil" component={HomeStack} />
-      <Tab.Screen name="Recettes" component={RecipeStack} />
-      <Tab.Screen name="Planning" component={PlanningStack} />
-      <Tab.Screen name="ListeDeCourse" component={ShoppingListStack} />
+      <Tab.Screen
+        name="Accueil"
+        component={HomeStack}
+        listeners={({ navigation }) => ({
+          tabPress: e => {
+            e.preventDefault();
+            navigation.navigate('Accueil', { screen: 'HomeMain' });
+          },
+        })}
+      />
+      <Tab.Screen
+        name="Recettes"
+        component={RecipeStack}
+        listeners={({ navigation }) => ({
+          tabPress: e => {
+            e.preventDefault();
+            navigation.navigate('Recettes', { screen: 'RecipeMain' });
+          },
+        })}
+      />
+      <Tab.Screen
+        name="Planning"
+        component={PlanningStack}
+        listeners={({ navigation }) => ({
+          tabPress: e => {
+            e.preventDefault();
+            navigation.navigate('Planning', { screen: 'MealPlanning' });
+          },
+        })}
+      />
+      <Tab.Screen
+        name="ListeDeCourse"
+        component={ShoppingListStack}
+        listeners={({ navigation }) => ({
+          tabPress: e => {
+            e.preventDefault();
+            navigation.navigate('ListeDeCourse', { screen: 'ShoppingListMain' });
+          },
+        })}
+      />
       <Tab.Screen name="Inventaire" component={InventoryScreen} />
     </Tab.Navigator>
   );
@@ -70,5 +116,23 @@ const styles = StyleSheet.create({
   },
   tabBar: {
     backgroundColor: '#858585',
+  },
+  badge: {
+    position: 'absolute',
+    top: -5,
+    right: -5,
+    backgroundColor: 'rgb(180, 180, 230)',
+    borderRadius: 10,
+    paddingHorizontal: 5,
+    minWidth: 18,
+    height: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  badgeText: {
+    color: 'black',
+    fontSize: 10,
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
 });

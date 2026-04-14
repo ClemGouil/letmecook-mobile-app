@@ -10,7 +10,11 @@ const RecipeCard = ({ recipe, onPress, isSelected, width, isGroup, owner }) => {
       onPress={onPress}
     >
       <Image
-        source={{ uri: recipe.imageUrl }}
+        source={
+          recipe.imageUrl
+            ? { uri: recipe.imageUrl }
+            : require('../assets/default.png')
+        }
         style={styles.image}
       />
 
@@ -41,7 +45,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: 'hidden',
     marginBottom: 8,
-    backgroundColor: '#000',
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
   },
   selectedCard: {
     borderWidth: 3,

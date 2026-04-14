@@ -88,7 +88,7 @@ const SelectRecipeModal = ({ visible, availableMealTypes, onSubmit, onCancel }) 
       <View style={styles.modalContainer}>
         {!recipeSelected && (
           <>
-            <Text style={styles.title}>Selectionner des recettes :</Text>
+            <Text style={styles.title}>Sélectionner la recette :</Text>
 
             <View style={styles.searchContainer}>
               <SearchBar search={search} setSearch={setSearch} />

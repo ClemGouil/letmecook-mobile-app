@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "letmecook",
-    "slug": "snack-affa3416-1086-4f13-bac4-b34a5f21e00a",
+    "name": "LetMeCook",
+    "slug": "letmecook",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -20,10 +20,17 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.anonymous.snackaffa341610864f13bac4b34a5f21e00a"
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "51e570e6-1cec-47f5-ad46-a03f4c371c80"
+      }
+    },
+    "owner": "mblabs"
   }
 }

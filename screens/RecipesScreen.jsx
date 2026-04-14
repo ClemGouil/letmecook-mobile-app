@@ -19,12 +19,13 @@ export default function RecipesScreen() {
 
   const [search, setSearch] = React.useState('');
   const [activeTab, setActiveTab] = useState('privateRecipes');
-  const [subActiveTab, setSubActiveTab] = useState(groups[0].id);
+  const [subActiveTab, setSubActiveTab] = useState(null);
 
   React.useEffect(() => {
-    if (activeTab === "groupRecipes" && subActiveTab) {
-      loadGroupRecipes(subActiveTab);
-    }
+    if (activeTab !== "groupRecipes") return;
+    if (!subActiveTab) return;
+
+    loadGroupRecipes(subActiveTab);
   }, [activeTab, subActiveTab]);
 
   const filteredRecipes = privateRecipes.filter((r) => {
@@ -107,7 +108,7 @@ export default function RecipesScreen() {
       {activeTab === 'groupRecipes' && (
         <>
           <View style={styles.subtabsCard}>
-            {groups.map((group) => (
+            {groups?.map((group) => (
               <TouchableOpacity
                 key={group.id}
                 style={[styles.tabButton, subActiveTab === group.id && styles.activeTab]}

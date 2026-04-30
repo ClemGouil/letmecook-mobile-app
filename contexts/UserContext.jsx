@@ -1,5 +1,6 @@
-import { createContext, useState } from "react";
+import { createContext, useState, useEffect } from "react";
 import axios from "axios";
+import * as SecureStore from 'expo-secure-store';
 
 export const UserContext = createContext();
 
@@ -7,8 +8,24 @@ export function UserProvider({children}) {
 
     const [user, setUser] = useState(null);
     const [token, setToken] = useState("");
+    const [isLoading, setIsLoading] = useState(true);
 
     const API_URL = `${process.env.EXPO_PUBLIC_URL_BACKEND}/api/users`;
+
+    useEffect(() => {
+        const initAuth = async () => {
+            const storedToken = await SecureStore.getItemAsync('token');
+
+            if (storedToken) {
+                await loadUserFromToken(storedToken);
+            } else {
+                setUser(null);
+            }
+            setIsLoading(false);
+        };
+
+        initAuth();
+    }, []);
 
     async function login(email, password) {
         try {
@@ -17,6 +34,7 @@ export function UserProvider({children}) {
 
             setUser(loggedUser);
             setToken(jwtToken);
+            await SecureStore.setItemAsync('token', jwtToken);
 
             return loggedUser;
             } catch (err) {
@@ -32,6 +50,7 @@ export function UserProvider({children}) {
 
             setUser(loggedUser);
             setToken(jwtToken);
+            await SecureStore.setItemAsync('token', jwtToken);
 
             return loggedUser;
             } catch (err) {
@@ -40,7 +59,24 @@ export function UserProvider({children}) {
         }
     }
 
+    async function loadUserFromToken (storedToken) {
+        try {
+            const response = await axios.get(`${API_URL}/me`, {
+                headers: { Authorization: `Bearer ${storedToken}` }});
+
+            setUser(response.data);
+            setToken(storedToken);
+            } catch (err) {
+                console.error("Auto login failed:", err);
+                await SecureStore.deleteItemAsync('token');
+                setUser(null);
+                setToken("");
+            throw err;
+            }
+    }
+
     async function logout() {
+        await SecureStore.deleteItemAsync('token');
         setUser(null);
         setToken("");
     }
@@ -91,6 +127,7 @@ export function UserProvider({children}) {
         value= {
             {user,
             token,
+            isLoading,
             login,
             register,
             logout,

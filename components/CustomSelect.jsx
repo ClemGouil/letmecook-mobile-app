@@ -10,18 +10,15 @@ const CustomSelect = ({ label, options, selectedValue, onValueChange }) => {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.selectBox}>
-        <View style={styles.row}>
-          <Text style={styles.label}>{label}</Text>
-          <TouchableOpacity style={styles.touchableArea} onPress={() => setVisible(true)}>
-            <Text style={styles.selectedText}>
-              {options.find(o => o.value === selectedValue)?.label || 'Choisir'}
-            </Text>
-          <Text style={styles.arrow}>▼</Text>
-        </TouchableOpacity>
-        </View>
-      </View>
+    <View style={styles.pickerContainer}>
+
+      <Text style={styles.label}>{label}</Text>
+      <TouchableOpacity style={styles.touchableArea} onPress={() => setVisible(true)}>
+        <Text style={styles.selectedText}>
+          {options.find(o => o.value === selectedValue)?.label || 'Choisir'}
+        </Text>
+        <Text style={styles.arrow}>▼</Text>
+      </TouchableOpacity>
 
       <Modal transparent={true} visible={visible} animationType="fade">
         <TouchableOpacity style={styles.modalBackground} onPress={() => setVisible(false)}>
@@ -43,28 +40,29 @@ const CustomSelect = ({ label, options, selectedValue, onValueChange }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { 
+  pickerContainer: {
     marginVertical: 12,
-    width: 150
+    borderLeftWidth: 2,
+    borderRightWidth: 2,
+    borderBottomWidth: 2,
+    borderColor: 'rgb(180, 180, 230)',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingTop: 18, 
+    paddingBottom: 10,
   },
-  row: { flexDirection: 'row', alignItems: 'center' },
-  selectBox: {
-    backgroundColor: 'transparent',
-    justifyContent: 'center',
-  },
-  label: {
+    label: {
     position: 'absolute',
-    top: -20,
-    left: 10,
+    top: -10,
+    left: 15,
+    paddingHorizontal: 4,
     fontSize: 12,
     color: '#555',
-    backgroundColor: 'transparent',
   },
   touchableArea: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 10
   },
   selectedText: { 
     fontSize: 14 

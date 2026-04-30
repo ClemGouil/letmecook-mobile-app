@@ -189,6 +189,29 @@ export function ShoppingListProvider({ children }) {
     }
   }
 
+  async function deleteIngredientToShoppingList(shoppingListId, ingredientItemId) {
+    try {
+      await axios.delete(`${API_URL}/shopping-list-ingredients/${ingredientItemId}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      });
+      setShoppingLists((prevLists) =>
+        prevLists.map((list) => {
+          if (list.id !== shoppingListId) return list;
+
+          return {
+            ...list,
+            items: list.items.filter(
+              (item) => item.id !== ingredientItemId
+            ),
+          };
+        })
+      );
+    } catch (err) {
+      console.error("Erreur lors de la suppression de l'ingredient dans la liste:", err);
+      throw err;
+    }
+  }
+
   async function generateShoppingListFromRecipes(recipesList) {
     try {
       const params = {};
@@ -323,6 +346,7 @@ export function ShoppingListProvider({ children }) {
         deleteShoppingList,
         addIngredientToShoppingList,
         updateIngredientToShoppingList,
+        deleteIngredientToShoppingList,
         generateShoppingListFromRecipes,
         generateShoppingListFromPlanning,
         addRecipeToShoppingList,

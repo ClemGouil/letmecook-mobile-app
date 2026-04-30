@@ -7,6 +7,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import * as ImagePicker from 'expo-image-picker';
 import AccordionSection from '../components/AccordionSection'
 import { useGroup } from '../hooks/useGroup';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function ProfileScreen() {
 
@@ -152,233 +153,244 @@ export default function ProfileScreen() {
   }
 
   return (
-    <View style={styles.screen}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Icon name="arrow-back" size={24} color="#000" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Profile</Text>
-        <View style={{ width: 24 }} />
-      </View>
-
-      <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-      
-        <AccordionSection title="Mon Profil">
-
-          <Image
-            source={{ uri: editedUser.profilePhotoUrl || user.profilePhotoUrl || 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png'}} style={styles.avatar}
-          />
-          {editingProfile && (
-          <TouchableOpacity style={styles.addButton} onPress={pickImage}>
-            <Text style={styles.addButtonText}>Changez l'image</Text>
+    <SafeAreaView style={{ flex: 1 }} edges={['bottom', 'left', 'right']}>
+      <View style={styles.screen}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+            <Icon name="arrow-back" size={24} color="#000" />
           </TouchableOpacity>
+          <Text style={styles.headerTitle}>Profile</Text>
+          <View style={{ width: 24 }} />
+        </View>
+
+        <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        
+          <AccordionSection title="Mon Profil">
+
+            <Image
+              source={{ uri: editedUser.profilePhotoUrl || user.profilePhotoUrl || 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png'}} style={styles.avatar}
+            />
+            {editingProfile && (
+            <TouchableOpacity style={styles.addButton} onPress={pickImage}>
+              <Text style={styles.addButtonText}>Changez l'image</Text>
+            </TouchableOpacity>
+            )}
+
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Nom d'utilisateur :</Text>
+              {editingProfile ? (
+                <TextInput style={styles.input}
+                  value={editedUser.username}
+                  onChangeText={(text) => setEditedUser({ ...editedUser, username: text })}
+                  placeholder="nom d'utilisateur"
+                />
+              ) : (
+                <Text style={styles.valueText}>{user.username}</Text>
+              )}
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Prénom :</Text>
+              {editingProfile ? (
+                <TextInput
+                  style={styles.input}
+                  value={editedUser.firstName}
+                  onChangeText={(text) => setEditedUser({ ...editedUser, firstName: text })}
+                  placeholder="prénom"
+                />
+              ) : (
+                <Text style={styles.valueText}>{user.firstName}</Text>
+              )}
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Nom :</Text>
+              {editingProfile ? (
+                <TextInput
+                  style={styles.input}
+                  value={editedUser.lastName}
+                  onChangeText={(text) => setEditedUser({ ...editedUser, lastName: text })}
+                  placeholder="nom"
+                />
+              ) : (
+                <Text style={styles.valueText}>{user.lastName}</Text>
+              )}
+            </View>
+
+            {!editingProfile ? (
+              <TouchableOpacity style={styles.button} onPress={() => toggleEditProfile()}>
+                <Icon name='pencil-outline' size={20} color="rgb(180, 180, 230)" style={styles.iconStyle}/>
+                <Text style={styles.buttonText}>Modifier</Text>
+              </TouchableOpacity>
+              ) : (
+              <TouchableOpacity style={styles.button} onPress={() => handleEditProfile()}>
+                <Icon name='save-outline' size={20} color="rgb(180, 180, 230)" style={styles.iconStyle}/>
+                <Text style={styles.buttonText}>Enregistrer</Text>
+              </TouchableOpacity>
+              )}
+          </AccordionSection>
+
+          <AccordionSection title="Mes Préferences">
+
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Langue :</Text>
+              {editingPreferences ? (
+                <TextInput
+                  style={styles.input}
+                  value={editedPreferences.langue}
+                  onChangeText={(text) => setEditedPreferences({ ...editedPreferences, langue: text })}
+                  placeholder="langue"
+                />
+              ) : (
+                <Text style={styles.valueText}>{user.preferences.langue || 'fr'}</Text>
+              )}
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Notifications :</Text>
+              {editingPreferences ? (
+                <Switch
+                  trackColor={{ false: '#767577', true: 'rgb(180, 180, 230)' }}
+                  thumbColor={
+                    editedPreferences.notifications ? 'rgb(40, 140, 240)' : '#f4f3f4'
+                  }
+                  onValueChange={toggleSwitch}
+                  value={editedPreferences.notifications}
+                />
+              ) : (
+                <Text style={styles.valueText}>
+                  {user.preferences.notifications ? 'Oui' : 'Non'}
+                </Text>
+              )}
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Allergies :</Text>
+              {editingPreferences ? (
+                <TextInput
+                  style={styles.input}
+                  value={editedPreferences.allergies}
+                  onChangeText={(text) =>
+                    setEditedPreferences({ ...editedPreferences, allergies: text })
+                  }
+                  placeholder="allergies"
+                />
+              ) : (
+                <Text style={styles.valueText}>
+                  {user.preferences.allergies || 'Aucune'}
+                </Text>
+              )}
+            </View>
+
+            {!editingPreferences ? (
+              <TouchableOpacity style={styles.button} onPress={() => toggleEditPreferences()}>
+                <Icon name='pencil-outline' size={20} color="rgb(180, 180, 230)" style={styles.iconStyle}/>
+                <Text style={styles.buttonText}>Modifier</Text>
+              </TouchableOpacity>
+              ) : (
+              <TouchableOpacity style={styles.button} onPress={() => handleEditPreferences()}>
+                <Icon name='save-outline' size={20} color="rgb(180, 180, 230)" style={styles.iconStyle}/>
+                <Text style={styles.buttonText}>Enregistrer</Text>
+              </TouchableOpacity>
+              )}
+
+          </AccordionSection>
+
+          <AccordionSection title="Mes groupes">
+            {groups.length > 0 ? (
+              <>
+              <View style={styles.table}>
+                <View style={[styles.row, styles.headerRow]}>
+                  <Text style={[styles.cell, styles.headerCell, styles.borderRight]}>Nom</Text>
+                  <Text style={[styles.cell, styles.headerCell, styles.borderRight]}>Rôle</Text>
+                  <Text style={[styles.cell, styles.headerCell]}>Adhésion</Text>
+                </View>
+                {groups.map((group) => (
+                  <View key={group.id} style={styles.row}>
+                    <Text style={[styles.cell, styles.borderRight]}>{group.name}</Text>
+                    <Text style={[styles.cell, styles.borderRight]}>{getUserRole(group)}</Text>
+                    <Text style={styles.cell}>{getJoinedDate(group)}</Text>
+                  </View>
+                ))}
+              </View>
+              <TouchableOpacity
+                style={styles.button}
+                onPress={handleShowDetailsGroup}
+              >
+                <Icon name="information-circle-outline" size={20} color="rgb(180, 180, 230)" />
+                <Text style={styles.buttonText}>Voir Détails</Text>
+              </TouchableOpacity>
+              </>
+          ) : (
+            <>
+            <Text>Vous ne faites partie d’aucun groupe.</Text>
+              <TouchableOpacity
+                  style={styles.button}
+                  onPress={handleShowDetailsGroup}
+                >
+                  <Icon name="information-circle-outline" size={20} color="rgb(180, 180, 230)" />
+                  <Text style={styles.buttonText}>Voir Détails</Text>
+              </TouchableOpacity>
+            </>
           )}
 
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Nom d'utilisateur :</Text>
-            {editingProfile ? (
-              <TextInput style={styles.input}
-                value={editedUser.username}
-                onChangeText={(text) => setEditedUser({ ...editedUser, username: text })}
-                placeholder="nom d'utilisateur"
-              />
-            ) : (
-              <Text style={styles.valueText}>{user.username}</Text>
-            )}
-          </View>
+          </AccordionSection>
 
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Prénom :</Text>
-            {editingProfile ? (
+          <AccordionSection title="Changer le mot de passe">
+
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Mot de passe actuel :</Text>
               <TextInput
                 style={styles.input}
-                value={editedUser.firstName}
-                onChangeText={(text) => setEditedUser({ ...editedUser, firstName: text })}
-                placeholder="prénom"
+                secureTextEntry
+                value={currentPassword}
+                onChangeText={setCurrentPassword}
+                placeholder="Mot de passe actuel"
               />
-            ) : (
-              <Text style={styles.valueText}>{user.firstName}</Text>
-            )}
-          </View>
-
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Nom :</Text>
-            {editingProfile ? (
-              <TextInput
-                style={styles.input}
-                value={editedUser.lastName}
-                onChangeText={(text) => setEditedUser({ ...editedUser, lastName: text })}
-                placeholder="nom"
-              />
-            ) : (
-              <Text style={styles.valueText}>{user.lastName}</Text>
-            )}
-          </View>
-
-          {!editingProfile ? (
-            <TouchableOpacity style={styles.button} onPress={() => toggleEditProfile()}>
-              <Icon name='pencil-outline' size={20} color="rgb(180, 180, 230)" style={styles.iconStyle}/>
-              <Text style={styles.buttonText}>Modifier</Text>
-            </TouchableOpacity>
-            ) : (
-            <TouchableOpacity style={styles.button} onPress={() => handleEditProfile()}>
-              <Icon name='save-outline' size={20} color="rgb(180, 180, 230)" style={styles.iconStyle}/>
-              <Text style={styles.buttonText}>Enregistrer</Text>
-            </TouchableOpacity>
-            )}
-        </AccordionSection>
-
-        <AccordionSection title="Mes Préferences">
-
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Langue :</Text>
-            {editingPreferences ? (
-              <TextInput
-                style={styles.input}
-                value={editedPreferences.langue}
-                onChangeText={(text) => setEditedPreferences({ ...editedPreferences, langue: text })}
-                placeholder="langue"
-              />
-            ) : (
-              <Text style={styles.valueText}>{user.preferences.langue || 'fr'}</Text>
-            )}
-          </View>
-
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Notifications :</Text>
-            {editingPreferences ? (
-              <Switch
-                trackColor={{ false: '#767577', true: 'rgb(180, 180, 230)' }}
-                thumbColor={
-                  editedPreferences.notifications ? 'rgb(40, 140, 240)' : '#f4f3f4'
-                }
-                onValueChange={toggleSwitch}
-                value={editedPreferences.notifications}
-              />
-            ) : (
-              <Text style={styles.valueText}>
-                {user.preferences.notifications ? 'Oui' : 'Non'}
-              </Text>
-            )}
-          </View>
-
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Allergies :</Text>
-            {editingPreferences ? (
-              <TextInput
-                style={styles.input}
-                value={editedPreferences.allergies}
-                onChangeText={(text) =>
-                  setEditedPreferences({ ...editedPreferences, allergies: text })
-                }
-                placeholder="allergies"
-              />
-            ) : (
-              <Text style={styles.valueText}>
-                {user.preferences.allergies || 'Aucune'}
-              </Text>
-            )}
-          </View>
-
-          {!editingPreferences ? (
-            <TouchableOpacity style={styles.button} onPress={() => toggleEditPreferences()}>
-              <Icon name='pencil-outline' size={20} color="rgb(180, 180, 230)" style={styles.iconStyle}/>
-              <Text style={styles.buttonText}>Modifier</Text>
-            </TouchableOpacity>
-            ) : (
-            <TouchableOpacity style={styles.button} onPress={() => handleEditPreferences()}>
-              <Icon name='save-outline' size={20} color="rgb(180, 180, 230)" style={styles.iconStyle}/>
-              <Text style={styles.buttonText}>Enregistrer</Text>
-            </TouchableOpacity>
-            )}
-
-        </AccordionSection>
-
-        <AccordionSection title="Mes groupes">
-          {groups.length > 0 ? (
-            <>
-            <View style={styles.table}>
-              <View style={[styles.row, styles.headerRow]}>
-                <Text style={[styles.cell, styles.headerCell, styles.borderRight]}>Nom</Text>
-                <Text style={[styles.cell, styles.headerCell, styles.borderRight]}>Rôle</Text>
-                <Text style={[styles.cell, styles.headerCell]}>Adhésion</Text>
-              </View>
-              {groups.map((group) => (
-                <View key={group.id} style={styles.row}>
-                  <Text style={[styles.cell, styles.borderRight]}>{group.name}</Text>
-                  <Text style={[styles.cell, styles.borderRight]}>{getUserRole(group)}</Text>
-                  <Text style={styles.cell}>{getJoinedDate(group)}</Text>
-                </View>
-              ))}
             </View>
+
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Nouveau mot de passe :</Text>
+              <TextInput
+                style={styles.input}
+                secureTextEntry
+                value={newPassword}
+                onChangeText={setNewPassword}
+                placeholder="Nouveau mot de passe"
+              />
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Confirmer :</Text>
+              <TextInput
+                style={styles.input}
+                secureTextEntry
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                placeholder="Confirmer le mot de passe"
+              />
+            </View>
+
             <TouchableOpacity
               style={styles.button}
-              onPress={handleShowDetailsGroup}
+              onPress={handleSubmitPassword}
             >
-              <Icon name="information-circle-outline" size={20} color="rgb(180, 180, 230)" />
-              <Text style={styles.buttonText}>Voir Détails</Text>
+              <Icon name="swap-horizontal-outline" size={20} color="rgb(180, 180, 230)" />
+              <Text style={styles.buttonText}>Changer</Text>
             </TouchableOpacity>
-            </>
-        ) : (
-          <Text>Vous ne faites partie d’aucun groupe.</Text>
-        )}
+            
+          </AccordionSection>
 
-        </AccordionSection>
-
-        <AccordionSection title="Changer le mot de passe">
-
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Mot de passe actuel :</Text>
-            <TextInput
-              style={styles.input}
-              secureTextEntry
-              value={currentPassword}
-              onChangeText={setCurrentPassword}
-              placeholder="Mot de passe actuel"
-            />
-          </View>
-
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Nouveau mot de passe :</Text>
-            <TextInput
-              style={styles.input}
-              secureTextEntry
-              value={newPassword}
-              onChangeText={setNewPassword}
-              placeholder="Nouveau mot de passe"
-            />
-          </View>
-
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Confirmer :</Text>
-            <TextInput
-              style={styles.input}
-              secureTextEntry
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              placeholder="Confirmer le mot de passe"
-            />
-          </View>
-
-          <TouchableOpacity
-            style={styles.button}
-            onPress={handleSubmitPassword}
-          >
-            <Icon name="swap-horizontal-outline" size={20} color="rgb(180, 180, 230)" />
-            <Text style={styles.buttonText}>Changer</Text>
+          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Icon name="log-out-outline" size={20} color="#fff" />
+              <Text style={styles.logoutText}>Se déconnecter</Text>
+            </View>
           </TouchableOpacity>
-          
-        </AccordionSection>
 
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <Icon name="log-out-outline" size={20} color="#fff" />
-            <Text style={styles.logoutText}>Se déconnecter</Text>
-          </View>
-        </TouchableOpacity>
-
-      </ScrollView>
-    </View>
+        </ScrollView>
+      </View>
+    </SafeAreaView>
   );
 }
 

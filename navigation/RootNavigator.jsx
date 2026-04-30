@@ -7,12 +7,21 @@ import { useUser } from '../hooks/useUser';
 import ProfileScreen from '../screens/ProfileScreen';
 import GroupScreen from '../screens/GroupScreen';
 import NotificationScreen from '../screens/NotificationScreen';
+import { View, ActivityIndicator } from "react-native";
 
 const Stack = createNativeStackNavigator();
 
 export default function RootNavigator() {
     
-  const { user } = useUser();
+  const { user, isLoading } = useUser();
+
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color="rgb(180, 180, 230)" />
+      </View>
+    );
+  }
 
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>

@@ -6,9 +6,16 @@ const RecipeCard = ({ recipe, onPress, isSelected, width, isGroup, owner }) => {
 
   return (
     <TouchableOpacity
-      style={[styles.card, { width }, isSelected && styles.selectedCard]}
+      style={[styles.card, { width }]}
       onPress={onPress}
     >
+      <View style={styles.overlayBadge}>
+        {recipe.category && (
+          <View style={styles.categoryBadge}>
+            <Text style={styles.categoryText}>{recipe.category}</Text>
+          </View>
+        )}
+      </View>
       <Image
         source={
           recipe.imageUrl
@@ -30,11 +37,6 @@ const RecipeCard = ({ recipe, onPress, isSelected, width, isGroup, owner }) => {
 
       <View style={styles.overlay}>
         <Text style={styles.title}>{recipe.name}</Text>
-        {recipe.category && (
-          <View style={styles.categoryBadge}>
-            <Text style={styles.categoryText}>{recipe.category}</Text>
-          </View>
-        )}
       </View>
     </TouchableOpacity>
   );
@@ -44,12 +46,13 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: 16,
     overflow: 'hidden',
-    marginBottom: 8,
     backgroundColor: 'rgba(255, 255, 255, 0.7)',
   },
-  selectedCard: {
-    borderWidth: 3,
-    borderColor: 'rgb(180, 180, 230)',
+  overlayBadge: {
+    position: 'absolute',
+    top: 8,
+    left: 8,
+    zIndex: 10,
   },
   image: {
     width: '100%',
@@ -69,12 +72,10 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   categoryBadge: {
-    alignSelf: 'flex-start',
     backgroundColor: 'rgba(255,255,255,0.8)',
     borderRadius: 12,
     paddingVertical: 3,
     paddingHorizontal: 8,
-    marginTop: 4,
   },
   categoryText: {
     color: 'rgb(180, 180, 230)',
@@ -83,13 +84,11 @@ const styles = StyleSheet.create({
   },
   topRightBadge: {
     position: 'absolute',
-    top: 8,
-    right: 8,
+    top: 0,
+    right: 0,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(255,255,255,0.8)',
-    paddingHorizontal: 6,
-    paddingVertical: 3,
     borderRadius: 16,
   },
   ownerAvatar: {

@@ -3,6 +3,7 @@ import { Text, View, ScrollView, TouchableOpacity, StyleSheet, Image } from 'rea
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
 import { useNotif } from '../hooks/useNotif'
+import { SafeAreaView } from 'react-native-safe-area-context';
 // import { useWSNotif } from '../hooks/useNotifWS';
 
 export default function NotificationScreen() {
@@ -34,62 +35,64 @@ export default function NotificationScreen() {
     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
 return (
-    <View style={styles.screen}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Icon name="arrow-back" size={24} color="#000" />
+    <SafeAreaView style={{ flex: 1 }} edges={['bottom', 'left', 'right']}>
+      <View style={styles.screen}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+            <Icon name="arrow-back" size={24} color="#000" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Mes Notifications</Text>
+          <View style={{ width: 24 }} />
+        </View>
+
+        <TouchableOpacity onPress={markAllAsRead} style={styles.markAllButton}>
+          <Text style={styles.markAllText}>Tout marquer comme lu</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Mes Notifications</Text>
-        <View style={{ width: 24 }} />
+
+        <ScrollView style={styles.notificationsContainer}>
+          {unreadNotifications.length > 0 && (
+            <>
+              <Text style={styles.sectionTitle}>Notifications Non lues</Text>
+              {unreadNotifications.map(notif => (
+                <TouchableOpacity
+                  key={notif.id}
+                  onPress={() => handleMarkAsRead(notif)}
+                  style={[styles.notificationItem, styles.unreadNotification]}
+                >
+                  <View style={styles.notificationHeader}>
+                    <Text style={styles.notificationTitle}>{notif.title}</Text>
+                    <Text style={styles.notificationDate}>
+                      {new Date(notif.createdAt).toLocaleString()}
+                    </Text>
+                  </View>
+                  <Text style={styles.notificationMessage}>{notif.message}</Text>
+                </TouchableOpacity>
+              ))}
+            </>
+          )}
+
+          {readNotifications.length > 0 && (
+            <>
+              <Text style={styles.sectionTitle}>Notifications Lues</Text>
+              {readNotifications.map(notif => (
+                <View
+                  key={notif.id}
+                  style={[styles.notificationItem, styles.readNotification]}
+                >
+                  <View style={styles.notificationHeader}>
+                    <Text style={styles.notificationTitle}>{notif.title}</Text>
+                    <Text style={styles.notificationDate}>
+                      {new Date(notif.createdAt).toLocaleString()}
+                    </Text>
+                  </View>
+                  <Text style={styles.notificationMessage}>{notif.message}</Text>
+                </View>
+              ))}
+            </>
+          )}
+        </ScrollView>
       </View>
-
-      <TouchableOpacity onPress={markAllAsRead} style={styles.markAllButton}>
-        <Text style={styles.markAllText}>Tout marquer comme lu</Text>
-      </TouchableOpacity>
-
-      <ScrollView style={styles.notificationsContainer}>
-        {unreadNotifications.length > 0 && (
-          <>
-            <Text style={styles.sectionTitle}>Notifications Non lues</Text>
-            {unreadNotifications.map(notif => (
-              <TouchableOpacity
-                key={notif.id}
-                onPress={() => handleMarkAsRead(notif)}
-                style={[styles.notificationItem, styles.unreadNotification]}
-              >
-                <View style={styles.notificationHeader}>
-                  <Text style={styles.notificationTitle}>{notif.title}</Text>
-                  <Text style={styles.notificationDate}>
-                    {new Date(notif.createdAt).toLocaleString()}
-                  </Text>
-                </View>
-                <Text style={styles.notificationMessage}>{notif.message}</Text>
-              </TouchableOpacity>
-            ))}
-          </>
-        )}
-
-        {readNotifications.length > 0 && (
-          <>
-            <Text style={styles.sectionTitle}>Notifications Lues</Text>
-            {readNotifications.map(notif => (
-              <View
-                key={notif.id}
-                style={[styles.notificationItem, styles.readNotification]}
-              >
-                <View style={styles.notificationHeader}>
-                  <Text style={styles.notificationTitle}>{notif.title}</Text>
-                  <Text style={styles.notificationDate}>
-                    {new Date(notif.createdAt).toLocaleString()}
-                  </Text>
-                </View>
-                <Text style={styles.notificationMessage}>{notif.message}</Text>
-              </View>
-            ))}
-          </>
-        )}
-      </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
 

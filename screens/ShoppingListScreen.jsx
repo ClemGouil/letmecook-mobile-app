@@ -4,13 +4,13 @@ import { useNavigation} from '@react-navigation/native';
 import { useShoppingList } from '../hooks/useShoppingList';
 import { useUser } from '../hooks/useUser'
 import { useAppContext } from '../hooks/useAppContext';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import SearchBar from '../components/SearchBar';
 import ShoppingListCard from '../components/ShoppingListCard';
 import FloatingButton  from '../components/FloatingButton';
 import ReusableModal from '../components/ReusableModal';
 import ChooseNameModal from '../components/ChooseNameModal';
-import GenerateFromRecipeModal from '../components/GenerateFromRecipeModal';
 import ContextSelector from '../components/ContextSelector';
 
 export default function ShoppingListScreen() {
@@ -31,14 +31,14 @@ export default function ShoppingListScreen() {
   const [addingShoppingList, setAddingShoppingList] = React.useState(false);
 
   const [showModalAdd, setShowModalAdd] = useState(false);
-  const [showModalGenerateFromRecipe, setShowModalGenerateFromRecipe] = useState(false);
 
-  const { shoppingLists, addShoppingList, updateShoppingList, deleteShoppingList, generateShoppingListFromRecipes } = useShoppingList();
+  const { shoppingLists, addShoppingList, updateShoppingList, deleteShoppingList } = useShoppingList();
 
   const filteredShoppingLists = shoppingLists.filter((sl) => {
     const matchesSearch = sl.name.toLowerCase().includes(search.toLowerCase());
     return matchesSearch;
-  });
+  })
+  .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
   const handlePressShoppingList = (list) => {
     navigation.navigate('ShoppingListDetail', { shoppingListId: list.id });
@@ -67,84 +67,71 @@ export default function ShoppingListScreen() {
     }
   };
 
-  const handleGenerateFromRecipe = async (selectedRecipes) => {
-    try {
-      const newList = await generateShoppingListFromRecipes(selectedRecipes)
-      setShowModalGenerateFromRecipe(false);
-      navigation.navigate('ShoppingListDetail', { shoppingListId: newList.id });
-    } catch (err) {
-      console.error('Erreur lors de la création de la liste :', err);
-    }
-  };
-
   return (
-    <View style={styles.container}>
-      <View style={styles.headerRow}>
-        <Text style={styles.title}>{screenTitle}</Text>
-        <ContextSelector />
+    <SafeAreaView style={{ flex: 1 }} edges={['top', 'left', 'right']}>
+      <View style={styles.container}>
+        <View style={styles.headerRow}>
+          <Text style={styles.title}>{screenTitle}</Text>
+          <View style={styles.contextWrapper}>
+            <ContextSelector />
+          </View>
+        </View>
+
+        <View style={styles.searchContainer}>
+          <SearchBar search={search} setSearch= {setSearch}/>
+        </View>
+
+        {filteredShoppingLists.length === 0 ? (
+          <Text style={styles.emptyText}>Aucune liste de course trouvées</Text>
+        ) : (
+          <>
+            <FlatList
+              data={filteredShoppingLists}
+              keyExtractor={(item) => item.id.toString()}
+              renderItem={({ item }) => (
+                <ShoppingListCard
+                  shoppingList={item}
+                  onPress={() => handlePressShoppingList(item)}
+                  onDelete={() => handleDelete(item.id)}
+                />
+                )}
+              contentContainerStyle={styles.list}
+              showsVerticalScrollIndicator={false}
+            />
+            <Text style={styles.countText}>{filteredShoppingLists.length} liste de course trouvées</Text>
+          </>
+        )}
+        <FloatingButton onPress={() => setAddingShoppingList(true)}/>
+
+        <ReusableModal
+          visible={addingShoppingList}
+          onClose={() => setAddingShoppingList(false)}
+        >
+          <View style={styles.buttonRow}>
+            <TouchableOpacity style={styles.button} onPress={() => {setShowModalAdd(true); setAddingShoppingList(false);}}>
+                <Text style={styles.buttonText}>Créer une nouvelle liste de course</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.button} onPress={() => {setAddingShoppingList(false); navigation.navigate('GenerateFromRecipe');}}>
+                <Text style={styles.buttonText}>Générer une liste de course à partir de recettes</Text>
+            </TouchableOpacity>
+        </View>
+        </ReusableModal>
+
+        <ChooseNameModal
+          visible={showModalAdd}
+          title={"Nom de la liste de course :"}
+          placeholder={"Course du week-end"} 
+          onSubmit={handleAdd}
+          onCancel={() => {setShowModalAdd(false)}}
+        />
       </View>
-
-      <View style={styles.searchContainer}>
-        <SearchBar search={search} setSearch= {setSearch}/>
-      </View>
-
-      {filteredShoppingLists.length === 0 ? (
-        <Text style={styles.emptyText}>Aucune liste de course trouvées</Text>
-      ) : (
-        <>
-          <FlatList
-            data={filteredShoppingLists}
-            keyExtractor={(item) => item.id.toString()}
-            renderItem={({ item }) => (
-              <ShoppingListCard
-                shoppingList={item}
-                onPress={() => handlePressShoppingList(item)}
-                onDelete={() => handleDelete(item.id)}
-              />
-              )}
-            contentContainerStyle={styles.list}
-            showsVerticalScrollIndicator={false}
-          />
-          <Text style={styles.countText}>{filteredShoppingLists.length} liste de course trouvées</Text>
-        </>
-      )}
-      <FloatingButton onPress={() => setAddingShoppingList(true)}/>
-
-      <ReusableModal
-        visible={addingShoppingList}
-        onClose={() => setAddingShoppingList(false)}
-      >
-        <View style={styles.buttonRow}>
-          <TouchableOpacity style={styles.button} onPress={() => {setShowModalAdd(true); setAddingShoppingList(false);}}>
-              <Text style={styles.buttonText}>Créer une nouvelle liste de course</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.button} onPress={() => {setShowModalGenerateFromRecipe(true); setAddingShoppingList(false);}}>
-              <Text style={styles.buttonText}>Générer une liste de course à partir de recettes</Text>
-          </TouchableOpacity>
-      </View>
-      </ReusableModal>
-
-      <ChooseNameModal
-        visible={showModalAdd}
-        title={"Nom de la liste de course :"}
-        placeholder={"Course du week-end"} 
-        onSubmit={handleAdd}
-        onCancel={() => {setShowModalAdd(false)}}
-      />
-
-      <GenerateFromRecipeModal
-        visible={showModalGenerateFromRecipe}
-        onSubmit={handleGenerateFromRecipe}
-        onCancel={() => {setShowModalGenerateFromRecipe(false)}}
-      />
-    </View>
+    </SafeAreaView>
   );
 
 }
 
 const styles = StyleSheet.create({
   container: {
-    marginTop:10,
     flex: 1,
     padding: 8,
   },
@@ -154,6 +141,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     width: '100%',
     marginBottom: 10,
+  },
+  contextWrapper: {
+    width: 150,
   },
   title: {
     fontSize: 20,
@@ -165,7 +155,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   list: {
-    paddingBottom: 20,
+    paddingBottom: 40,
   },
   row: {
     justifyContent: 'space-between',

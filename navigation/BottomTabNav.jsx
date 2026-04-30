@@ -41,29 +41,33 @@ const Tab = createBottomTabNavigator();
 export default function BottomTabNavigator() {
   return (
     <Tab.Navigator
-      screenOptions={({ route }) => ({
-        headerRight: () => <HeaderRight />,
-        headerTitle: "LetMeCook",
-        headerStyle: styles.header,
-        tabBarStyle: styles.tabBar,
-        tabBarActiveTintColor: '#000000ff', 
-        tabBarInactiveTintColor: '#3b3b3b',
-        tabBarIcon: ({ color, size }) => {
-          let iconName;
-          if (route.name === 'Accueil') {
-            iconName = 'home-outline';
-          } else if (route.name === 'Recettes') {
-            iconName = 'book-outline';
-          } else if (route.name === 'Planning') {
-            iconName = 'calendar-outline';
-          } else if (route.name === 'ListeDeCourse') {
-            iconName = 'cart-outline';
-          } else if (route.name === 'Inventaire') {
-            iconName = 'cube-outline';
-          }
-          return <Icon name={iconName} size={size} color={color} />;
-        },
-      })}
+      screenOptions={({ route }) => {
+        const isHome = route.name === 'Accueil';
+
+        return {
+          headerShown: isHome,
+          headerRight: isHome ? () => <HeaderRight /> : undefined,
+          headerTitle: isHome ? "LetMeCook" : "",
+          headerStyle: isHome ? styles.header : { display: 'none' },
+          tabBarStyle: styles.tabBar,
+          tabBarActiveTintColor: '#000000ff', 
+          tabBarInactiveTintColor: '#3b3b3b',
+          tabBarIcon: ({ color, size }) => {
+            let iconName;
+            if (route.name === 'Accueil') {
+              iconName = 'home-outline';
+            } else if (route.name === 'Recettes') {
+              iconName = 'book-outline';
+            } else if (route.name === 'Planning') {
+              iconName = 'calendar-outline';
+            } else if (route.name === 'ListeDeCourse') {
+              iconName = 'cart-outline';
+            } else if (route.name === 'Inventaire') {
+              iconName = 'cube-outline';
+            }
+            return <Icon name={iconName} size={size} color={color} />;
+          },
+        }}}
     >
       <Tab.Screen
         name="Accueil"

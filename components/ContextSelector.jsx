@@ -42,28 +42,19 @@ const ContextSelector = ({ showUserOption = true }) => {
   };
 
   return (
-    <View style={styles.pickerContainer}>
-      <CustomSelect
-        label="Choisir le contexte"
-        options={[
-          { label: 'Moi', value: user.id },
-          ...groups.map(g => ({ label: g.name, value: g.id }))
-        ]}
-        selectedValue={selectedId}
-        onValueChange={onChange}
-      />
-    </View>
+    <CustomSelect
+      label="Choisir le contexte"
+      options={[
+        { label: 'Moi', value: user.id },
+        ...groups.map(g => ({ label: g.name, value: g.id }))
+      ]}
+      selectedValue={selectedId}
+      onValueChange={onChange}
+    />
   );
 };
 
 const styles = StyleSheet.create({
-  pickerContainer: {
-    borderLeftWidth: 2,
-    borderRightWidth: 2,
-    borderBottomWidth: 2,
-    borderColor: 'rgb(180, 180, 230)',
-    borderRadius: 8
-  },
   picker: {
   }
 });

@@ -4,6 +4,7 @@ import { useRecipe } from '../hooks/useRecipe'
 import { useGroup } from '../hooks/useGroup';
 import { useUser } from '../hooks/useUser'
 import { useNavigation} from '@react-navigation/native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import SearchBar from '../components/SearchBar';
 import RecipeCard from '../components/RecipeCard';
@@ -20,6 +21,8 @@ export default function RecipesScreen() {
   const [search, setSearch] = React.useState('');
   const [activeTab, setActiveTab] = useState('privateRecipes');
   const [subActiveTab, setSubActiveTab] = useState(null);
+
+  const screenTitle = "Mes recettes"
 
   React.useEffect(() => {
     if (activeTab !== "groupRecipes") return;
@@ -59,100 +62,107 @@ export default function RecipesScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={{ flex: 1 }} edges={['top', 'left', 'right']}>
+      <View style={styles.container}>
 
-      <View style={styles.searchContainer}>
-        <SearchBar search={search} setSearch={setSearch} />
-      </View>
+        <View style={styles.headerRow}>
+          <Text style={styles.titlePage}>{screenTitle}</Text>
+          <View style={{ height: 60 }} />
+        </View>
 
-      <View style={[styles.tabsCard, activeTab === 'privateRecipes' ? { marginBottom: 16 } : { marginBottom: 2 }]}>
-        <TouchableOpacity
-          style={[styles.tabButton, activeTab === 'privateRecipes' && styles.activeTab]}
-          onPress={() => setActiveTab('privateRecipes')}
-        >
-          <Text style={[styles.tabText, activeTab === 'privateRecipes' && styles.activeTabText]}>Mes Recettes</Text>
-        </TouchableOpacity>
-        <View style={styles.separator} />
-        <TouchableOpacity
-          style={[styles.tabButton, activeTab === 'groupRecipes' && styles.activeTab]}
-          onPress={() => setActiveTab('groupRecipes')}
-        >
-          <Text style={[styles.tabText, activeTab === 'groupRecipes' && styles.activeTabText]}>Recette de groupe</Text>
-        </TouchableOpacity>
-      </View>
+        <View style={styles.searchContainer}>
+          <SearchBar search={search} setSearch={setSearch} />
+        </View>
 
-      {activeTab === 'privateRecipes' && (
-        <>
-          {filteredRecipes.length === 0 ? (
-            <Text style={styles.emptyText}>Aucune recette trouvée</Text>
-          ) : (
-            <FlatList
-              data={filteredRecipes}
-              keyExtractor={(recipe) => recipe.id.toString()}
-              renderItem={({ item }) => (
-                <RecipeCard
-                  recipe={item}
-                  onPress={() => handlePressRecipe(item, false)}
-                  width={CARD_WIDTH}
-                />
-              )}
-              numColumns={2}
-              columnWrapperStyle={styles.row}
-              contentContainerStyle={styles.list}
-              showsVerticalScrollIndicator={false}
-            />
-          )}
-        </>
-      )}
+        <View style={[styles.tabsCard, activeTab === 'privateRecipes' ? { marginBottom: 16 } : { marginBottom: 2 }]}>
+          <TouchableOpacity
+            style={[styles.tabButton, activeTab === 'privateRecipes' && styles.activeTab]}
+            onPress={() => setActiveTab('privateRecipes')}
+          >
+            <Text style={[styles.tabText, activeTab === 'privateRecipes' && styles.activeTabText]}>Mes Recettes</Text>
+          </TouchableOpacity>
+          <View style={styles.separator} />
+          <TouchableOpacity
+            style={[styles.tabButton, activeTab === 'groupRecipes' && styles.activeTab]}
+            onPress={() => setActiveTab('groupRecipes')}
+          >
+            <Text style={[styles.tabText, activeTab === 'groupRecipes' && styles.activeTabText]}>Recette de groupe</Text>
+          </TouchableOpacity>
+        </View>
 
-      {activeTab === 'groupRecipes' && (
-        <>
-          <View style={styles.subtabsCard}>
-            {groups?.map((group) => (
-              <TouchableOpacity
-                key={group.id}
-                style={[styles.tabButton, subActiveTab === group.id && styles.activeTab]}
-                onPress={() => setSubActiveTab(group.id)}
-              >
-                <Text style={[styles.tabText, subActiveTab === group.id && styles.activeTabText]}>
-                  {group.name}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          {filteredGroupRecipes.length === 0 ? (
+        {activeTab === 'privateRecipes' && (
+          <>
+            {filteredRecipes.length === 0 ? (
               <Text style={styles.emptyText}>Aucune recette trouvée</Text>
             ) : (
               <FlatList
-                data={filteredGroupRecipes}
+                data={filteredRecipes}
                 keyExtractor={(recipe) => recipe.id.toString()}
-                renderItem={({ item }) => {
-                  const group = groups.find(g => g.id === item.groupId);
-                  const owner = group ? getOwnerById(group.members, item.recipe.ownerId) : null;
-                  return (
-                    <RecipeCard
-                      recipe={item.recipe}
-                      onPress={() => handlePressRecipe(item, true)}
-                      width={CARD_WIDTH}
-                      isGroup={true}
-                      owner={owner}
-                    />
-                  );
-                }}
+                renderItem={({ item }) => (
+                  <RecipeCard
+                    recipe={item}
+                    onPress={() => handlePressRecipe(item, false)}
+                    width={CARD_WIDTH}
+                  />
+                )}
                 numColumns={2}
                 columnWrapperStyle={styles.row}
                 contentContainerStyle={styles.list}
                 showsVerticalScrollIndicator={false}
               />
-            )
-          }
-        </>
-      )}
-      
-      <FloatingButton onPress={() => navigation.navigate('RecipeForm')}/>
+            )}
+          </>
+        )}
 
-    </View>
+        {activeTab === 'groupRecipes' && (
+          <>
+            <View style={styles.subtabsCard}>
+              {groups?.map((group) => (
+                <TouchableOpacity
+                  key={group.id}
+                  style={[styles.tabButton, subActiveTab === group.id && styles.activeTab]}
+                  onPress={() => setSubActiveTab(group.id)}
+                >
+                  <Text style={[styles.tabText, subActiveTab === group.id && styles.activeTabText]}>
+                    {group.name}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            {filteredGroupRecipes.length === 0 ? (
+                <Text style={styles.emptyText}>Aucune recette trouvée</Text>
+              ) : (
+                <FlatList
+                  data={filteredGroupRecipes}
+                  keyExtractor={(recipe) => recipe.id.toString()}
+                  renderItem={({ item }) => {
+                    const group = groups.find(g => g.id === item.groupId);
+                    const owner = group ? getOwnerById(group.members, item.recipe.ownerId) : null;
+                    return (
+                      <RecipeCard
+                        recipe={item.recipe}
+                        onPress={() => handlePressRecipe(item, true)}
+                        width={CARD_WIDTH}
+                        isGroup={true}
+                        owner={owner}
+                      />
+                    );
+                  }}
+                  numColumns={2}
+                  columnWrapperStyle={styles.row}
+                  contentContainerStyle={styles.list}
+                  showsVerticalScrollIndicator={false}
+                />
+              )
+            }
+          </>
+        )}
+        
+        <FloatingButton onPress={() => navigation.navigate('RecipeForm')}/>
+
+      </View>
+    </SafeAreaView>
   );
 }
 
@@ -164,16 +174,28 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 8,
   },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
+    marginBottom: 10,
+  },
+  titlePage: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#333',
+  },
   searchContainer: {
     alignItems: 'center',
     marginBottom: 8,
   },
   list: {
-    paddingBottom: 20,
+    paddingBottom: 40,
   },
   row: {
     justifyContent: 'space-between',
-    gap: 8,
+    paddingBottom: 8,
   },
   image: {
     width: '100%',

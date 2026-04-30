@@ -4,6 +4,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import { useRecipe } from '../hooks/useRecipe'
 import { useImage } from '../hooks/useImage'
 import { useNavigation} from '@react-navigation/native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import ReusableModal from '../components/ReusableModal'
 import EditAddItemForm from '../components/EditAddItemForm'
@@ -177,47 +178,75 @@ export default function RecipeFormScreen({ route }) {
   };
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingVertical: 10 }}>
+    <SafeAreaView style={{ flex: 1 }} edges={['top', 'left', 'right']}>
+      <ScrollView style={styles.container} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingVertical: 10 }}>
 
-      <View style={styles.headerButtons}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Icon name="arrow-back" size={20} color="#fff" />
-          <Text style={styles.backButtonText}>Retour</Text>
-        </TouchableOpacity>
+        <View style={styles.headerButtons}>
+          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+            <Icon name="arrow-back" size={20} color="#fff" />
+            <Text style={styles.backButtonText}>Retour</Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity style={styles.saveButton} onPress={handleSaveRecipe}>
-          <Text style={styles.saveButtonText}>Enregistrer</Text>
-        </TouchableOpacity>
-      </View>
+          <TouchableOpacity style={styles.saveButton} onPress={handleSaveRecipe}>
+            <Text style={styles.saveButtonText}>Enregistrer</Text>
+          </TouchableOpacity>
+        </View>
 
-      <View style={styles.cardContainer}>
-        <Text style={styles.label}>Recette</Text>
-        <Text style={styles.subTitleText}>Title</Text>
-        <TextInput
-          style={styles.input}
-          onChangeText={setTitle}
-          value={title}
-        />
-        <Text style={styles.subTitleText}>Catégorie</Text>
-        <TextInput 
-          style={styles.input} 
-          value={category} 
-          onChangeText={setCategory} 
-          placeholder="Catégorie" 
-        />
-        <Text style={styles.subTitleText}>Temps de préparation</Text>
-        <View style={styles.sliderContainer}>
+        <View style={styles.cardContainer}>
+          <Text style={styles.label}>Recette</Text>
+          <Text style={styles.subTitleText}>Title</Text>
+          <TextInput
+            style={styles.input}
+            onChangeText={setTitle}
+            value={title}
+          />
+          <Text style={styles.subTitleText}>Catégorie</Text>
+          <TextInput 
+            style={styles.input} 
+            value={category} 
+            onChangeText={setCategory} 
+            placeholder="Catégorie" 
+          />
+          <Text style={styles.subTitleText}>Temps de préparation</Text>
+          <View style={styles.sliderContainer}>
+            <Slider
+              style={styles.slider}
+              value={Number(prepTime)}
+              onValueChange={setPrepTime}
+              maximumValue={90}
+              minimumValue={0}
+              step={1}
+              trackStyle={styles.sliderTrack}
+              thumbStyle={styles.sliderThumb}
+              minimumTrackTintColor="rgb(180, 180, 230)"
+              maximumTrackTintColor="rgba(180,180,230,0.3)"
+              thumbProps={{
+                children: (
+                  <Icon
+                    name="bicycle"
+                    size={20}
+                    color="white"
+                    style={styles.iconStyle}
+                  />
+                ),
+              }}
+            />
+            <Text style={styles.valueText}>{prepTime} min</Text>
+          </View>
+
+          <Text style={styles.subTitleText}>Temps de cuisson</Text>
+          <View style={styles.sliderContainer}>
           <Slider
             style={styles.slider}
-            value={Number(prepTime)}
-            onValueChange={setPrepTime}
+            value={Number(cookTime)}
+            onValueChange={setCookTime}
             maximumValue={90}
             minimumValue={0}
             step={1}
             trackStyle={styles.sliderTrack}
             thumbStyle={styles.sliderThumb}
             minimumTrackTintColor="rgb(180, 180, 230)"
-            maximumTrackTintColor="rgba(180,180,230,0.3)"
+              maximumTrackTintColor="rgba(180,180,230,0.3)"
             thumbProps={{
               children: (
                 <Icon
@@ -229,156 +258,137 @@ export default function RecipeFormScreen({ route }) {
               ),
             }}
           />
-          <Text style={styles.valueText}>{prepTime} min</Text>
-        </View>
-
-        <Text style={styles.subTitleText}>Temps de cuisson</Text>
-        <View style={styles.sliderContainer}>
-        <Slider
-          style={styles.slider}
-          value={Number(cookTime)}
-          onValueChange={setCookTime}
-          maximumValue={90}
-          minimumValue={0}
-          step={1}
-          trackStyle={styles.sliderTrack}
-          thumbStyle={styles.sliderThumb}
-          minimumTrackTintColor="rgb(180, 180, 230)"
-            maximumTrackTintColor="rgba(180,180,230,0.3)"
-          thumbProps={{
-            children: (
-              <Icon
-                name="bicycle"
-                size={20}
-                color="white"
-                style={styles.iconStyle}
-              />
-            ),
-          }}
-        />
-        <Text style={styles.valueText}>{cookTime} min</Text>
-        </View>
-        
-        <Text style={styles.subTitleText}>Portions</Text>
-        
-        <ServingsControl
-          servings={servings}
-          onIncrease={() => setServings(prev => prev + 1)}
-          onDecrease={() => setServings(prev => Math.max(prev - 1, 1))}
-        />
-        <Image source={{ uri: imageUrl }} style={styles.image} />
-        <TouchableOpacity style={styles.addButton} onPress={pickImage}>
-          <Text style={styles.addButtonText}>Changez l'image</Text>
-        </TouchableOpacity>
-
-      </View>
-
-      <View style={styles.cardContainer}>
-        <Text style={styles.label}>Ingrédients</Text>
-        <FlatList
-              scrollEnabled={false}
-              data={localIngredients}
-              keyExtractor={(item) => item.id.toString()}
-              renderItem={({ item }) => (
-                <View style={styles.ingredientItem}>
-                  <TouchableOpacity style={styles.ingredientInfo} onPress={() => handleEdit(item)}>
-                    <Image source={{ uri: item.ingredient.imageUrl }} style={styles.ingredientImage} />
-                    <Text style={styles.ingredientText}>
-                      {item.ingredient.name} - {item.quantity} {item.unit.symbol}
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.deleteButton} onPress={() => handleDeleteIngredient(item.id)}>
-                    <Icon name="trash-outline" size={15} color="rgb(180, 180, 230)" />
-                  </TouchableOpacity>
-                </View>
-              )}
-            />
-          <TouchableOpacity style={styles.addButton} onPress={() => setAddingItem(true)}>
-          <Icon name="add-circle-outline" size={24} color="rgb(180, 180, 230)" />
-            <Text style={styles.addButtonText}>ingrédient</Text>
+          <Text style={styles.valueText}>{cookTime} min</Text>
+          </View>
+          
+          <Text style={styles.subTitleText}>Portions</Text>
+          
+          <ServingsControl
+            servings={servings}
+            onIncrease={() => setServings(prev => prev + 1)}
+            onDecrease={() => setServings(prev => Math.max(prev - 1, 1))}
+          />
+          <Image 
+            source={
+            imageUrl
+              ? { uri: imageUrl }
+              : require('../assets/default.png')
+            }
+            style={styles.image} 
+          />
+          <TouchableOpacity style={styles.addButton} onPress={pickImage}>
+            <Text style={styles.addButtonText}>Changez l'image</Text>
           </TouchableOpacity>
+
         </View>
 
         <View style={styles.cardContainer}>
-
-          <Text style={styles.label}>Instructions</Text>
+          <Text style={styles.label}>Ingrédients</Text>
           <FlatList
-              scrollEnabled={false}
-              data={localInstructions}
-              keyExtractor={(item) => item.id.toString()}
-              renderItem={({ item }) => (
-                <View style={styles.instructionItem}>
-                  <View style={styles.instructionHeader}>
-                  <Text style={styles.subTitleText}>Étape {item.stepNumber}</Text>
-                  <TouchableOpacity  style={styles.deleteButton} onPress={() => handleDeleteInstruction(item.id)}>
-                    <Icon name="trash-outline" size={15} color="rgb(180, 180, 230)" />
-                  </TouchableOpacity>
+                scrollEnabled={false}
+                data={localIngredients}
+                keyExtractor={(item) => item.id.toString()}
+                renderItem={({ item }) => (
+                  <View style={styles.ingredientItem}>
+                    <TouchableOpacity style={styles.ingredientInfo} onPress={() => handleEdit(item)}>
+                      <Image source={{ uri: item.ingredient.imageUrl }} style={styles.ingredientImage} />
+                      <Text style={styles.ingredientText}>
+                        {item.ingredient.name} - {item.quantity} {item.unit.symbol}
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.deleteButton} onPress={() => handleDeleteIngredient(item.id)}>
+                      <Icon name="trash-outline" size={15} color="rgb(180, 180, 230)" />
+                    </TouchableOpacity>
                   </View>
-                  <TextInput
-                    style={styles.input}
-                    multiline
-                    value={item.description}
-                    onChangeText={(text) => handleEditInstruction({ id: item.id, description: text })}
-                  />
-                </View>
-              )}
-            />
-
-          {addingInstruction && (
-            <View style={styles.newInstructionContainer}>
-              <Text style={styles.subTitleText}>Étape {recipe.instructions.length + 2}</Text>
-              
-              <TextInput
-                style={styles.input}
-                placeholder="Nouvelle instruction..."
-                multiline
-                value={newInstructionText}
-                onChangeText={setNewInstructionText}
+                )}
               />
-              <TouchableOpacity
-                style={styles.addButton}
-                onPress={() => handleAddInstruction({ description: newInstructionText })}
-              >
-                <Text style={styles.addButtonText}>Valider</Text>
-              </TouchableOpacity>
-              </View> 
-          )}
-
-          {!addingInstruction && (
-          <TouchableOpacity style={styles.addButton} onPress={() => setAddingInstruction(true)}>
+            <TouchableOpacity style={styles.addButton} onPress={() => setAddingItem(true)}>
             <Icon name="add-circle-outline" size={24} color="rgb(180, 180, 230)" />
-            <Text style={styles.addButtonText}>instruction</Text>
-          </TouchableOpacity>
-          )}
+              <Text style={styles.addButtonText}>ingrédient</Text>
+            </TouchableOpacity>
+          </View>
 
-        </View>
-      <ReusableModal
-            visible={!!editingItem}
-            onClose={() => setEditingItem(null)}
-        >
-            {editingItem && (
-            <EditAddItemForm
-                item={editingItem}
-                unitsList={units}
-                onSave={handleEditIngredient}
-                onCancel={() => setEditingItem(null)}
-            />
+          <View style={styles.cardContainer}>
+
+            <Text style={styles.label}>Instructions</Text>
+            <FlatList
+                scrollEnabled={false}
+                data={localInstructions}
+                keyExtractor={(item) => item.id.toString()}
+                renderItem={({ item }) => (
+                  <View style={styles.instructionItem}>
+                    <View style={styles.instructionHeader}>
+                    <Text style={styles.subTitleText}>Étape {item.stepNumber}</Text>
+                    <TouchableOpacity  style={styles.deleteButton} onPress={() => handleDeleteInstruction(item.id)}>
+                      <Icon name="trash-outline" size={15} color="rgb(180, 180, 230)" />
+                    </TouchableOpacity>
+                    </View>
+                    <TextInput
+                      style={styles.input}
+                      multiline
+                      value={item.description}
+                      onChangeText={(text) => handleEditInstruction({ id: item.id, description: text })}
+                    />
+                  </View>
+                )}
+              />
+
+            {addingInstruction && (
+              <View style={styles.newInstructionContainer}>
+                <Text style={styles.subTitleText}>Étape {recipe.instructions.length + 2}</Text>
+                
+                <TextInput
+                  style={styles.input}
+                  placeholder="Nouvelle instruction..."
+                  multiline
+                  value={newInstructionText}
+                  onChangeText={setNewInstructionText}
+                />
+                <TouchableOpacity
+                  style={styles.addButton}
+                  onPress={() => handleAddInstruction({ description: newInstructionText })}
+                >
+                  <Text style={styles.addButtonText}>Valider</Text>
+                </TouchableOpacity>
+                </View> 
             )}
-      </ReusableModal>
 
-      <ReusableModal
-        visible={addingItem}
-        onClose={() => setAddingItem(false)}
-      >
-        <EditAddItemForm
-          item={null}
-          unitsList={units}
-          ingredientsList= {ingredients}
-          onSave={handleAddIngredient}
-          onCancel={() => setAddingItem(false)}
-        />
-      </ReusableModal>
-    </ScrollView>
+            {!addingInstruction && (
+            <TouchableOpacity style={styles.addButton} onPress={() => setAddingInstruction(true)}>
+              <Icon name="add-circle-outline" size={24} color="rgb(180, 180, 230)" />
+              <Text style={styles.addButtonText}>instruction</Text>
+            </TouchableOpacity>
+            )}
+
+          </View>
+        <ReusableModal
+              visible={!!editingItem}
+              onClose={() => setEditingItem(null)}
+          >
+              {editingItem && (
+              <EditAddItemForm
+                  item={editingItem}
+                  unitsList={units}
+                  onSave={handleEditIngredient}
+                  onCancel={() => setEditingItem(null)}
+              />
+              )}
+        </ReusableModal>
+
+        <ReusableModal
+          visible={addingItem}
+          onClose={() => setAddingItem(false)}
+        >
+          <EditAddItemForm
+            item={null}
+            unitsList={units}
+            ingredientsList= {ingredients}
+            onSave={handleAddIngredient}
+            onCancel={() => setAddingItem(false)}
+          />
+        </ReusableModal>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 

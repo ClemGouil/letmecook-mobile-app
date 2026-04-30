@@ -4,6 +4,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import RecipesScreen from '../screens/RecipesScreen';
 import RecipeDetailScreen from '../screens/RecipeDetailScreen';
 import RecipeFormScreen from '../screens/RecipeFormScreen';
+import AddIngredientToListScreen from '../screens/AddIngredientToListScreen';
 
 const Stack = createStackNavigator();
 
@@ -23,6 +24,11 @@ export default function RecipeStack() {
       <Stack.Screen
         name="RecipeForm"
         component={RecipeFormScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="AddIngredientToList"
+        component={AddIngredientToListScreen}
         options={{ headerShown: false }}
       />
     </Stack.Navigator>

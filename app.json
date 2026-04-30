@@ -21,7 +21,8 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.anonymous.snackaffa341610864f13bac4b34a5f21e00a"
+      "package": "com.anonymous.snackaffa341610864f13bac4b34a5f21e00a",
+      "softwareKeyboardLayoutMode": "resize"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -31,6 +32,9 @@
         "projectId": "51e570e6-1cec-47f5-ad46-a03f4c371c80"
       }
     },
-    "owner": "mblabs"
+    "owner": "mblabs",
+    "plugins": [
+      "expo-secure-store"
+    ]
   }
 }

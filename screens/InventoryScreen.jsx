@@ -3,6 +3,7 @@ import { Text, View, StyleSheet, FlatList, Keyboard, TouchableOpacity } from 're
 import { useInventory } from '../hooks/useInventory';
 import { useUser } from '../hooks/useUser'
 import { useAppContext } from '../hooks/useAppContext';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import SearchBar from '../components/SearchBar';
 import InventoryItemCard from '../components/InventoryItemCard';
@@ -14,6 +15,10 @@ import ContextSelector from '../components/ContextSelector';
 export default function InventoryScreen() {
 
   const [search, setSearch] = React.useState('');
+
+  React.useEffect(() => {
+    setSearch('');
+  }, [currentContext]);
 
   const { user} = useUser();
   const { currentContext } = useAppContext();
@@ -29,9 +34,11 @@ export default function InventoryScreen() {
   const [editingItem, setEditingItem] = React.useState(null);
   const [addingItem, setAddingItem] = React.useState(false);
 
-  const filteredInventoryItems = inventory?.items?.filter((i) =>
-    i.ingredient.name.toLowerCase().includes(search.toLowerCase())
-  ) || [];
+  const filteredInventoryItems = inventory?.items
+    ?.filter(i => i?.ingredient?.name)
+    ?.filter(i =>
+      i.ingredient.name.toLowerCase().includes(search.toLowerCase())
+    ) || [];
 
   const handleEdit = (item) => setEditingItem(item);
 
@@ -65,76 +72,79 @@ export default function InventoryScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={{ flex: 1 }} edges={['top', 'left', 'right']}>
+      <View style={styles.container}>
 
-      <View style={styles.headerRow}>
-        <Text style={styles.title}>{screenTitle}</Text>
-        <ContextSelector />
-      </View>
+        <View style={styles.headerRow}>
+          <Text style={styles.title}>{screenTitle}</Text>
+          <View style={styles.contextWrapper}>
+            <ContextSelector />
+          </View>
+        </View>
 
-      <View style={styles.searchContainer}>
-        <SearchBar search={search} setSearch={setSearch} />
-      </View>
+        <View style={styles.searchContainer}>
+          <SearchBar search={search} setSearch={setSearch} />
+        </View>
 
-      {filteredInventoryItems.length === 0 ? (
-        <Text style={styles.emptyText}>Aucun ingrédient trouvé</Text>
-      ) : (
-        <>
-          <FlatList
-            data={filteredInventoryItems}
-            keyExtractor={(item) => item.id.toString()}
-            renderItem={({ item }) => (
-              <InventoryItemCard
-                item={item}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-              />
-            )}
-            numColumns={2}
-            columnWrapperStyle={styles.row}
-            contentContainerStyle={styles.list}
-            showsVerticalScrollIndicator={false}
-          />
-          <Text style={styles.countText}>
-            {filteredInventoryItems.length} ingrédients trouvés
-          </Text>
-        </>
-      )}
-      <FloatingButton onPress={() => setAddingItem(true)}/>
-
-      <ReusableModal
-        visible={!!editingItem}
-        onClose={() => setEditingItem(null)}
-      >
-        {editingItem && (
-          <EditAddItemForm
-            item={editingItem}
-            unitsList={units}
-            onSave={handleSave}
-            onCancel={() => setEditingItem(null)}
-          />
+        {filteredInventoryItems.length === 0 ? (
+          <Text style={styles.emptyText}>Aucun ingrédient trouvé</Text>
+        ) : (
+          <>
+            <FlatList
+              data={filteredInventoryItems}
+              keyExtractor={(item) => item.id.toString()}
+              renderItem={({ item }) => (
+                <InventoryItemCard
+                  item={item}
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
+                />
+              )}
+              numColumns={2}
+              columnWrapperStyle={styles.row}
+              contentContainerStyle={styles.list}
+              showsVerticalScrollIndicator={false}
+            />
+            <Text style={styles.countText}>
+              {filteredInventoryItems.length} ingrédients trouvés
+            </Text>
+          </>
         )}
-      </ReusableModal>
+        <FloatingButton onPress={() => setAddingItem(true)}/>
 
-      <ReusableModal
-        visible={addingItem}
-        onClose={() => setAddingItem(false)}
-      >
-        <EditAddItemForm
-          item={null}
-          unitsList={units}
-          ingredientsList= {ingredients}
-          onSave={handleAdd}
-          onCancel={() => setAddingItem(false)}
-        />
-      </ReusableModal>
-    </View>
+        <ReusableModal
+          visible={!!editingItem}
+          onClose={() => setEditingItem(null)}
+        >
+          {editingItem && (
+            <EditAddItemForm
+              item={editingItem}
+              unitsList={units}
+              onSave={handleSave}
+              onCancel={() => setEditingItem(null)}
+            />
+          )}
+        </ReusableModal>
+
+        <ReusableModal
+          visible={addingItem}
+          onClose={() => setAddingItem(false)}
+        >
+          <EditAddItemForm
+            item={null}
+            unitsList={units}
+            ingredientsList= {ingredients}
+            onSave={handleAdd}
+            onCancel={() => setAddingItem(false)}
+          />
+        </ReusableModal>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: 10,
     flex: 1,
     padding: 8,
   },
@@ -144,6 +154,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     width: '100%',
     marginBottom: 10,
+  },
+  contextWrapper: {
+    width: 150,
   },
   title: {
     fontSize: 20,
@@ -155,7 +168,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   list: {
-    paddingBottom: 20,
+    paddingBottom: 40,
   },
   row: {
     justifyContent: 'space-between',

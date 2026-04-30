@@ -3,6 +3,7 @@ import { Text, View, TouchableOpacity, StyleSheet, FlatList, Image, Dimensions, 
 import { useRecipe } from '../hooks/useRecipe'
 import { useUser } from '../hooks/useUser';
 import { useNavigation } from '@react-navigation/native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import SearchBar from '../components/SearchBar';
 import RecipeCard from '../components/RecipeCard';
@@ -59,68 +60,70 @@ export default function HomeScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.searchContainer}>
-        <SearchBar search={search} setSearch={setSearch} />
-      </View>
-      <View style={styles.ingredientSearchContainer}>
-        <TextInput
-          style={styles.ingredientInput}
-          placeholder="Rechercher par ingrédient..."
-          value={ingredientSearch}
-          onChangeText={setIngredientSearch}
-        />
-        {ingredientSearch.length > 0 && (
-          <FlatList
-            data={filteredIngredients}
-            keyExtractor={(item) => item.id.toString()}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={styles.ingredientItem}
-                onPress={() => {
-                  addIngredient(item);
-                  setIngredientSearch('');
-                }}
-              >
-                <Text>{item.name}</Text>
+    <SafeAreaView style={{ flex: 1 }} edges={['bottom', 'left', 'right']}>
+      <View style={styles.container}>
+        <View style={styles.searchContainer}>
+          <SearchBar search={search} setSearch={setSearch} />
+        </View>
+        <View style={styles.ingredientSearchContainer}>
+          <TextInput
+            style={styles.ingredientInput}
+            placeholder="Rechercher par ingrédient..."
+            value={ingredientSearch}
+            onChangeText={setIngredientSearch}
+          />
+          {ingredientSearch.length > 0 && (
+            <FlatList
+              data={filteredIngredients}
+              keyExtractor={(item) => item.id.toString()}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={styles.ingredientItem}
+                  onPress={() => {
+                    addIngredient(item);
+                    setIngredientSearch('');
+                  }}
+                >
+                  <Text>{item.name}</Text>
+                </TouchableOpacity>
+              )}
+              style={styles.ingredientList}
+            />
+          )}
+        </View>
+
+        <View style={styles.selectedIngredientsContainer}>
+          {selectedIngredients.map((ingr) => (
+            <View key={ingr} style={styles.chip}>
+              <Text>{ingr}</Text>
+              <TouchableOpacity onPress={() => removeIngredient(ingr)}>
+                <Text style={styles.removeButton}>×</Text>
               </TouchableOpacity>
-            )}
-            style={styles.ingredientList}
-          />
-        )}
-      </View>
+            </View>
+          ))}
+        </View>
 
-      <View style={styles.selectedIngredientsContainer}>
-        {selectedIngredients.map((ingr) => (
-          <View key={ingr} style={styles.chip}>
-            <Text>{ingr}</Text>
-            <TouchableOpacity onPress={() => removeIngredient(ingr)}>
-              <Text style={styles.removeButton}>×</Text>
-            </TouchableOpacity>
-          </View>
-        ))}
+        {filteredRecipes.length === 0 ? (
+            <Text style={styles.emptyText}>Aucune recette trouvée</Text>
+          ) : (
+            <FlatList
+              data={filteredRecipes}
+              keyExtractor={(recipe) => recipe.id.toString()}
+              renderItem={({ item }) => (
+                <RecipeCard
+                  recipe={item}
+                  onPress={() => handlePressRecipe(item, false, true)}
+                  width={CARD_WIDTH}
+                />
+              )}
+              numColumns={2}
+              columnWrapperStyle={styles.row}
+              contentContainerStyle={styles.list}
+              showsVerticalScrollIndicator={false}
+            />
+          )}
       </View>
-
-      {filteredRecipes.length === 0 ? (
-          <Text style={styles.emptyText}>Aucune recette trouvée</Text>
-        ) : (
-          <FlatList
-            data={filteredRecipes}
-            keyExtractor={(recipe) => recipe.id.toString()}
-            renderItem={({ item }) => (
-              <RecipeCard
-                recipe={item}
-                onPress={() => handlePressRecipe(item, false, true)}
-                width={CARD_WIDTH}
-              />
-            )}
-            numColumns={2}
-            columnWrapperStyle={styles.row}
-            contentContainerStyle={styles.list}
-            showsVerticalScrollIndicator={false}
-          />
-        )}
-      </View>
+    </SafeAreaView>
   );
 }
 

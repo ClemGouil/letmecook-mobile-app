@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform,} from 'react-native';
 import Modal from 'react-native-modal';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function ReusableModal({ visible, onClose, children }) {
   return (
@@ -13,19 +14,27 @@ export default function ReusableModal({ visible, onClose, children }) {
       backdropTransitionOutTiming={0}
       propagateSwipe={false}
       useNativeDriverForBackdrop
+      avoidKeyboard
     >
-      <View style={styles.bottomSheet}>
-        {/* Barre de fermeture */}
-        <TouchableOpacity
-          activeOpacity={0.8}
-          onPress={onClose}
-          style={styles.dragBarContainer}
-        >
-          <View style={styles.dragBar} />
-        </TouchableOpacity>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'padding'}
+        style={{ flex: 1, justifyContent: 'flex-end' }}
+      >
+        <SafeAreaView edges={['bottom']} style={styles.safeArea}>
+          <View style={styles.bottomSheet}>
+            {/* Barre de fermeture */}
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={onClose}
+              style={styles.dragBarContainer}
+            >
+              <View style={styles.dragBar} />
+            </TouchableOpacity>
 
-        {children}
-      </View>
+            {children}
+          </View>
+        </SafeAreaView>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }

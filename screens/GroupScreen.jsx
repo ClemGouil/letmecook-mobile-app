@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Text, TextInput , View, ScrollView, TouchableOpacity, StyleSheet, Image, Switch} from 'react-native';
 import { useUser } from '../hooks/useUser';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
 import AccordionSection from '../components/AccordionSection'
@@ -215,265 +216,267 @@ export default function GroupScreen() {
     }
 
     return (
-    <View style={styles.screen}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Icon name="arrow-back" size={24} color="#000" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Mes groupes</Text>
-        <View style={{ width: 24 }} />
-      </View>
+    <SafeAreaView style={{ flex: 1 }} edges={['bottom', 'left', 'right']}>
+      <View style={styles.screen}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+            <Icon name="arrow-back" size={24} color="#000" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Mes groupes</Text>
+          <View style={{ width: 24 }} />
+        </View>
 
-      <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
 
-        {pendingGroups.length > 0 && (
-            pendingGroups.map(group => (
-            <AccordionSection title={`Invitation à rejoindre ${group.name}`}>
-                <View style={styles.pendingButtonsRow}>
-                <TouchableOpacity style={styles.textButton} onPress={() => acceptInvitation(group)} >
-                    <Icon name="checkmark" size={22} color="green" />
-                    <Text style={[styles.textButtonLabel, { color: "green" }]}>Accepter</Text>
-                </TouchableOpacity>
+          {pendingGroups.length > 0 && (
+              pendingGroups.map(group => (
+              <AccordionSection title={`Invitation à rejoindre ${group.name}`}>
+                  <View style={styles.pendingButtonsRow}>
+                  <TouchableOpacity style={styles.textButton} onPress={() => acceptInvitation(group)} >
+                      <Icon name="checkmark" size={22} color="green" />
+                      <Text style={[styles.textButtonLabel, { color: "green" }]}>Accepter</Text>
+                  </TouchableOpacity>
 
-                <TouchableOpacity style={styles.textButton} onPress={() => refuseInvitation(group)} >
-                    <Icon name="close" size={22} color="red" />
-                    <Text style={[styles.textButtonLabel, { color: "red" }]}>Refuser</Text>
-                </TouchableOpacity>
-                </View>
-            </AccordionSection>
-            ))
-        )}
+                  <TouchableOpacity style={styles.textButton} onPress={() => refuseInvitation(group)} >
+                      <Icon name="close" size={22} color="red" />
+                      <Text style={[styles.textButtonLabel, { color: "red" }]}>Refuser</Text>
+                  </TouchableOpacity>
+                  </View>
+              </AccordionSection>
+              ))
+          )}
 
-        {activeGroups.length > 0 ? (
-            activeGroups.map(group => {
+          {activeGroups.length > 0 ? (
+              activeGroups.map(group => {
 
-              const member = group.members.find(m => m.user.id === user.id);
-              const role = member?.role;
+                const member = group.members.find(m => m.user.id === user.id);
+                const role = member?.role;
 
-              return (
-                <AccordionSection title={group.name} key={group.id}>
+                return (
+                  <AccordionSection title={group.name} key={group.id}>
 
-                  {!isEditing && !isInviting ? (
-                    <View style={styles.actionsRow}>
-                      <TouchableOpacity
-                        style={[styles.actionButton,!canEditGroup(role) && { opacity: 0.2 }]}
-                        onPress={() => {setIsEditing(true)}}
-                        disabled={!canEditGroup(role)}
-                      >
-                        <Icon name="create-outline" size={20} color="#3f51b5" />
-                        <Text style={styles.actionLabel}>Modifier</Text>
-                      </TouchableOpacity>
+                    {!isEditing && !isInviting ? (
+                      <View style={styles.actionsRow}>
+                        <TouchableOpacity
+                          style={[styles.actionButton,!canEditGroup(role) && { opacity: 0.2 }]}
+                          onPress={() => {setIsEditing(true)}}
+                          disabled={!canEditGroup(role)}
+                        >
+                          <Icon name="create-outline" size={20} color="#3f51b5" />
+                          <Text style={styles.actionLabel}>Modifier</Text>
+                        </TouchableOpacity>
 
-                      <TouchableOpacity
-                        style={[styles.actionButton,!canQuitGroup(user.id, group) && { opacity: 0.2 }]}
-                        onPress={() => leaveGroup(group)}
-                        disabled={!canQuitGroup(user.id, group)}
-                      >
-                        <Icon name="exit-outline" size={20} color="orange" />
-                        <Text style={[styles.actionLabel, { color: "orange" }]}>Quitter</Text>
-                      </TouchableOpacity>
-                    </View>
-                  ): null }
+                        <TouchableOpacity
+                          style={[styles.actionButton,!canQuitGroup(user.id, group) && { opacity: 0.2 }]}
+                          onPress={() => leaveGroup(group)}
+                          disabled={!canQuitGroup(user.id, group)}
+                        >
+                          <Icon name="exit-outline" size={20} color="orange" />
+                          <Text style={[styles.actionLabel, { color: "orange" }]}>Quitter</Text>
+                        </TouchableOpacity>
+                      </View>
+                    ): null }
 
-                  <View style={styles.table}>
-                    <View style={[styles.row, styles.headerRow]}>
-                      <Text style={[styles.cell, styles.headerCell, styles.borderRight]}>Nom</Text>
-                      <Text style={[styles.cell, styles.headerCell, styles.borderRight]}>Rôle</Text>
-                      <Text style={[styles.cell, styles.headerCell]}>Adhésion</Text>
-                      <View style={styles.headerDeleteCell}></View>
-                    </View>
+                    <View style={styles.table}>
+                      <View style={[styles.row, styles.headerRow]}>
+                        <Text style={[styles.cell, styles.headerCell, styles.borderRight]}>Nom</Text>
+                        <Text style={[styles.cell, styles.headerCell, styles.borderRight]}>Rôle</Text>
+                        <Text style={[styles.cell, styles.headerCell]}>Adhésion</Text>
+                        <View style={styles.headerDeleteCell}></View>
+                      </View>
 
-                    {group.members.map((member) => (
-                      !membersToDelete.includes(member.id) && (
-                        <View key={member.id} style={styles.row}>
-                          <Text style={[styles.cell, styles.borderRight, member.status === 'PENDING' && styles.memberPending]}>
-                            {member.status === 'PENDING'
-                              ? `${member.user.username} (en attente)`
-                              : member.user.username}
-                          </Text>
+                      {group.members.map((member) => (
+                        !membersToDelete.includes(member.id) && (
+                          <View key={member.id} style={styles.row}>
+                            <Text style={[styles.cell, styles.borderRight, member.status === 'PENDING' && styles.memberPending]}>
+                              {member.status === 'PENDING'
+                                ? `${member.user.username} (en attente)`
+                                : member.user.username}
+                            </Text>
 
-                          {isEditing && !isOwner(group, member.user.id) ? (
-                            <View style={[styles.cell, styles.borderRight]}>
-                              <View style={styles.pickerContainer}>
-                                <Picker
-                                  selectedValue={editedMembers[member.id] ?? member.role}
-                                  style={styles.picker}
-                                  onValueChange={(value) =>
-                                    setEditedMembers(prev => ({ ...prev, [member.id]: value }))
-                                  }
-                                >
-                                  <Picker.Item label="Membre" value="VIEWER" />
-                                  <Picker.Item label="Admin" value="ADMIN" />
-                                  <Picker.Item label="Éditeur" value="EDITOR" />
-                                </Picker>
+                            {isEditing && !isOwner(group, member.user.id) ? (
+                              <View style={[styles.cell, styles.borderRight]}>
+                                <View style={styles.pickerContainer}>
+                                  <Picker
+                                    selectedValue={editedMembers[member.id] ?? member.role}
+                                    style={styles.picker}
+                                    onValueChange={(value) =>
+                                      setEditedMembers(prev => ({ ...prev, [member.id]: value }))
+                                    }
+                                  >
+                                    <Picker.Item label="Membre" value="VIEWER" />
+                                    <Picker.Item label="Admin" value="ADMIN" />
+                                    <Picker.Item label="Éditeur" value="EDITOR" />
+                                  </Picker>
+                                </View>
                               </View>
-                            </View>
-                          ) : (
-                            <Text style={[styles.cell, styles.borderRight]}>{member.role}</Text>
-                          )}
+                            ) : (
+                              <Text style={[styles.cell, styles.borderRight]}>{member.role}</Text>
+                            )}
 
-                          <Text style={[styles.cell, styles.borderRight]}>{member.joinedAt}</Text>
+                            <Text style={[styles.cell, styles.borderRight]}>{member.joinedAt}</Text>
 
-                          {isEditing ? (
-                            <TouchableOpacity
-                              style={styles.deleteCell}
-                              onPress={() => {
-                                setMembersToDelete(prev =>
-                                  prev.includes(member.id)
-                                    ? prev.filter(id => id !== member.id)
-                                    : [...prev, member.id]
-                                );
-                              }}
-                              disabled={member.status === 'PENDING' || member.user.id === group.ownerId || member.user.id === user.id}
-                            >
-                              <Icon
-                                name="trash-outline"
-                                size={20}
-                                color={
-                                  member.status === 'PENDING' ||
-                                  member.user.id === group.ownerId ||
-                                  member.user.id === user.id
-                                    ? 'grey'
-                                    : 'rgb(180, 180, 230)'
-                                }
-                                style={{
-                                  opacity:
+                            {isEditing ? (
+                              <TouchableOpacity
+                                style={styles.deleteCell}
+                                onPress={() => {
+                                  setMembersToDelete(prev =>
+                                    prev.includes(member.id)
+                                      ? prev.filter(id => id !== member.id)
+                                      : [...prev, member.id]
+                                  );
+                                }}
+                                disabled={member.status === 'PENDING' || member.user.id === group.ownerId || member.user.id === user.id}
+                              >
+                                <Icon
+                                  name="trash-outline"
+                                  size={20}
+                                  color={
                                     member.status === 'PENDING' ||
                                     member.user.id === group.ownerId ||
                                     member.user.id === user.id
-                                      ? 0.5
-                                      : 1,
-                                }}
-                              />
-                            </TouchableOpacity>
-                          ) : (
-                            <View style={styles.deleteCellPlaceholder} />
-                          )}
-                        </View>
-                      )
-                    ))}
-                  </View>
-                  
-
-
-                  {!isEditing && !isInviting ? (
-                    <View style={styles.actionsRow}>
-                      <TouchableOpacity
-                        style={[styles.actionButton,!canInvite(role) && { opacity: 0.2 }]}
-                        onPress={() => {setIsInviting(true);}}
-                        disabled={!canInvite(role)}
-                      >
-                        <Icon name="person-add-outline" size={20} color="#3f51b5" />
-                        <Text style={styles.actionLabel}>Inviter</Text>
-                      </TouchableOpacity>
-
-                      <TouchableOpacity
-                        style={[styles.actionButton,!canDeleteGroup(user.id, group) && { opacity: 0.2 }]}
-                        onPress={() => confirmDeleteGroup(group)}
-                        disabled={!canDeleteGroup(user.id, group)}
-                      >
-                        <Icon name="trash-outline" size={20} color="red" />
-                        <Text style={[styles.actionLabel, { color: "red" }]}>Supprimer</Text>
-                      </TouchableOpacity>
+                                      ? 'grey'
+                                      : 'rgb(180, 180, 230)'
+                                  }
+                                  style={{
+                                    opacity:
+                                      member.status === 'PENDING' ||
+                                      member.user.id === group.ownerId ||
+                                      member.user.id === user.id
+                                        ? 0.5
+                                        : 1,
+                                  }}
+                                />
+                              </TouchableOpacity>
+                            ) : (
+                              <View style={styles.deleteCellPlaceholder} />
+                            )}
+                          </View>
+                        )
+                      ))}
                     </View>
-                  ): null }
+                    
 
-                  {isEditing ? (
-                    <View style={styles.actionsRow}>
-                      <TouchableOpacity
-                        style={[styles.actionButton,]}
-                        onPress={() => handleSaveMembers(group)}
-                      >
-                        <Icon name="save-outline" size={20} color="#3f51b5" />
-                        <Text style={styles.actionLabel}>Sauvegarder</Text>
-                      </TouchableOpacity>
 
-                      <TouchableOpacity
-                        style={[styles.actionButton,]}
-                        onPress={() => {setIsEditing(false); setMembersToDelete([]);}}
-                      >
-                        <Icon name="close-outline" size={20} color="red" />
-                        <Text style={[styles.actionLabel, { color: "red" }]}>Annuler</Text>
-                      </TouchableOpacity>
-                    </View>
-                  ): null }
+                    {!isEditing && !isInviting ? (
+                      <View style={styles.actionsRow}>
+                        <TouchableOpacity
+                          style={[styles.actionButton,!canInvite(role) && { opacity: 0.2 }]}
+                          onPress={() => {setIsInviting(true);}}
+                          disabled={!canInvite(role)}
+                        >
+                          <Icon name="person-add-outline" size={20} color="#3f51b5" />
+                          <Text style={styles.actionLabel}>Inviter</Text>
+                        </TouchableOpacity>
 
-                  {isInviting ? (
-                    <>
-                      <View style={styles.inviteForms} >
-                        <Text style={styles.label}>Email du membre :</Text>
-                        <TextInput
-                          style={styles.input}
-                          placeholder="exemple@domaine.com"
-                          value={invitedMember.email}
-                          onChangeText={(value) => setInvitedMember(prev => ({ ...prev, email: value }))}
-                          keyboardType="email-address"
-                        />
-                        <Text style={styles.label}>Role du membre :</Text>
-                        <View style={styles.pickerContainer}>
-                          <Picker
-                              selectedValue={invitedMember.role}
-                              style={styles.picker}
-                              onValueChange={(value) => setInvitedMember(prev => ({ ...prev, role: value }))}
-                            >
-                            <Picker.Item label="Membre" value="VIEWER" />
-                            <Picker.Item label="Admin" value="ADMIN" />
-                            <Picker.Item label="Editeur" value="EDITOR" />
-                          </Picker>
-                        </View>
-
-                        <View style={styles.actionsRow}>
-                          <TouchableOpacity
-                            style={[styles.actionButton,]}
-                            onPress={() => handleInviteMember(group)}
-                          >
-                            <Icon name="person-add-outline" size={20} color="#3f51b5" />
-                            <Text style={styles.actionLabel}>Inviter</Text>
-                          </TouchableOpacity>
-
-                          <TouchableOpacity
-                            style={[styles.actionButton,]}
-                            onPress={() => setIsInviting(false)}
-                          >
-                            <Icon name="close-outline" size={20} color="red" />
-                            <Text style={[styles.actionLabel, { color: "red" }]}>Annuler</Text>
-                          </TouchableOpacity>
-                        </View>
+                        <TouchableOpacity
+                          style={[styles.actionButton,!canDeleteGroup(user.id, group) && { opacity: 0.2 }]}
+                          onPress={() => confirmDeleteGroup(group)}
+                          disabled={!canDeleteGroup(user.id, group)}
+                        >
+                          <Icon name="trash-outline" size={20} color="red" />
+                          <Text style={[styles.actionLabel, { color: "red" }]}>Supprimer</Text>
+                        </TouchableOpacity>
                       </View>
-                    </>
-                  ): null }
+                    ): null }
 
-                </AccordionSection>
-              );
-            })
-          ) : (
-            <Text style={styles.noGroupText}>Vous ne faites partie d’aucun groupe.</Text>
-          )}
+                    {isEditing ? (
+                      <View style={styles.actionsRow}>
+                        <TouchableOpacity
+                          style={[styles.actionButton,]}
+                          onPress={() => handleSaveMembers(group)}
+                        >
+                          <Icon name="save-outline" size={20} color="#3f51b5" />
+                          <Text style={styles.actionLabel}>Sauvegarder</Text>
+                        </TouchableOpacity>
 
-        <ChooseNameModal
-          visible={addingGroup}
-          title={"Nom du groupe :"}
-          placeholder={"Famille"} 
-          onSubmit={handleAdd}
-          onCancel={() => setAddingGroup(false)}
-        />
-      </ScrollView>
-      <FloatingButton onPress={() => setAddingGroup(true)}/>
+                        <TouchableOpacity
+                          style={[styles.actionButton,]}
+                          onPress={() => {setIsEditing(false); setMembersToDelete([]);}}
+                        >
+                          <Icon name="close-outline" size={20} color="red" />
+                          <Text style={[styles.actionLabel, { color: "red" }]}>Annuler</Text>
+                        </TouchableOpacity>
+                      </View>
+                    ): null }
 
-      {transferGroup &&
-      <ReusableModal
-          visible={transferingOwnership}
-          onClose={() => {setTransferingOwnership(false); setTransferGroup(null)}}
-        >
-          <SelectNewOwnerForm
-            members={transferGroup.members.filter(m => m.user.id !== user.id && m.status === "ACTIVE")}
-            group={transferGroup}
-            onSave={handleTransferOwnerShip}
-            onCancel={() => {setTransferingOwnership(false); setTransferGroup(null)}}
+                    {isInviting ? (
+                      <>
+                        <View style={styles.inviteForms} >
+                          <Text style={styles.label}>Email du membre :</Text>
+                          <TextInput
+                            style={styles.input}
+                            placeholder="exemple@domaine.com"
+                            value={invitedMember.email}
+                            onChangeText={(value) => setInvitedMember(prev => ({ ...prev, email: value }))}
+                            keyboardType="email-address"
+                          />
+                          <Text style={styles.label}>Role du membre :</Text>
+                          <View style={styles.pickerContainer}>
+                            <Picker
+                                selectedValue={invitedMember.role}
+                                style={styles.picker}
+                                onValueChange={(value) => setInvitedMember(prev => ({ ...prev, role: value }))}
+                              >
+                              <Picker.Item label="Membre" value="VIEWER" />
+                              <Picker.Item label="Admin" value="ADMIN" />
+                              <Picker.Item label="Editeur" value="EDITOR" />
+                            </Picker>
+                          </View>
+
+                          <View style={styles.actionsRow}>
+                            <TouchableOpacity
+                              style={[styles.actionButton,]}
+                              onPress={() => handleInviteMember(group)}
+                            >
+                              <Icon name="person-add-outline" size={20} color="#3f51b5" />
+                              <Text style={styles.actionLabel}>Inviter</Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                              style={[styles.actionButton,]}
+                              onPress={() => setIsInviting(false)}
+                            >
+                              <Icon name="close-outline" size={20} color="red" />
+                              <Text style={[styles.actionLabel, { color: "red" }]}>Annuler</Text>
+                            </TouchableOpacity>
+                          </View>
+                        </View>
+                      </>
+                    ): null }
+
+                  </AccordionSection>
+                );
+              })
+            ) : (
+              <Text style={styles.noGroupText}>Vous ne faites partie d’aucun groupe.</Text>
+            )}
+
+          <ChooseNameModal
+            visible={addingGroup}
+            title={"Nom du groupe :"}
+            placeholder={"Famille"} 
+            onSubmit={handleAdd}
+            onCancel={() => setAddingGroup(false)}
           />
-      </ReusableModal>
-      }
-    </View>
+        </ScrollView>
+        <FloatingButton onPress={() => setAddingGroup(true)}/>
+
+        {transferGroup &&
+        <ReusableModal
+            visible={transferingOwnership}
+            onClose={() => {setTransferingOwnership(false); setTransferGroup(null)}}
+          >
+            <SelectNewOwnerForm
+              members={transferGroup.members.filter(m => m.user.id !== user.id && m.status === "ACTIVE")}
+              group={transferGroup}
+              onSave={handleTransferOwnerShip}
+              onCancel={() => {setTransferingOwnership(false); setTransferGroup(null)}}
+            />
+        </ReusableModal>
+        }
+      </View>
+    </SafeAreaView>
   );
 }
 
@@ -511,7 +514,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexDirection: 'column',
     alignItems: 'stretch',
-    paddingBottom: 20,
+    paddingBottom: 60,
   },
   title: {
     fontSize: 18,

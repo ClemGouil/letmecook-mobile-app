@@ -15,7 +15,7 @@ import FloatingButton  from '../components/FloatingButton';
 
 export default function ShoppingListDetailScreen({ route }) {
 
-  const { shoppingLists, units, ingredients, addIngredientToShoppingList, updateIngredientToShoppingList, deleteIngredientToShoppingList} = useShoppingList();
+  const { shoppingLists, units, searchIngredients, addIngredientToShoppingList, updateIngredientToShoppingList, deleteIngredientToShoppingList} = useShoppingList();
   const { inventory, feedFromShoppingList} = useInventory();
   const navigation = useNavigation();
 
@@ -29,6 +29,9 @@ export default function ShoppingListDetailScreen({ route }) {
   const [editingItem, setEditingItem] = React.useState(null);
   const [addingItem, setAddingItem] = React.useState(false);
 
+  const [ingredientQuery, setIngredientQuery] = React.useState('');
+  const [ingredientResults, setIngredientResults] = React.useState([]);
+
   const handleEdit = (item) => setEditingItem(item);
 
   const categories = Object.entries(
@@ -39,6 +42,19 @@ export default function ShoppingListDetailScreen({ route }) {
       return acc;
     }, {})
   );
+
+  React.useEffect(() => {
+    const timeout = setTimeout(async () => {
+      if (ingredientQuery.length >= 2) {
+        const res = await searchIngredients(ingredientQuery);
+        setIngredientResults(res);
+      } else {
+        setIngredientResults([]);
+      }
+    }, 300);
+
+    return () => clearTimeout(timeout);
+  }, [ingredientQuery]);
 
   const handleToggleChecked = async (item) => {
     const updatedItem = { ...item, checked: !item.checked };
@@ -152,7 +168,8 @@ export default function ShoppingListDetailScreen({ route }) {
             <EditAddItemForm
               item={null}
               unitsList={units}
-              ingredientsList= {ingredients}
+              ingredientsList= {ingredientResults}
+              onSearchIngredient={setIngredientQuery}
               onSave={handleAdd}
               onCancel={() => setAddingItem(false)}
             />

@@ -8,7 +8,6 @@ export const InventoryContext = createContext();
 export function InventoryProvider({ children }) {
 
   const [inventory, setInventory] = useState(null);
-  const [ingredients, setIngredients] = useState([]);
   const [units, setUnits] = useState([]);
 
   const { currentContext } = useAppContext();
@@ -19,7 +18,6 @@ export function InventoryProvider({ children }) {
       const userId = currentContext.type === "user" ? currentContext.id : null;
       const groupId = currentContext.type === "group" ? currentContext.id : null;
       loadInventory(userId, groupId);
-      loadIngredients();
       loadUnits();
     }
   }, [user, currentContext]);
@@ -43,12 +41,16 @@ export function InventoryProvider({ children }) {
     }
   }
 
-  async function loadIngredients() {
+  async function searchIngredients(query, limit = 5) {
     try {
       const response = await axios.get(`${API_URL}/ingredients`, {
+      params: {
+        query,
+        limit,
+      },
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
-      setIngredients(response.data);
+      return response.data;
     } catch (err) {
       console.error("Erreur lors du chargement des ingrédients:", err);
     }
@@ -127,9 +129,9 @@ export function InventoryProvider({ children }) {
     <InventoryContext.Provider
       value={{
         inventory,
-        ingredients,
         units,
         loadInventory,
+        searchIngredients,
         addItem,
         updateItem,
         deleteItem,

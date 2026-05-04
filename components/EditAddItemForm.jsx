@@ -3,7 +3,7 @@ import { View, TextInput, Button, StyleSheet, Text, TouchableOpacity, Image, Fla
 import { Picker } from '@react-native-picker/picker';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
-const EditAddItemForm = ({ item, unitsList, ingredientsList, onSave, onCancel }) => {
+const EditAddItemForm = ({ item, unitsList, ingredientsList, onSearchIngredient, onSave, onCancel }) => {
 
   const [quantity, setQuantity] = useState(item?.quantity ?? 0);
   const [selectedIngredient, setSelectedIngredient] = useState(item?.ingredient ?? null);
@@ -56,12 +56,13 @@ const EditAddItemForm = ({ item, unitsList, ingredientsList, onSave, onCancel })
             style={styles.input}
             placeholder="Tapez le nom de l'ingrédient"
             value={searchIngredient}
-            onChangeText={setSearchIngredient}
+            onChangeText={(text) => {
+              setSearchIngredient(text);
+              onSearchIngredient(text);
+            }}
           />
           <FlatList
-            data={ingredientsList.filter(i =>
-              i.name.toLowerCase().includes(searchIngredient.toLowerCase())
-            )}
+            data={ingredientsList}
             keyExtractor={i => i.id}
             renderItem={({ item }) => (
               <TouchableOpacity
@@ -71,6 +72,7 @@ const EditAddItemForm = ({ item, unitsList, ingredientsList, onSave, onCancel })
                 }}
                 style={styles.ingredientItem}
               >
+                <Image source={{ uri: item.imageUrl }} style={styles.ingredientThumb} />
                 <Text style={styles.ingredientItemText}>{item.name}</Text>
               </TouchableOpacity>
             )}
@@ -232,13 +234,15 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginBottom: 15,
     backgroundColor: '#fff',
-    elevation: 2, // petite ombre sur Android
-    shadowColor: '#000', // ombre sur iOS
+    elevation: 2,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.2,
     shadowRadius: 2,
   },
   ingredientItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingVertical: 12,
     paddingHorizontal: 10,
     borderBottomWidth: 1,
@@ -248,6 +252,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#333',
   },
+  ingredientThumb: {
+    width: 32,
+    height: 32,
+    borderRadius: 6,
+    marginRight: 10,
+    backgroundColor: '#f2f2f2',
+  }
 });
 
 export default EditAddItemForm;

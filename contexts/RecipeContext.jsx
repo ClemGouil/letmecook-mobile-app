@@ -9,7 +9,6 @@ export function RecipeProvider({ children }) {
   const [publicRecipes, setPublicRecipes] = useState([]);
   const [privateRecipes, setPrivateRecipes] = useState([]);
   const [groupRecipes, setGroupRecipes] = useState([]);
-  const [ingredients, setIngredients] = useState([]);
   const [units, setUnits] = useState([]);
 
   const { user, token } = useUser();
@@ -18,7 +17,6 @@ export function RecipeProvider({ children }) {
     if (user) {
       loadPublicRecipes(user.id);
       loadPrivateRecipes(user.id);
-      loadIngredients();
       loadUnits();
     }
   }, [user]);
@@ -68,12 +66,16 @@ export function RecipeProvider({ children }) {
     }
   }
 
-  async function loadIngredients() {
+  async function searchIngredients(query, limit = 5) {
     try {
       const response = await axios.get(`${API_URL}/ingredients`, {
+      params: {
+        query,
+        limit,
+      },
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
-      setIngredients(response.data);
+      return response.data;
     } catch (err) {
       console.error("Erreur lors du chargement des ingrédients:", err);
     }
@@ -270,8 +272,8 @@ export function RecipeProvider({ children }) {
         publicRecipes,
         privateRecipes,
         groupRecipes,
-        ingredients,
         units,
+        searchIngredients,
         loadPublicRecipes,
         loadPrivateRecipes,
         loadGroupRecipes,

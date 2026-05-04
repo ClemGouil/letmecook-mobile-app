@@ -17,7 +17,7 @@ export default function RecipeFormScreen({ route }) {
 
   const navigation = useNavigation();
 
-  const { privateRecipes, ingredients, units, addRecipe, addIngredientToRecipe, deleteAllIngredientsFromRecipe, addInstructionToRecipe, deleteAllInstructionsFromRecipe, updateRecipe} = useRecipe();
+  const { privateRecipes, units, searchIngredients, addRecipe, addIngredientToRecipe, deleteAllIngredientsFromRecipe, addInstructionToRecipe, deleteAllInstructionsFromRecipe, updateRecipe} = useRecipe();
   const {  uploadImage } = useImage();
   const { user } = useUser();
 
@@ -51,6 +51,22 @@ export default function RecipeFormScreen({ route }) {
 
   const [newInstructionText, setNewInstructionText] = useState("");
   const [addingInstruction, setAddingInstruction] = useState(false);
+
+  const [ingredientQuery, setIngredientQuery] = React.useState('');
+  const [ingredientResults, setIngredientResults] = React.useState([]);
+
+  React.useEffect(() => {
+    const timeout = setTimeout(async () => {
+      if (ingredientQuery.length >= 2) {
+        const res = await searchIngredients(ingredientQuery);
+        setIngredientResults(res);
+      } else {
+        setIngredientResults([]);
+      }
+    }, 300);
+
+    return () => clearTimeout(timeout);
+  }, [ingredientQuery]);
   
   const handleEdit = (item) => setEditingItem(item);
 
@@ -382,7 +398,8 @@ export default function RecipeFormScreen({ route }) {
           <EditAddItemForm
             item={null}
             unitsList={units}
-            ingredientsList= {ingredients}
+            ingredientsList= {ingredientResults}
+            onSearchIngredient={setIngredientQuery}
             onSave={handleAddIngredient}
             onCancel={() => setAddingItem(false)}
           />

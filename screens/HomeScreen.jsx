@@ -12,11 +12,12 @@ export default function HomeScreen() {
 
   const navigation = useNavigation();
 
-  const { publicRecipes, ingredients} = useRecipe();
+  const { publicRecipes, searchIngredients} = useRecipe();
   const { user} = useUser();
 
   const [search, setSearch] = React.useState('');
   const [ingredientSearch, setIngredientSearch] = React.useState('');
+  const [suggestions, setSuggestions] = React.useState([]);
   const [selectedIngredients, setSelectedIngredients] = React.useState([]);
 
   const filteredRecipes = React.useMemo(() => {
@@ -29,10 +30,17 @@ export default function HomeScreen() {
     });
   }, [search, selectedIngredients, publicRecipes]);
 
-  const filteredIngredients = ingredients.filter((i) => {
-    const matchesSearch = i.name.toLowerCase().includes(ingredientSearch.toLowerCase());
-    return matchesSearch;
-  });
+  React.useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (ingredientSearch.length >= 2) {
+        searchIngredients(ingredientSearch, 5).then(setSuggestions);
+      } else {
+        setSuggestions([]);
+      }
+    }, 300);
+
+    return () => clearTimeout(timeout);
+  }, [ingredientSearch]);
 
   const addIngredient = (ingredient) => {
     if (!selectedIngredients.includes(ingredient.name)) {
@@ -74,7 +82,7 @@ export default function HomeScreen() {
           />
           {ingredientSearch.length > 0 && (
             <FlatList
-              data={filteredIngredients}
+              data={suggestions}
               keyExtractor={(item) => item.id.toString()}
               renderItem={({ item }) => (
                 <TouchableOpacity

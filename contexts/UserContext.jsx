@@ -14,14 +14,24 @@ export function UserProvider({children}) {
 
     useEffect(() => {
         const initAuth = async () => {
-            const storedToken = await SecureStore.getItemAsync('token');
+            try {
+                const storedToken = await SecureStore.getItemAsync('token');
 
-            if (storedToken) {
-                await loadUserFromToken(storedToken);
-            } else {
-                setUser(null);
+                if (storedToken) {
+                    await loadUserFromToken(storedToken);
+                } else {
+                    setUser(null);
+                }
+                setIsLoading(false);
+            } catch (err) {
+
+                if (err.response?.status === 403 || err.response?.status === 401) {
+                    await SecureStore.deleteItemAsync('token');
+                    setUser(null);
+                    setToken("");
+                    return;
+                }
             }
-            setIsLoading(false);
         };
 
         initAuth();

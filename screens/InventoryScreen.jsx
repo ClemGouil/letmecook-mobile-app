@@ -29,10 +29,26 @@ export default function InventoryScreen() {
     ? "Mon Inventaire"
     : `Inventaire de ${currentContext.name}`;
 
-  const { inventory, units, ingredients, updateItem, addItem, deleteItem } = useInventory();
+  const { inventory, units, searchIngredients, updateItem, addItem, deleteItem } = useInventory();
 
   const [editingItem, setEditingItem] = React.useState(null);
   const [addingItem, setAddingItem] = React.useState(false);
+
+  const [ingredientQuery, setIngredientQuery] = React.useState('');
+  const [ingredientResults, setIngredientResults] = React.useState([]);
+
+  React.useEffect(() => {
+    const timeout = setTimeout(async () => {
+      if (ingredientQuery.length >= 2) {
+        const res = await searchIngredients(ingredientQuery);
+        setIngredientResults(res);
+      } else {
+        setIngredientResults([]);
+      }
+    }, 300);
+
+    return () => clearTimeout(timeout);
+  }, [ingredientQuery]);
 
   const filteredInventoryItems = inventory?.items
     ?.filter(i => i?.ingredient?.name)
@@ -133,7 +149,8 @@ export default function InventoryScreen() {
           <EditAddItemForm
             item={null}
             unitsList={units}
-            ingredientsList= {ingredients}
+            ingredientsList= {ingredientResults}
+            onSearchIngredient={setIngredientQuery}
             onSave={handleAdd}
             onCancel={() => setAddingItem(false)}
           />

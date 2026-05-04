@@ -8,7 +8,6 @@ export const ShoppingListContext = createContext();
 export function ShoppingListProvider({ children }) {
 
   const [shoppingLists, setShoppingLists] = useState([]);
-  const [ingredients, setIngredients] = useState([]);
   const [units, setUnits] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -20,7 +19,6 @@ export function ShoppingListProvider({ children }) {
       const userId = currentContext.type === "user" ? currentContext.id : null;
       const groupId = currentContext.type === "group" ? currentContext.id : null;
       loadShoppingLists(userId, groupId);
-      loadIngredients();
       loadUnits();
     }
   }, [user, currentContext]);
@@ -45,12 +43,16 @@ export function ShoppingListProvider({ children }) {
     }
   }
 
-  async function loadIngredients() {
+  async function searchIngredients(query, limit = 5) {
     try {
       const response = await axios.get(`${API_URL}/ingredients`, {
+      params: {
+        query,
+        limit,
+      },
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
-      setIngredients(response.data);
+      return response.data;
     } catch (err) {
       console.error("Erreur lors du chargement des ingrédients:", err);
     }
@@ -337,9 +339,9 @@ export function ShoppingListProvider({ children }) {
     <ShoppingListContext.Provider
       value={{
         shoppingLists,
-        ingredients,
         units,
         loading,
+        searchIngredients,
         loadShoppingLists,
         addShoppingList,
         updateShoppingList,

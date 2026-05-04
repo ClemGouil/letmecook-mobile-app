@@ -46,7 +46,7 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: 16,
     overflow: 'hidden',
-    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    backgroundColor: 'rgba(114, 111, 111, 0.7)',
   },
   overlayBadge: {
     position: 'absolute',

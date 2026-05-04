@@ -61,7 +61,8 @@ export default function RecipeFormScreen({ route }) {
         const res = await searchIngredients(ingredientQuery);
         setIngredientResults(res);
       } else {
-        setIngredientResults([]);
+        const res = await searchIngredients(null, 3);
+        setIngredientResults(res);
       }
     }, 300);
 

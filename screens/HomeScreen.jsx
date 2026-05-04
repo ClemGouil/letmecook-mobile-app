@@ -32,7 +32,7 @@ export default function HomeScreen() {
 
   React.useEffect(() => {
     const timeout = setTimeout(() => {
-      if (ingredientSearch.length >= 2) {
+      if (ingredientSearch.length >= 1) {
         searchIngredients(ingredientSearch, 5).then(setSuggestions);
       } else {
         setSuggestions([]);

@@ -51,7 +51,7 @@ const EditAddItemForm = ({ item, unitsList, ingredientsList, onSearchIngredient,
 
       {showIngredientPicker && (
         <>
-          <Text style={styles.label}>Sélectionnez un ingrédient :</Text>
+          <Text style={styles.label1}>Sélectionnez un ingrédient :</Text>
           <TextInput
             style={styles.input}
             placeholder="Tapez le nom de l'ingrédient"
@@ -61,6 +61,7 @@ const EditAddItemForm = ({ item, unitsList, ingredientsList, onSearchIngredient,
               onSearchIngredient(text);
             }}
           />
+          { ingredientsList.length > 0 && (
           <FlatList
             data={ingredientsList}
             keyExtractor={i => i.id}
@@ -78,6 +79,7 @@ const EditAddItemForm = ({ item, unitsList, ingredientsList, onSearchIngredient,
             )}
             style={styles.ingredientPicker}
           />
+          )}
         </>
       )}
 
@@ -163,6 +165,12 @@ const styles = StyleSheet.create({
     color: '#333',
     flexShrink: 1,
   },
+  label1: {
+    marginBottom: 15,
+    fontWeight: '600',
+    fontSize: 18,
+    color: '#333',
+  },
   label: {
     marginBottom: 6,
     fontWeight: '600',
@@ -171,7 +179,8 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderWidth: 2,
+    borderColor: 'rgb(180, 180, 230)',
     padding: 12,
     borderRadius: 8,
     marginBottom: 15,

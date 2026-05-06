@@ -9,6 +9,7 @@ import { useNavigation} from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import SelectGroupForm from '../components/SelectGroupForm';
 import ReusableModal from '../components/ReusableModal';
+import BackButton from '../components/BackButton';
 
 export default function RecipeDetailScreen({ route }) {
 
@@ -149,10 +150,11 @@ export default function RecipeDetailScreen({ route }) {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={{ flex: 1 }} >
       <>
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingVertical: 20 }}>
         <View style={styles.cardContainer}>
+          <BackButton onPress={() => navigation.goBack()}/>
           <Text style={styles.title}>{recipe.name}</Text>
           <Image 
             source={

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, TextInput, Text, StyleSheet, FlatList, Image, TouchableOpacity, ScrollView } from 'react-native';
+import { View, TextInput, Text, StyleSheet, FlatList, Image, TouchableOpacity, ScrollView, Switch } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useRecipe } from '../hooks/useRecipe'
 import { useImage } from '../hooks/useImage'
@@ -12,6 +12,8 @@ import * as ImagePicker from 'expo-image-picker';
 import ServingsControl from '../components/ServingsControl'
 import { Slider } from 'react-native-elements';
 import { useUser } from '../hooks/useUser';
+import BackButton from '../components/BackButton';
+import SaveButton from '../components/SaveButton';
 
 export default function RecipeFormScreen({ route }) {
 
@@ -33,6 +35,7 @@ export default function RecipeFormScreen({ route }) {
       imageUrl: null,
       ingredients: [],
       instructions: [],
+      isPublic: false
     }
   : privateRecipes.find(r => r.id === route.params.recipeId);
 
@@ -42,6 +45,7 @@ export default function RecipeFormScreen({ route }) {
   const [cookTime, setCookTime] = useState(recipe.cookTime);
   const [servings, setServings] = useState(recipe.servings);
   const [imageUrl, setImageUrl] = useState(recipe.imageUrl);
+  const [isPublic, setIsPublic] = useState(recipe.isPublic);
 
   const [localIngredients, setLocalIngredients] = useState(recipe.ingredients ?? []);
   const [localInstructions, setLocalInstructions] = useState(recipe.instructions ?? []);
@@ -86,7 +90,8 @@ export default function RecipeFormScreen({ route }) {
         cookTime,
         servings,
         imageUrl : finalImageUrl,
-        ownerId: isNew ? user.id : recipe.ownerId
+        ownerId: isNew ? user.id : recipe.ownerId,
+        isPublic,
       };
 
       if (isNew) {
@@ -195,21 +200,14 @@ export default function RecipeFormScreen({ route }) {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={{ flex: 1 }}>
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingVertical: 10 }}>
 
-        <View style={styles.headerButtons}>
-          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-            <Icon name="arrow-back" size={20} color="#fff" />
-            <Text style={styles.backButtonText}>Retour</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.saveButton} onPress={handleSaveRecipe}>
-            <Text style={styles.saveButtonText}>Enregistrer</Text>
-          </TouchableOpacity>
-        </View>
-
         <View style={styles.cardContainer}>
+          <View style={styles.headerButtons}>
+            <BackButton onPress={() => navigation.goBack()}/>
+            <SaveButton onPress={handleSaveRecipe}/>
+          </View>
           <Text style={styles.label}>Recette</Text>
           <Text style={styles.subTitleText}>Title</Text>
           <TextInput
@@ -285,6 +283,15 @@ export default function RecipeFormScreen({ route }) {
             onIncrease={() => setServings(prev => prev + 1)}
             onDecrease={() => setServings(prev => Math.max(prev - 1, 1))}
           />
+          <Text style={styles.subTitleText}>Publique</Text>
+          
+          <View style={styles.publicRow}>
+            <Switch
+              value={isPublic}
+              onValueChange={setIsPublic}
+            />
+          </View>
+
           <Image 
             source={
             imageUrl
@@ -534,6 +541,11 @@ const styles = StyleSheet.create({
     marginTop: 16,
     color: '#555',
   },
+  publicRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+  },
   deleteButton : {
     width: 30,
     height: 30,
@@ -548,33 +560,5 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 16,
-  },
-  backButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgb(180, 180, 230)',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-  },
-
-  backButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
-    marginLeft: 6,
-    fontSize : 16
-  },
-
-  saveButton: {
-    backgroundColor: 'rgb(100, 149, 237)',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-  },
-
-  saveButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize : 16
   },
 });

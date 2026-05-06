@@ -114,7 +114,7 @@ export default function SelectRecipeToAddScreen({ route, navigation }) {
 
   return (
 
-  <SafeAreaView style={{ flex: 1 }} edges={['top', 'left', 'right']}>
+  <SafeAreaView style={{ flex: 1 }}>
     <View style={styles.container}>
         {!recipeSelected && (
           <>

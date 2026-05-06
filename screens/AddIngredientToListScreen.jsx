@@ -78,7 +78,7 @@ export default function AddIngredientToListScreen({ route, navigation }) {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={{ flex: 1 }}>
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingVertical: 10 }}>
 
           <View style={styles.headerButtons}>

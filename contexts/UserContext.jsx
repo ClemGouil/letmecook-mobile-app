@@ -31,6 +31,8 @@ export function UserProvider({children}) {
                     setToken("");
                     return;
                 }
+            } finally {
+                setIsLoading(false);
             }
         };
 

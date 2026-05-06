@@ -115,7 +115,7 @@ export default function ShoppingListDetailScreen({ route }) {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={{ flex: 1 }}>
       <View style={styles.container}>
         <View style={styles.header}>
           <Text style={styles.headerTitle}>{shoppingList.name}</Text>

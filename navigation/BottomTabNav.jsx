@@ -1,5 +1,6 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { getFocusedRouteNameFromRoute } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { Text, View, TouchableOpacity, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -78,6 +79,16 @@ export default function BottomTabNavigator() {
             navigation.navigate('Accueil', { screen: 'HomeMain' });
           },
         })}
+        options={({ route }) => {
+          const routeName = getFocusedRouteNameFromRoute(route) ?? 'HomeMain';
+
+          return {
+            tabBarStyle: routeName === 'HomeMain' 
+              ? styles.tabBar 
+              : { display: 'none' },
+            headerShown: routeName === 'HomeMain',
+          };
+        }}
       />
       <Tab.Screen
         name="Recettes"
@@ -88,6 +99,15 @@ export default function BottomTabNavigator() {
             navigation.navigate('Recettes', { screen: 'RecipeMain' });
           },
         })}
+        options={({ route }) => {
+          const routeName = getFocusedRouteNameFromRoute(route) ?? 'RecipeMain';
+
+          return {
+            tabBarStyle: routeName === 'RecipeMain' 
+              ? styles.tabBar 
+              : { display: 'none' },
+          };
+        }}
       />
       <Tab.Screen
         name="Planning"
@@ -98,6 +118,15 @@ export default function BottomTabNavigator() {
             navigation.navigate('Planning', { screen: 'MealPlanning' });
           },
         })}
+        options={({ route }) => {
+          const routeName = getFocusedRouteNameFromRoute(route) ?? 'MealPlanning';
+
+          return {
+            tabBarStyle: routeName === 'MealPlanning' 
+              ? styles.tabBar 
+              : { display: 'none' },
+          };
+        }}
       />
       <Tab.Screen
         name="ListeDeCourse"
@@ -108,6 +137,15 @@ export default function BottomTabNavigator() {
             navigation.navigate('ListeDeCourse', { screen: 'ShoppingListMain' });
           },
         })}
+        options={({ route }) => {
+          const routeName = getFocusedRouteNameFromRoute(route) ?? 'ShoppingListMain';
+
+          return {
+            tabBarStyle: routeName === 'ShoppingListMain' 
+              ? styles.tabBar 
+              : { display: 'none' },
+          };
+        }}
       />
       <Tab.Screen name="Inventaire" component={InventoryScreen} />
     </Tab.Navigator>

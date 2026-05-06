@@ -15,7 +15,6 @@ export function RecipeProvider({ children }) {
 
   useEffect(() => {
     if (user) {
-      loadPublicRecipes(user.id);
       loadPrivateRecipes(user.id);
       loadUnits();
     }
@@ -23,14 +22,27 @@ export function RecipeProvider({ children }) {
 
   const API_URL = `${process.env.EXPO_PUBLIC_URL_BACKEND}/api`;
 
-  async function loadPublicRecipes(userId) {
+  async function loadPublicRecipes(userId, query = null, limit = 5, offset = 0, ingredientIds = [], append = false) {
+    const safeIngredientIds = ingredientIds?.length ? ingredientIds : undefined;
     try {
       const response = await axios.get(`${API_URL}/recipes/public/${userId}`, {
+        params: {
+          query,
+          ingredientIds: safeIngredientIds,
+          minMatch: safeIngredientIds ? 1 : undefined,
+          limit,
+          offset,
+        },
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      setPublicRecipes(response.data);
+
+      const newData = response.data;
+
+      setPublicRecipes(prev =>
+        append ? [...prev, ...newData] : newData
+      );
     } catch (err) {
       console.error("Erreur lors du chargement des recettes publiques:", err);
     }

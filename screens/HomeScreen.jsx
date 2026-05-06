@@ -12,7 +12,7 @@ export default function HomeScreen() {
 
   const navigation = useNavigation();
 
-  const { publicRecipes, searchIngredients} = useRecipe();
+  const { publicRecipes, searchIngredients,  loadPublicRecipes} = useRecipe();
   const { user} = useUser();
 
   const [search, setSearch] = React.useState('');
@@ -20,15 +20,22 @@ export default function HomeScreen() {
   const [suggestions, setSuggestions] = React.useState([]);
   const [selectedIngredients, setSelectedIngredients] = React.useState([]);
 
-  const filteredRecipes = React.useMemo(() => {
-    return publicRecipes.filter((r) => {
-      const matchesSearch = r.name.toLowerCase().includes(search.toLowerCase());
-      const matchesIngredients =
-        selectedIngredients.length === 0 ||
-        selectedIngredients.some((ingr) => r.ingredients.some(i => i.ingredient.name.toLowerCase().includes(ingr.toLowerCase())));
-      return matchesSearch && matchesIngredients;
-    });
-  }, [search, selectedIngredients, publicRecipes]);
+  const [loading, setLoading] = React.useState(false);
+  const [offset, setOffset] = React.useState(0);
+  const [refreshing, setRefreshing] = React.useState(false);
+  const [loadingMore, setLoadingMore] = React.useState(false);
+
+  const ingredientIds = React.useMemo(
+    () => selectedIngredients.map(i => i.id),
+    [selectedIngredients]
+  );
+
+  React.useEffect(() => {
+    if (!user?.id) return;
+    setOffset(0);
+    loadPublicRecipes( user.id, search.length >= 2 ? search : null, 10, 0, ingredientIds, false);
+  }, [search, ingredientIds]);
+
 
   React.useEffect(() => {
     const timeout = setTimeout(() => {
@@ -42,15 +49,40 @@ export default function HomeScreen() {
     return () => clearTimeout(timeout);
   }, [ingredientSearch]);
 
-  const addIngredient = (ingredient) => {
-    if (!selectedIngredients.includes(ingredient.name)) {
-      setSelectedIngredients([...selectedIngredients, ingredient.name]);
-    }
+  const refreshRecipes = async () => {
+    
+    setRefreshing(true);
+    setOffset(0);
+
+    await loadPublicRecipes( user.id, search, 10, 0, ingredientIds, false);
+
+    setRefreshing(false);
   };
 
-  const removeIngredient = (ingredient) => {
-    setSelectedIngredients(selectedIngredients.filter(i => i !== ingredient));
+  const loadMoreRecipes = async () => {
+    if (loadingMore) return;
+    setLoadingMore(true);
+    const newOffset = offset + 10;
+    await loadPublicRecipes( user.id, search, 10, newOffset, ingredientIds, true);
+    setOffset(newOffset);
+    setLoadingMore(false);
   };
+
+  const addIngredient = (ingredient) => {
+    setSelectedIngredients(prev => {
+      if (prev.some(i => i.id === ingredient.id)) return prev;
+
+      return [...prev, {
+        id: ingredient.id,
+        name: ingredient.name
+      }];
+    });
+  };
+
+  const removeIngredient = (id) => {
+    setSelectedIngredients(selectedIngredients.filter(i => i.id !== id));
+  };
+
 
   const handlePressRecipe = (item, isGroup, isPublic) => {
     const currentUserId = user.id;
@@ -68,7 +100,7 @@ export default function HomeScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['bottom', 'left', 'right']}>
+    <SafeAreaView style={{ flex: 1 }} edges={['left', 'right']}>
       <View style={styles.container}>
         <View style={styles.searchContainer}>
           <SearchBar search={search} setSearch={setSearch} />
@@ -102,32 +134,36 @@ export default function HomeScreen() {
 
         <View style={styles.selectedIngredientsContainer}>
           {selectedIngredients.map((ingr) => (
-            <View key={ingr} style={styles.chip}>
-              <Text>{ingr}</Text>
-              <TouchableOpacity onPress={() => removeIngredient(ingr)}>
+            <View key={ingr.id} style={styles.chip}>
+              <Text>{ingr.name}</Text>
+              <TouchableOpacity onPress={() => removeIngredient(ingr.id)}>
                 <Text style={styles.removeButton}>×</Text>
               </TouchableOpacity>
             </View>
           ))}
         </View>
 
-        {filteredRecipes.length === 0 ? (
+        {publicRecipes.length === 0 ? (
             <Text style={styles.emptyText}>Aucune recette trouvée</Text>
           ) : (
             <FlatList
-              data={filteredRecipes}
+              data={publicRecipes}
               keyExtractor={(recipe) => recipe.id.toString()}
               renderItem={({ item }) => (
-                <RecipeCard
-                  recipe={item}
-                  onPress={() => handlePressRecipe(item, false, true)}
-                  width={CARD_WIDTH}
-                />
-              )}
+                  <RecipeCard
+                    recipe={item}
+                    onPress={() => handlePressRecipe(item, false, true)}
+                    width={CARD_WIDTH}
+                  />)
+              }
               numColumns={2}
               columnWrapperStyle={styles.row}
               contentContainerStyle={styles.list}
               showsVerticalScrollIndicator={false}
+              refreshing={refreshing}
+              onRefresh={refreshRecipes}
+              onEndReached={loadMoreRecipes}
+              onEndReachedThreshold={0.5}
             />
           )}
       </View>
@@ -135,7 +171,7 @@ export default function HomeScreen() {
   );
 }
 
-const CARD_MARGIN = 6;
+const CARD_MARGIN = 4;
 const CARD_WIDTH = (Dimensions.get('window').width / 2) - (CARD_MARGIN * 3);
 
 const styles = StyleSheet.create({
@@ -148,10 +184,11 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   list: {
-    paddingBottom: 20,
+    paddingBottom: 40,
   },
   row: {
     justifyContent: 'space-between',
+    paddingBottom: 8,
   },
   emptyText: {
     textAlign: 'center',

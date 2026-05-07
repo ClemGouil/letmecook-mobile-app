@@ -8,6 +8,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import SearchBar from '../components/SearchBar';
 import RecipeCard from '../components/RecipeCard';
 import ServingsControl from '../components/ServingsControl'
+import BackButton from '../components/BackButton';
+import SaveButton from '../components/SaveButton';
 
 import { useRecipe } from '../hooks/useRecipe'
 import { useGroup } from '../hooks/useGroup';
@@ -119,19 +121,9 @@ export default function SelectRecipeToAddScreen({ route, navigation }) {
         {!recipeSelected && (
           <>
             <View style={styles.headerButtons}>
-              <TouchableOpacity style={styles.backButton} onPress={handleCancel}>
-                <Icon name="arrow-back" size={20} color="#fff" />
-                <Text style={styles.backButtonText}>Retour</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity style={[styles.saveButton, selectedRecipe == null && styles.disabledButton]} onPress={() => setRecipeSelected(true)} disabled={selectedRecipe == null}>
-                <Text style={[styles.saveButtonText, selectedRecipe == null && styles.disabledButtonText]}>Valider</Text>
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.headerRow}>
-              <Text style={styles.titlePage}>Sélectionner la recette :</Text>
-              <View style={{ height: 60 }} />
+                <BackButton onPress={handleCancel}/>
+                <Text style={styles.titlePage}>Sélectionner une recette </Text>
+                <SaveButton onPress={() => setRecipeSelected(true)} title = "Valider" disabled={selectedRecipe == null} />
             </View>
 
             <View style={styles.searchContainer}>
@@ -235,14 +227,9 @@ export default function SelectRecipeToAddScreen({ route, navigation }) {
           <>
 
             <View style={styles.headerButtons}>
-              <TouchableOpacity style={styles.backButton} onPress={() => setRecipeSelected(false)}>
-                <Icon name="arrow-back" size={20} color="#fff" />
-                <Text style={styles.backButtonText}>Retour</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity style={[styles.saveButton, (selectedRecipe == null || selectedRecipe == 0 || mealType == null) && styles.disabledButton]} onPress={handleAddPlanning} disabled={selectedRecipe == null || selectedRecipe == 0 || mealType == null}>
-                <Text style={[styles.saveButtonText, (selectedRecipe == null || selectedRecipe == 0 || mealType == null) && styles.disabledButtonText]}>Ajouter</Text>
-              </TouchableOpacity>
+              <BackButton onPress={() => setRecipeSelected(false)}/>
+                <Text style={styles.titlePage}>Choisir la quantité </Text>
+              <SaveButton onPress={handleAddPlanning} title = "Ajouter" disabled={(selectedRecipe == null || selectedRecipe == 0 || mealType == null)} />
             </View>
 
             <View style={styles.cardContainer}>
@@ -292,16 +279,12 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 8,
   },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    width: '100%',
-  },
   titlePage: {
+    flex: 1,
+    textAlign: 'center',
     fontSize: 20,
     fontWeight: '600',
-    color: '#333',
+    color: '#000000',
   },
   searchContainer: {
     alignItems: 'center',
@@ -320,41 +303,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   headerButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  backButton: {
+    paddingVertical : 10,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgb(180, 180, 230)',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-  },
-  backButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
-    marginLeft: 6,
-    fontSize : 16
-  },
-  saveButton: {
-    backgroundColor: 'rgb(100, 149, 237)',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-  },
-  saveButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize : 16
-  },
-  disabledButton: {
-    backgroundColor: '#ccc',
-  },
-  disabledButtonText: {
-    color: '#888',
+    marginBottom: 10,
   },
   tabsCard: {
     flexDirection: 'row',
@@ -422,19 +374,19 @@ const styles = StyleSheet.create({
   },
   image: {
     width: '100%',
-    height: 200,
+    height: 150,
     resizeMode: 'contain',
     borderRadius: 8,
     marginBottom: 16,
   },
   title: {
-    fontSize: 26,
+    fontSize: 22,
     fontWeight: 'bold',
     marginBottom: 12,
     textAlign: 'center',
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
     marginTop: 8,
     marginBottom: 4,

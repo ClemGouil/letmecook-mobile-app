@@ -9,6 +9,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useUser } from '../hooks/useUser';
 import { useShoppingList } from '../hooks/useShoppingList';
+import BackButton from '../components/BackButton';
+import SaveButton from '../components/SaveButton';
 
 export default function AddIngredientToListScreen({ route, navigation }) {
 
@@ -81,21 +83,11 @@ export default function AddIngredientToListScreen({ route, navigation }) {
     <SafeAreaView style={{ flex: 1 }}>
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingVertical: 10 }}>
 
-          <View style={styles.headerButtons}>
-            <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-              <Icon name="arrow-back" size={20} color="#fff" />
-              <Text style={styles.backButtonText}>Annuler</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={[styles.saveButton, selectedIngredients.length === 0 && styles.disabledButton]} onPress={handleAddRecipeToShoppingList} disabled={selectedIngredients.length === 0}>
-              <Text style={[styles.saveButtonText, selectedIngredients.length === 0 && styles.disabledButtonText]}>Ajouter</Text>
-            </TouchableOpacity>
-          </View>
-
           <View style={styles.cardContainer}>
-            <View style={styles.headerRow}>
-              <Text style={styles.titlePage}>Ajout d'ingrédients à une liste</Text>
-              <View style={{ height: 60 }} />
+            <View style={styles.headerButtons}>
+              <BackButton onPress={() => navigation.goBack()}/>
+                <Text style={styles.titlePage}>Ajout d'ingrédients à une liste</Text>
+              <SaveButton onPress={handleAddRecipeToShoppingList} title = "Ajouter" disabled={selectedIngredients.length === 0} />
             </View>
 
             <View style={styles.content}>
@@ -153,12 +145,6 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 8,
   },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    width: '100%',
-  },
   cardContainer: {
     backgroundColor: '#fff', 
     borderRadius: 12,
@@ -171,9 +157,11 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   titlePage: {
-    fontSize: 20,
+    flex: 1,
+    textAlign: 'center',
+    fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    color: '#000000',
   },
   content: {
   },
@@ -227,37 +215,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
-  },
-  backButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgb(180, 180, 230)',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-  },
-  backButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
-    marginLeft: 6,
-    fontSize : 16
-  },
-  saveButton: {
-    backgroundColor: 'rgb(100, 149, 237)',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-  },
-  saveButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize : 16
-  },
-  disabledButton: {
-    backgroundColor: '#ccc',
-  },
-  disabledButtonText: {
-    color: '#888',
+    marginVertical: 8,
+    marginBottom: 14,
   },
 });

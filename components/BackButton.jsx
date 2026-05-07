@@ -2,7 +2,7 @@ import React from 'react';
 import { TouchableOpacity, StyleSheet, Text, View } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 
-const BackButton = ({ onPress, iconName = "chevron-back-outline" , iconSize = 22, iconColor = "rgb(180, 180, 230)" }) => {
+const BackButton = ({ onPress, iconName = "chevron-back-outline" , iconSize = 20, iconColor = "rgb(180, 180, 230)" }) => {
 
   return (
     <TouchableOpacity style={styles.container} onPress={onPress}>

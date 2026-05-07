@@ -29,9 +29,9 @@ export default function RecipeFormScreen({ route }) {
       id: null,
       name: "",
       category: "",
-      prepTime: 0,
-      cookTime: 0,
-      servings: 1,
+      prepTime: 20,
+      cookTime: 20,
+      servings: 2,
       imageUrl: null,
       ingredients: [],
       instructions: [],
@@ -206,15 +206,17 @@ export default function RecipeFormScreen({ route }) {
         <View style={styles.cardContainer}>
           <View style={styles.headerButtons}>
             <BackButton onPress={() => navigation.goBack()}/>
-            <SaveButton onPress={handleSaveRecipe}/>
+              <Text style={styles.titlePage}>{isNew ? "Créer une recette" : "Modifier la recette"}</Text>
+            <SaveButton onPress={handleSaveRecipe} disabled={title.length == 0}/>
           </View>
-          <Text style={styles.label}>Recette</Text>
+          {/* <Text style={styles.label}>Recette</Text> */}
           <Text style={styles.subTitleText}>Title</Text>
           <TextInput
             style={styles.input}
             onChangeText={setTitle}
             value={title}
           />
+
           <Text style={styles.subTitleText}>Catégorie</Text>
           <TextInput 
             style={styles.input} 
@@ -421,12 +423,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 16,
-    margin: 5,
+    margin: 3,
   },
   cardContainer: {
     backgroundColor: '#fff', 
     borderRadius: 12,
-    paddingHorizontal: 30,
+    paddingHorizontal: 20,
     paddingVertical: 20,
     marginBottom: 16,
     shadowColor: '#000',
@@ -557,8 +559,14 @@ const styles = StyleSheet.create({
   },
   headerButtons: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 10,
+  },
+  titlePage: {
+    flex: 1,
+    textAlign: 'center',
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#000000',
   },
 });

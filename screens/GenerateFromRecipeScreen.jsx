@@ -8,6 +8,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import SearchBar from '../components/SearchBar';
 import RecipeCard from '../components/RecipeCard';
 import ServingsControl from '../components/ServingsControl'
+import BackButton from '../components/BackButton';
+import SaveButton from '../components/SaveButton';
 
 export default function GenerateFromRecipeScreen({ navigation }) {
 
@@ -116,19 +118,9 @@ export default function GenerateFromRecipeScreen({ navigation }) {
         {!recipeSelected && (
           <>  
             <View style={styles.headerButtons}>
-              <TouchableOpacity style={styles.backButton} onPress={handleCancel}>
-                <Icon name="arrow-back" size={20} color="#fff" />
-                <Text style={styles.backButtonText}>Retour</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity style={[styles.saveButton, selectedRecipes.length === 0 && styles.disabledButton]} onPress={() => setRecipeSelected(true)} disabled={selectedRecipes.length === 0}>
-                <Text style={[styles.saveButtonText, selectedRecipes.length === 0 && styles.disabledButtonText]}>Valider</Text>
-              </TouchableOpacity>
-              
-            </View>
-            <View style={styles.headerRow}>
-              <Text style={styles.titlePage}>Sélectionner des recettes :</Text>
-              <View style={{ height: 60 }} />
+              <BackButton onPress={handleCancel}/>
+              <Text style={styles.titlePage}>Sélectionner des recettes</Text>
+              <SaveButton onPress={() => setRecipeSelected(true)} title = "Valider" disabled={selectedRecipes.length === 0} />         
             </View>
 
             <View style={styles.searchContainer}>
@@ -234,18 +226,12 @@ export default function GenerateFromRecipeScreen({ navigation }) {
 
         {selectedRecipes.length > 0 && recipeSelected && (
           <>
-            <View style={styles.headerButtons}>
-              <TouchableOpacity style={styles.backButton} onPress={() => setRecipeSelected(false)}>
-                <Icon name="arrow-back" size={20} color="#fff" />
-                <Text style={styles.backButtonText}>Retour</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity style={[styles.saveButton, selectedRecipes.length === 0 && styles.disabledButton]} onPress={handleGenerate} disabled={selectedRecipes.length === 0}>
-                <Text style={[styles.saveButtonText, selectedRecipes.length === 0 && styles.disabledButtonText]}>Générer</Text>
-              </TouchableOpacity>
-            </View>
-
             <ScrollView style={styles.selectedContainer} showsVerticalScrollIndicator={false}>
+              <View style={styles.headerButtons}>
+                <BackButton onPress={() => setRecipeSelected(false)}/>
+                  <Text style={styles.titlePage}>Choisir les quantités </Text>
+                <SaveButton onPress={handleGenerate} title = "Générer" disabled={selectedRecipes.length === 0} />
+              </View>
               {selectedRecipes.map((recipe, index) => (
 
                 <View key={recipe.recipeId} style={styles.cardContainer}>
@@ -284,6 +270,22 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 8,
   },
+  fixedHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+
+    backgroundColor: '#fff',
+
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+
+    zIndex: 100,
+    elevation: 4,
+  },
   headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -291,9 +293,11 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   titlePage: {
+    flex: 1,
+    textAlign: 'center',
     fontSize: 20,
     fontWeight: '600',
-    color: '#333',
+    color: '#000000',
   },
   searchContainer: {
     alignItems: 'center',
@@ -312,41 +316,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   headerButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  backButton: {
+    paddingVertical : 10,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgb(180, 180, 230)',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-  },
-  backButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
-    marginLeft: 6,
-    fontSize : 16
-  },
-  saveButton: {
-    backgroundColor: 'rgb(100, 149, 237)',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-  },
-  saveButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize : 16
-  },
-  disabledButton: {
-    backgroundColor: '#ccc',
-  },
-  disabledButtonText: {
-    color: '#888',
+    marginBottom: 10,
   },
   tabsCard: {
     flexDirection: 'row',
@@ -419,20 +392,20 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 150,
     resizeMode: 'contain',
-    borderRadius: 4,
-    marginBottom: 8,
+    borderRadius: 8,
+    marginBottom: 16,
   },
   title: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: 'bold',
-    marginBottom: 6,
+    marginBottom: 12,
     textAlign: 'center',
   },
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    marginTop: 4,
-    marginBottom: 2,
+    marginTop: 8,
+    marginBottom: 4,
     color: '#333',
   },
 });

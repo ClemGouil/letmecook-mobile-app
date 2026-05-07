@@ -12,6 +12,7 @@ import IngredientListCard  from '../components/IngredientListCard';
 import ReusableModal from '../components/ReusableModal';
 import EditAddItemForm from '../components/EditAddItemForm';
 import FloatingButton  from '../components/FloatingButton';
+import BackButton from '../components/BackButton';
 
 export default function ShoppingListDetailScreen({ route }) {
 
@@ -118,6 +119,7 @@ export default function ShoppingListDetailScreen({ route }) {
     <SafeAreaView style={{ flex: 1 }}>
       <View style={styles.container}>
         <View style={styles.header}>
+          <BackButton onPress={() => navigation.goBack()}/>
           <Text style={styles.headerTitle}>{shoppingList.name}</Text>
         </View>
         <FlatList
@@ -215,17 +217,17 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     paddingVertical: 8,
     paddingHorizontal: 6,
     borderRadius: 12,
     marginBottom: 8,
   },
   headerTitle: {
+    flexShrink: 1,
     fontSize: 20,
     fontWeight: '700',
     color: '#222',
-    letterSpacing: 0.5,
-    textAlign: 'center',
+    letterSpacing: 0.4,
+    marginLeft: 12,
   },
 });

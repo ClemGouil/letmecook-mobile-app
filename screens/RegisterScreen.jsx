@@ -13,21 +13,40 @@ export default function Register() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [error, setError] = useState('');
 
   const { user, register } = useUser();
 
   const handleSubmit = async () => {
+    setError('');
+
+    if ( !username || !firstName || !lastName || !email || !password || !confirmPassword) {
+      setError('Veuillez remplir tous les champs');
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!emailRegex.test(email)) {
+      setError('Format de l’email invalide');
+      return;
+    }
+
+    if (password.length < 6) {
+      setError('Le mot de passe doit contenir au moins 6 caractères');
+      return;
+    }
+
     if (password !== confirmPassword) {
-      alert("Passwords don't match!");
+      setError("Les mots de passe ne correspondent pas.");
       return;
     }
 
     try {
       const newUser = await register(username, firstName, lastName, email, password);
-      console.log('User registered:', newUser);
     } catch (err) {
       console.error('Register error:', err);
-      alert(err.response?.data?.error || 'Registration failed');
+      setError("Erreur lors de l'inscription");
     }
   };
 
@@ -80,6 +99,10 @@ export default function Register() {
             value={confirmPassword} 
             onChangeText={setConfirmPassword}
         />
+
+        {error ? (
+          <Text style={styles.errorText}>{error}</Text>
+        ) : null}
 
         <TouchableOpacity style={styles.button} onPress={handleSubmit}>
             <Text style={styles.buttonText}>S'enregistrer</Text>
@@ -150,5 +173,10 @@ const styles = StyleSheet.create({
   signUpLink: {
     color: '#3f51b5',
     fontWeight: '500',
+  },
+  errorText: {
+    color: 'red',
+    marginBottom: 12,
+    textAlign: 'center',
   },
 })

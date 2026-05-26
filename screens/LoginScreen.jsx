@@ -9,15 +9,30 @@ export default function Login() {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
 
   const { user, login } = useUser();
 
   const handleSubmit = async () => {
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!emailRegex.test(email)) {
+      setError('Format de l’email invalide');
+      return;
+    }
+
+    if (password.length < 6) {
+      setError('Le mot de passe doit contenir au moins 6 caractères');
+      return;
+    }
+
     try {
+      setError('');
       const loggedUser = await login(email, password);
-      console.log('Utilisateur connecté:', loggedUser);
     } catch (err) {
       console.error('Erreur login:', err);
+      setError('Email ou mot de passe incorrect');
     }
   }
 
@@ -41,6 +56,10 @@ export default function Login() {
           value={password}
           onChangeText={setPassword}
         />
+
+        {error ? (
+          <Text style={styles.errorText}>{error}</Text>
+        ) : null}
 
         <TouchableOpacity style={styles.button} onPress={handleSubmit}>
           <Text style={styles.buttonText}>Se connecter</Text>
@@ -111,5 +130,10 @@ const styles = StyleSheet.create({
   signUpLink: {
     color: '#3f51b5',
     fontWeight: '500',
+  },
+  errorText: {
+    color: 'red',
+    marginBottom: 12,
+    textAlign: 'center',
   },
 })

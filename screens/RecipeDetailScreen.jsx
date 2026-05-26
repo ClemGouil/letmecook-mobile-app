@@ -14,7 +14,7 @@ import BackButton from '../components/BackButton';
 export default function RecipeDetailScreen({ route }) {
 
   const navigation = useNavigation();
-  const { user } = useUser();
+  const { user, getUserInfo } = useUser();
   const { groups} = useGroup();
 
   const { publicRecipes, privateRecipes, groupRecipes, addRecipe, addIngredientToRecipe, addInstructionToRecipe, deleteRecipe ,shareRecipeWithGroup, unshareRecipeFromGroup} = useRecipe();
@@ -36,6 +36,22 @@ export default function RecipeDetailScreen({ route }) {
   const [activeTab, setActiveTab] = useState('ingredients');
   const [servings, setServings] = useState(recipe.servings);
   const [showGroupSelector, setShowGroupSelector] = useState(false);
+  const [ownerInfo, setOwnerInfo] = useState(null);
+
+  useEffect(() => {
+    const loadOwner = async () => {
+      try {
+        if (isPublic && recipe?.ownerId) {
+          const info = await getUserInfo(recipe.ownerId);
+          setOwnerInfo(info);
+        }
+      } catch (err) {
+        console.error("Erreur chargement owner:", err);
+      }
+    };
+
+    loadOwner();
+  }, [recipe, isPublic]);
 
   const getScaledQuantity = (originalQuantity) => {
     const ratio = servings / recipe.servings;
@@ -218,6 +234,29 @@ export default function RecipeDetailScreen({ route }) {
           )}
         </View>
 
+        {isPublic && ownerInfo && ( 
+        <View style={styles.cardContainer}>
+          <View style={styles.profileSection}>
+            <Image
+              source={
+                ownerInfo.profilePhotoUrl
+                  ? { uri: ownerInfo.profilePhotoUrl }
+                  : { uri :'https://cdn-icons-png.flaticon.com/512/3135/3135715.png'}
+              }
+              style={styles.profileImage}
+            />
+            <View>
+              <Text style={styles.profileUsername}>
+                {ownerInfo.username}
+              </Text>
+              <Text style={styles.profileText}>
+                Créateur de la recette
+              </Text>
+            </View>
+          </View>
+        </View>
+        )}
+
         <View style={styles.timeContainer}>
           <View style={styles.timeSection}>
             <Text style={styles.timeLabel}>Préparation</Text>
@@ -386,6 +425,25 @@ const styles = StyleSheet.create({
   timeValue: {
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  profileSection :{ 
+    flexDirection: 'row',
+    alignItems: 'center', 
+    justifyContent  : 'center'
+  },
+  profileImage :{ 
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginRight: 10
+  },
+  profileUsername :{ 
+    fontSize: 16, 
+    fontWeight: 'bold'
+  },
+  profileText :{ 
+    fontSize: 12, 
+    color: 'gray'
   },
   separatorVertical: {
     width: 1,

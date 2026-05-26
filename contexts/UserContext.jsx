@@ -134,6 +134,18 @@ export function UserProvider({children}) {
         }
     }
 
+    async function getUserInfo(userId) {
+        try {
+            const response = await axios.get(`${API_URL}/${userId}/public`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            return response.data;
+            } catch (err) {
+            console.error("No user information available:", err.response?.data || err.message);
+            throw err;
+        }
+    }
+
     return (
         <UserContext.Provider 
         value= {
@@ -145,7 +157,8 @@ export function UserProvider({children}) {
             logout,
             updateUser,
             deleteAccount,
-            changePassword
+            changePassword,
+            getUserInfo,
         }}>
             {children}
         </UserContext.Provider>

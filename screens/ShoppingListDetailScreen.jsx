@@ -94,7 +94,6 @@ export default function ShoppingListDetailScreen({ route }) {
 
   const handleDelete = async (item) => {
     try {
-      console.log(item.id)
       await deleteIngredientToShoppingList(
         shoppingList.id,
         item.id

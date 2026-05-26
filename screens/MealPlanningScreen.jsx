@@ -221,7 +221,6 @@ export default function MealPlanningScreen() {
   };
 
   const handleGenerateShoppingListFromRange  = async () => {
-    console.log(dateRange)
     try {
       const newList = await generateShoppingListFromPlanning(dateRange.start, dateRange.end)
       setShowModalGeneratingShoppingListFromRange(false); 

@@ -251,7 +251,6 @@ export function ShoppingListProvider({ children }) {
   }
 
   async function generateShoppingListFromPlanning(startDate, endDate) {
-    console.log(startDate, endDate)
     try {
       const params = { startDate, endDate};
       if (currentContext?.type === "user") {

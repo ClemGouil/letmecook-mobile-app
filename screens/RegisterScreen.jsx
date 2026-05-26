@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native'
 import { useUser } from '../hooks/useUser'
 import { useNavigation} from '@react-navigation/native';
+import Icon from 'react-native-vector-icons/Ionicons';
 
 export default function Register() {
 
@@ -12,7 +13,9 @@ export default function Register() {
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
 
   const { user, register } = useUser();
@@ -84,21 +87,46 @@ export default function Register() {
             onChangeText={setEmail}
         />
 
-        <TextInput
+        <View style={styles.passwordContainer}>
+          <TextInput
             placeholder="Mot de passe"
-            secureTextEntry
+            secureTextEntry = {!showPassword}
             style={styles.input}
             value={password} 
             onChangeText={setPassword}
-        />
-
-        <TextInput
+          />
+          <TouchableOpacity
+            onPress={() => setShowPassword(prev => !prev)}
+            style={styles.eyeButton}
+          >
+            <Icon
+              name={showPassword ? "eye-off-outline" : "eye-outline"}
+              size={22}
+              color="rgb(180, 180, 230)"
+            />
+          </TouchableOpacity>
+        </View>
+        
+        <View style={styles.passwordContainer}>
+          <TextInput
             placeholder="Confirmez le mot de passe"
-            secureTextEntry
+            secureTextEntry = {!showConfirmPassword}
             style={styles.input}
             value={confirmPassword} 
             onChangeText={setConfirmPassword}
-        />
+          />
+          <TouchableOpacity
+            onPress={() => setShowConfirmPassword(prev => !prev)}
+            style={styles.eyeButton}
+          >
+            <Icon
+              name={showConfirmPassword ? "eye-off-outline" : "eye-outline"}
+              size={22}
+              color="rgb(180, 180, 230)"
+            />
+          </TouchableOpacity>
+        </View>
+        
 
         {error ? (
           <Text style={styles.errorText}>{error}</Text>
@@ -154,7 +182,7 @@ const styles = StyleSheet.create({
   button: {
     width: '100%',
     height: 50,
-    backgroundColor: '#3f51b5',
+    backgroundColor: 'rgb(157, 157, 225)',
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
@@ -178,5 +206,15 @@ const styles = StyleSheet.create({
     color: 'red',
     marginBottom: 12,
     textAlign: 'center',
+  },
+  passwordContainer: {
+    position: "relative",
+    width: "100%",
+  },
+  eyeButton: {
+    position: "absolute",
+    right: 10,
+    top: 12,
+    padding: 5,
   },
 })

@@ -11,11 +11,15 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
   const { user, login } = useUser();
 
   const handleSubmit = async () => {
+    setError('');
+
+    if (isLoading) return;
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -30,11 +34,14 @@ export default function Login() {
     }
 
     try {
+      setIsLoading(true);
       setError('');
-      const loggedUser = await login(email, password);
+      await login(email, password);
     } catch (err) {
       console.error('Erreur login:', err);
       setError('Email ou mot de passe incorrect');
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -48,7 +55,10 @@ export default function Login() {
           keyboardType="email-address"
           style={styles.input}
           value={email}
-          onChangeText={setEmail}
+          onChangeText={(text) => {
+            setEmail(text);
+            setError('');
+          }}
         />
 
         <View style={styles.passwordContainer}>
@@ -57,7 +67,10 @@ export default function Login() {
             secureTextEntry={!showPassword}
             style={styles.input}
             value={password}
-            onChangeText={setPassword}
+            onChangeText={(text) => {
+              setPassword(text);
+              setError('');
+            }}
           />
           <TouchableOpacity
             onPress={() => setShowPassword(prev => !prev)}
@@ -75,7 +88,7 @@ export default function Login() {
           <Text style={styles.errorText}>{error}</Text>
         ) : null}
 
-        <TouchableOpacity style={styles.button} onPress={handleSubmit}>
+        <TouchableOpacity style={styles.button} disabled={isLoading} onPress={handleSubmit}>
           <Text style={styles.buttonText}>Se connecter</Text>
         </TouchableOpacity>
 

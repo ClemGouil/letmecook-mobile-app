@@ -16,12 +16,15 @@ export default function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
   const { user, register } = useUser();
 
   const handleSubmit = async () => {
     setError('');
+
+    if (isLoading) return;
 
     if ( !username || !firstName || !lastName || !email || !password || !confirmPassword) {
       setError('Veuillez remplir tous les champs');
@@ -46,10 +49,14 @@ export default function Register() {
     }
 
     try {
-      const newUser = await register(username, firstName, lastName, email, password);
+      setIsLoading(true);
+      setError('');
+      await register(username, firstName, lastName, email, password);
     } catch (err) {
       console.error('Register error:', err);
       setError("Erreur lors de l'inscription");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -62,21 +69,30 @@ export default function Register() {
             placeholder="Nom d'utilisateur"
             style={styles.input}
             value={username} 
-            onChangeText={setUsername}
+            onChangeText={(text) => {
+              setUsername(text);
+              setError('');
+            }}
         />
 
         <TextInput
             placeholder="Prénom"
             style={styles.input}
             value={firstName} 
-            onChangeText={setFirstName}
+            onChangeText={(text) => {
+              setFirstName(text);
+              setError('');
+            }}
         />
 
         <TextInput
             placeholder="Nom de famille"
             style={styles.input}
             value={lastName} 
-            onChangeText={setLastName}
+            onChangeText={(text) => {
+              setLastName(text);
+              setError('');
+            }}
         />
 
         <TextInput
@@ -84,7 +100,10 @@ export default function Register() {
             keyboardType="email-address"
             style={styles.input}
             value={email} 
-            onChangeText={setEmail}
+            onChangeText={(text) => {
+              setEmail(text);
+              setError('');
+            }}
         />
 
         <View style={styles.passwordContainer}>
@@ -93,7 +112,10 @@ export default function Register() {
             secureTextEntry = {!showPassword}
             style={styles.input}
             value={password} 
-            onChangeText={setPassword}
+            onChangeText={(text) => {
+              setPassword(text);
+              setError('');
+            }}
           />
           <TouchableOpacity
             onPress={() => setShowPassword(prev => !prev)}
@@ -113,7 +135,10 @@ export default function Register() {
             secureTextEntry = {!showConfirmPassword}
             style={styles.input}
             value={confirmPassword} 
-            onChangeText={setConfirmPassword}
+            onChangeText={(text) => {
+              setConfirmPassword(text);
+              setError('');
+            }}
           />
           <TouchableOpacity
             onPress={() => setShowConfirmPassword(prev => !prev)}
@@ -132,7 +157,7 @@ export default function Register() {
           <Text style={styles.errorText}>{error}</Text>
         ) : null}
 
-        <TouchableOpacity style={styles.button} onPress={handleSubmit}>
+        <TouchableOpacity style={styles.button} disabled={isLoading} onPress={handleSubmit}>
             <Text style={styles.buttonText}>S'enregistrer</Text>
         </TouchableOpacity>
 

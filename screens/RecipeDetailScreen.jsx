@@ -305,7 +305,7 @@ export default function RecipeDetailScreen({ route }) {
             </View>
             <FlatList
               scrollEnabled={false}
-              data={recipe.ingredients}
+              data={recipe.ingredients ?? []}
               keyExtractor={(item) => item.ingredient.id}
               renderItem={({ item }) => (
                 <View style={styles.ingredientItem}>
@@ -333,7 +333,7 @@ export default function RecipeDetailScreen({ route }) {
           {activeTab === 'instructions' && (
             <FlatList
               scrollEnabled={false}
-              data={recipe.instructions}
+              data={recipe.instructions ?? []}
               keyExtractor={(item) => item.stepNumber.toString()}
               renderItem={({ item }) => (
                 <View style={styles.instructionItem}>

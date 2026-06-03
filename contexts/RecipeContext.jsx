@@ -158,7 +158,7 @@ export function RecipeProvider({ children }) {
           if (recipe.id === dto.recipeId) {
             return {
               ...recipe,
-              ingredients: [...recipe.ingredients, newIngredient],
+              ingredients: [...(recipe.ingredients ?? []), newIngredient],
             };
           }
           return recipe;
@@ -185,7 +185,7 @@ export function RecipeProvider({ children }) {
           if (recipe.id === dto.recipeId) {
             return {
               ...recipe,
-              instructions: [...recipe.instructions, newInstruction],
+              instructions: [...(recipe.instructions ?? []), newInstruction],
             };
           }
           return recipe;

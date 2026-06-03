@@ -120,7 +120,6 @@ export default function RecipeFormScreen({ route }) {
           description: inst.description,
         });
       }
-
       navigation.goBack();
     } catch (err) {
       console.error(err);
@@ -196,7 +195,7 @@ export default function RecipeFormScreen({ route }) {
   };
 
   const handleDeleteInstruction = (id) => {
-    setLocalInstructions(prev => prev.filter(item => item.id !== id));
+    setLocalInstructions(prev => prev.filter(item => item.id !== id).map((item, index) => ({...item, stepNumber : index + 1 })));
   };
 
   return (
@@ -361,7 +360,7 @@ export default function RecipeFormScreen({ route }) {
 
             {addingInstruction && (
               <View style={styles.newInstructionContainer}>
-                <Text style={styles.subTitleText}>Étape {recipe.instructions.length + 2}</Text>
+                <Text style={styles.subTitleText}>Étape {localInstructions.length + 1}</Text>
                 
                 <TextInput
                   style={styles.input}

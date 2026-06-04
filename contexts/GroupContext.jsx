@@ -1,5 +1,5 @@
 import { createContext, useState, useEffect } from "react";
-import axios from "axios";
+import { api } from "../api/axiosInstance";
 import { useUser } from "../hooks/useUser";
 
 export const GroupContext  = createContext();
@@ -8,7 +8,7 @@ export function GroupProvider ({ children }) {
 
   const [groups, setGroups] = useState([]);
 
-  const { user, token } = useUser();
+  const { user } = useUser();
 
   useEffect(() => {
     if (user) {
@@ -16,13 +16,9 @@ export function GroupProvider ({ children }) {
     }
   }, [user]);
 
-  const API_URL = `${process.env.EXPO_PUBLIC_URL_BACKEND}/api`;
-
   async function loadAllGroupsOfAnUser(userId) {
     try {
-      const response = await axios.get(`${API_URL}/group-users/${userId}/groups`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
+      const response = await api.get(`/group-users/${userId}/groups`);
       setGroups(response.data);
     } catch (err) {
       console.error("Erreur lors du chargement des groupes: ", err);
@@ -31,12 +27,8 @@ export function GroupProvider ({ children }) {
 
   async function addGroup(dto) {
     try {
-      const res = await axios.post(`${API_URL}/group`, dto, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const res2 = await axios.get(`${API_URL}/group/${res.data.id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await api.post(`/group`, dto);
+      const res2 = await api.get(`/group/${res.data.id}`);
       setGroups(prev => [...prev, res2.data]);
       return res2.data;
     } catch (err) {
@@ -47,9 +39,7 @@ export function GroupProvider ({ children }) {
 
   async function updateGroup(id, dto) {
     try {
-      const response = await axios.put(`${API_URL}/group/${id}`, dto, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await api.put(`/group/${id}`, dto);
       const updated = response.data;
       setGroups(
         prev => prev.map(group => (group.id === updated.id ? updated : group))
@@ -63,9 +53,7 @@ export function GroupProvider ({ children }) {
 
   async function deleteGroup(id) {
     try {
-      await axios.delete(`${API_URL}/group/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await api.delete(`/group/${id}`);
       setGroups(prev => prev.filter(group => group.id !== id));
     } catch (err) {
       console.error(err);
@@ -75,9 +63,7 @@ export function GroupProvider ({ children }) {
 
   async function addUserToGroup(dto) {
     try {
-      const response = await axios.post(`${API_URL}/group-users`, dto, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await api.post(`/group-users`, dto);
 
       const newMember = response.data;
 
@@ -102,9 +88,7 @@ export function GroupProvider ({ children }) {
 
   async function inviteUserToGroup(dto) {
     try {
-      const response = await axios.post(`${API_URL}/group-users/invite`, dto, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await api.post(`/group-users/invite`, dto);
 
       const newMember = response.data;
 
@@ -129,11 +113,10 @@ export function GroupProvider ({ children }) {
 
   async function updateUserInGroup(id, { userId, role, status }) {
     try {
-      const response = await axios.put(
-        `${API_URL}/group-users/${id}`,
+      const response = await api.put(
+        `/group-users/${id}`,
         null,
         {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
           params: { userId, role, status },
         }
       );
@@ -162,9 +145,8 @@ export function GroupProvider ({ children }) {
     try {
       const params = removerId ? { removerId } : {};
 
-      await axios.delete(`${API_URL}/group-users/${memberId}`, {
+      await api.delete(`/group-users/${memberId}`, {
         params,
-        headers: { Authorization: `Bearer ${token}` },
       });
 
       setGroups(prevGroups =>
@@ -186,12 +168,9 @@ export function GroupProvider ({ children }) {
 
   async function transferOwnership(groupId, newOwnerId) {
     try {
-      await axios.put(
-        `${API_URL}/group-users/${groupId}/transfer-ownership/${newOwnerId}`,
+      await api.put(
+        `/group-users/${groupId}/transfer-ownership/${newOwnerId}`,
         {},
-        {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        }
       );
 
     setGroups((prevGroups) =>

@@ -1,5 +1,5 @@
 import { createContext, useState, useEffect } from "react";
-import axios from "axios";
+import { api } from "../api/axiosInstance";
 import { useUser } from "../hooks/useUser";
 
 export const NotifContext  = createContext();
@@ -8,7 +8,7 @@ export function NotifProvider ({ children }) {
 
   const [notifications, setNotifications] = useState([]);
 
-  const { user, token } = useUser();
+  const { user } = useUser();
 
   useEffect(() => {
     if (user) {
@@ -16,12 +16,9 @@ export function NotifProvider ({ children }) {
     }
   }, [user]);
 
-  const API_URL = `${process.env.EXPO_PUBLIC_URL_BACKEND}/api`;
-
   async function loadUnreadNotification(userId) {
     try {
-      const response = await axios.get(`${API_URL}/notifications/unread`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      const response = await api.get(`/notifications/unread`, {
         params: {userId},
       });
       setNotifications(response.data);
@@ -32,9 +29,7 @@ export function NotifProvider ({ children }) {
 
   async function markAsRead(id) {
     try {
-      await axios.put(`${API_URL}/notifications/${id}/read`, {} , {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await api.put(`/notifications/${id}/read`, {});
       setNotifications(prev =>
         prev.map(notif =>
           notif.id === id ? { ...notif, read: true } : notif

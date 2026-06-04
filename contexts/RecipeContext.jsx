@@ -1,5 +1,5 @@
 import { createContext, useState, useEffect} from "react";
-import axios from "axios";
+import { api } from "../api/axiosInstance";
 import { useUser } from "../hooks/useUser";
 
 export const RecipeContext = createContext();
@@ -11,7 +11,7 @@ export function RecipeProvider({ children }) {
   const [groupRecipes, setGroupRecipes] = useState([]);
   const [units, setUnits] = useState([]);
 
-  const { user, token } = useUser();
+  const { user } = useUser();
 
   useEffect(() => {
     if (user) {
@@ -20,21 +20,16 @@ export function RecipeProvider({ children }) {
     }
   }, [user]);
 
-  const API_URL = `${process.env.EXPO_PUBLIC_URL_BACKEND}/api`;
-
   async function loadPublicRecipes(userId, query = null, limit = 5, offset = 0, ingredientIds = [], append = false) {
     const safeIngredientIds = ingredientIds?.length ? ingredientIds : undefined;
     try {
-      const response = await axios.get(`${API_URL}/recipes/public/${userId}`, {
+      const response = await api.get(`/recipes/public/${userId}`, {
         params: {
           query,
           ingredientIds: safeIngredientIds,
           minMatch: safeIngredientIds ? 1 : undefined,
           limit,
           offset,
-        },
-        headers: {
-          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -50,11 +45,7 @@ export function RecipeProvider({ children }) {
 
   async function loadPrivateRecipes(userId) {
     try {
-      const response = await axios.get(`${API_URL}/recipes/user/${userId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await api.get(`/recipes/user/${userId}`);
       setPrivateRecipes(response.data);
     } catch (err) {
       console.error("Erreur lors du chargement des recettes privées:", err);
@@ -63,11 +54,7 @@ export function RecipeProvider({ children }) {
 
   async function loadGroupRecipes(groupId) {
     try {
-      const response = await axios.get(`${API_URL}/group-recipes/${groupId}/recipes`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await api.get(`/group-recipes/${groupId}/recipes`);
 
       const data = response.data.map(r => ({
       ...r, groupId: groupId})
@@ -80,12 +67,11 @@ export function RecipeProvider({ children }) {
 
   async function searchIngredients(query, limit = 5) {
     try {
-      const response = await axios.get(`${API_URL}/ingredients`, {
+      const response = await api.get(`/ingredients`, {
       params: {
         query,
         limit,
-      },
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      }
       });
       return response.data;
     } catch (err) {
@@ -95,9 +81,7 @@ export function RecipeProvider({ children }) {
 
   async function loadUnits() {
     try {
-      const response = await axios.get(`${API_URL}/units`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
+      const response = await api.get(`/units`);
       setUnits(response.data);
     } catch (err) {
       console.error("Erreur lors du chargement des unités:", err);
@@ -106,9 +90,7 @@ export function RecipeProvider({ children }) {
 
   async function addRecipe(dto) {
     try {
-      const res = await axios.post(`${API_URL}/recipes`, dto, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await api.post(`/recipes`, dto);
       setPrivateRecipes(prev => [...prev, res.data]);
       return res.data;
     } catch (err) {
@@ -119,9 +101,7 @@ export function RecipeProvider({ children }) {
 
   async function updateRecipe(id, dto) {
     try {
-      const response = await axios.put(`${API_URL}/recipes/${id}`, dto, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await api.put(`/recipes/${id}`, dto );
       const updated = response.data;
       setPrivateRecipes(
         prev => prev.map(recipe => (recipe.id === updated.id ? updated : recipe))
@@ -135,9 +115,7 @@ export function RecipeProvider({ children }) {
 
   async function deleteRecipe(id) {
     try {
-      await axios.delete(`${API_URL}/recipes/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await api.delete(`/recipes/${id}`);
       setPrivateRecipes(prev => prev.filter(recipe => recipe.id !== id));
     } catch (err) {
       console.error(err);
@@ -147,9 +125,7 @@ export function RecipeProvider({ children }) {
 
   async function addIngredientToRecipe(dto) {
     try {
-      const response = await axios.post(`${API_URL}/recipe-ingredients`, dto, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await api.post(`/recipe-ingredients`, dto);
 
       const newIngredient = response.data;
 
@@ -174,9 +150,7 @@ export function RecipeProvider({ children }) {
 
   async function addInstructionToRecipe(dto) {
     try {
-      const response = await axios.post(`${API_URL}/recipe-instructions`, dto, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await api.post(`/recipe-instructions`, dto);
 
       const newInstruction = response.data;
 
@@ -201,9 +175,7 @@ export function RecipeProvider({ children }) {
 
   async function deleteAllInstructionsFromRecipe(id) {
     try {
-      await axios.delete(`${API_URL}/recipe-instructions/deleteAll/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await api.delete(`/recipe-instructions/deleteAll/${id}`);
       setPrivateRecipes((prevRecipe) =>
         prevRecipe.map((recipe) => {
           if (recipe.id === id) {
@@ -223,9 +195,7 @@ export function RecipeProvider({ children }) {
 
   async function deleteAllIngredientsFromRecipe(id) {
     try {
-      await axios.delete(`${API_URL}/recipe-ingredients/deleteAll/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await api.delete(`/recipe-ingredients/deleteAll/${id}`);
       setPrivateRecipes((prevRecipe) =>
         prevRecipe.map((recipe) => {
           if (recipe.id === id) {
@@ -246,9 +216,8 @@ export function RecipeProvider({ children }) {
   async function shareRecipeWithGroup(groupId, recipeId, userId) {
     try {
       
-      const response = await axios.post(`${API_URL}/group-recipes/${groupId}/recipes/${recipeId}`, null, {
+      const response = await api.post(`/group-recipes/${groupId}/recipes/${recipeId}`, null, {
         params: { userId },
-        headers: { Authorization: `Bearer ${token}` },
       });
 
       const newSharedRecipe = response.data;
@@ -265,9 +234,8 @@ export function RecipeProvider({ children }) {
 
   async function unshareRecipeFromGroup(groupId, recipeId, userId) {
     try {
-      await axios.delete(`${API_URL}/group-recipes/${groupId}/recipes/${recipeId}`, {
+      await api.delete(`/group-recipes/${groupId}/recipes/${recipeId}`, {
           params: { userId },
-          headers: { Authorization: `Bearer ${token}` }
       });
 
       loadGroupRecipes(groupId);

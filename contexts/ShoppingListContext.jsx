@@ -1,5 +1,5 @@
 import { createContext, useState, useEffect } from "react";
-import axios from "axios";
+import { api } from "../api/axiosInstance";
 import { useUser } from "../hooks/useUser";
 import { useAppContext } from "../hooks/useAppContext";
 
@@ -12,7 +12,7 @@ export function ShoppingListProvider({ children }) {
   const [loading, setLoading] = useState(false);
 
   const { currentContext } = useAppContext();
-  const { user, token } = useUser();
+  const { user } = useUser();
 
   useEffect(() => {
     if (user && currentContext) {
@@ -23,18 +23,14 @@ export function ShoppingListProvider({ children }) {
     }
   }, [user, currentContext]);
 
-  const API_URL = `${process.env.EXPO_PUBLIC_URL_BACKEND}/api`;
-
   async function loadShoppingLists(userId, groupId) {
     try {
       setLoading(true);
       let url = "";
-      if (groupId) url = `${API_URL}/shopping-list/group/${groupId}`;
-      else url = `${API_URL}/shopping-list/user/${userId}`;
+      if (groupId) url = `/shopping-list/group/${groupId}`;
+      else url = `/shopping-list/user/${userId}`;
 
-      const response = await axios.get(url, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
+      const response = await api.get(url);
       setShoppingLists(response.data);
     } catch (err) {
       console.error("Erreur lors du chargement des listes de courses:", err);
@@ -45,12 +41,11 @@ export function ShoppingListProvider({ children }) {
 
   async function searchIngredients(query, limit = 5) {
     try {
-      const response = await axios.get(`${API_URL}/ingredients`, {
+      const response = await api.get(`/ingredients`, {
       params: {
         query,
         limit,
       },
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       return response.data;
     } catch (err) {
@@ -60,9 +55,7 @@ export function ShoppingListProvider({ children }) {
 
   async function loadUnits() {
     try {
-      const response = await axios.get(`${API_URL}/units`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
+      const response = await api.get(`/units`);
       setUnits(response.data);
     } catch (err) {
       console.error("Erreur lors du chargement des unités:", err);
@@ -82,8 +75,7 @@ export function ShoppingListProvider({ children }) {
 
       const params = { adderId: user.id };
 
-      const response = await axios.post(`${API_URL}/shopping-list`, dto, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      const response = await api.post(`/shopping-list`, dto, {
         params,
       });
       setShoppingLists((prev) => [...prev, response.data]);
@@ -96,8 +88,7 @@ export function ShoppingListProvider({ children }) {
 
   async function updateShoppingList(id, dto) {
     try {
-      const response = await axios.put(`${API_URL}/shopping-list/${id}`, dto, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      const response = await api.put(`/shopping-list/${id}`, dto, {
         params: { updaterId: user.id },
       });
       const updated = response.data;
@@ -113,8 +104,7 @@ export function ShoppingListProvider({ children }) {
 
   async function deleteShoppingList(id) {
     try {
-      await axios.delete(`${API_URL}/shopping-list/${id}`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      await api.delete(`/shopping-list/${id}`, {
         params: { removerId: user.id },
       });
       setShoppingLists((prev) => prev.filter((list) => list.id !== id));
@@ -126,9 +116,7 @@ export function ShoppingListProvider({ children }) {
 
   async function addIngredientToShoppingList(dto) {
     try {
-      const response = await axios.post(`${API_URL}/shopping-list-ingredients`, dto, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
+      const response = await api.post(`/shopping-list-ingredients`, dto);
 
       const newIngredient = response.data;
 
@@ -162,9 +150,7 @@ export function ShoppingListProvider({ children }) {
 
   async function updateIngredientToShoppingList(dto) {
     try {
-      const response = await axios.post(`${API_URL}/shopping-list-ingredients/update`, dto, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
+      const response = await api.post(`/shopping-list-ingredients/update`, dto);
 
       const updatedIngredient = response.data;
 
@@ -193,9 +179,7 @@ export function ShoppingListProvider({ children }) {
 
   async function deleteIngredientToShoppingList(shoppingListId, ingredientItemId) {
     try {
-      await axios.delete(`${API_URL}/shopping-list-ingredients/${ingredientItemId}`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {}
-      });
+      await api.delete(`/shopping-list-ingredients/${ingredientItemId}`);
       setShoppingLists((prevLists) =>
         prevLists.map((list) => {
           if (list.id !== shoppingListId) return list;
@@ -224,21 +208,15 @@ export function ShoppingListProvider({ children }) {
         params.userId = user.id;
       }
 
-      const generatedList = await axios.post(
-        `${API_URL}/shopping-list/generate-from-recipes-list`,
+      const generatedList = await api.post(
+        `/shopping-list/generate-from-recipes-list`,
         recipesList,
         {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
           params,
         }
       );
 
-      const fullListResponse = await axios.get(
-        `${API_URL}/shopping-list/${generatedList.data.id}`,
-        {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        }
-      );
+      const fullListResponse = await api.get(`/shopping-list/${generatedList.data.id}`);
 
       const newList = fullListResponse.data;
 
@@ -260,21 +238,12 @@ export function ShoppingListProvider({ children }) {
         params.userId = user.id;
       }
 
-      const generatedList = await axios.post(
-        `${API_URL}/shopping-list/generate-from-planning`,
-        {},
-        {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-          params,
-        }
+      const generatedList = await api.post(
+        `/shopping-list/generate-from-planning`,
+        {},{ params}
       );
 
-      const fullListResponse = await axios.get(
-        `${API_URL}/shopping-list/${generatedList.data.id}`,
-        {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        }
-      );
+      const fullListResponse = await api.get(`/shopping-list/${generatedList.data.id}`);
 
       const newList = fullListResponse.data;
 
@@ -297,21 +266,9 @@ export function ShoppingListProvider({ children }) {
         delete dto.userId;
       }
 
+      const generatedList = await api.post(`/shopping-list/add-ingredient-from-recipe`, dto,);
 
-      const generatedList = await axios.post(
-        `${API_URL}/shopping-list/add-ingredient-from-recipe`,
-        dto,
-        {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        }
-      );
-
-      const fullListResponse = await axios.get(
-        `${API_URL}/shopping-list/${generatedList.data.id}`,
-        {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        }
-      );
+      const fullListResponse = await api.get(`/shopping-list/${generatedList.data.id}`);
 
       const fullList = fullListResponse.data;
 

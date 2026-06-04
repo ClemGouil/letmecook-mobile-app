@@ -1,5 +1,5 @@
 import { createContext, useState, useEffect } from "react";
-import axios from "axios";
+import { api } from "../api/axiosInstance";
 import { useUser } from "../hooks/useUser";
 import { useAppContext } from "../hooks/useAppContext";
 
@@ -11,7 +11,7 @@ export function InventoryProvider({ children }) {
   const [units, setUnits] = useState([]);
 
   const { currentContext } = useAppContext();
-  const { user, token } = useUser();
+  const { user } = useUser();
 
    useEffect(() => {
     if (user && currentContext) {
@@ -22,19 +22,15 @@ export function InventoryProvider({ children }) {
     }
   }, [user, currentContext]);
 
-  const API_URL = `${process.env.EXPO_PUBLIC_URL_BACKEND}/api`;
-
   async function loadInventory(userId, groupId) {
     try {
       let url = "";
       if (groupId) {
-        url = `${API_URL}/inventories/group/${groupId}`;
+        url = `/inventories/group/${groupId}`;
       } else if (userId) {
-        url = `${API_URL}/inventories/user/${userId}`;
+        url = `/inventories/user/${userId}`;
       }
-      const response = await axios.get(url, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
+      const response = await api.get(url);
       setInventory(response.data);
     } catch (err) {
       console.error("Erreur lors du chargement de l'inventaire:", err);
@@ -43,12 +39,11 @@ export function InventoryProvider({ children }) {
 
   async function searchIngredients(query, limit = 5) {
     try {
-      const response = await axios.get(`${API_URL}/ingredients`, {
+      const response = await api.get(`/ingredients`, {
       params: {
         query,
         limit,
       },
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       return response.data;
     } catch (err) {
@@ -58,9 +53,7 @@ export function InventoryProvider({ children }) {
 
   async function loadUnits() {
     try {
-      const response = await axios.get(`${API_URL}/units`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
+      const response = await api.get(`/units`);
       setUnits(response.data);
     } catch (err) {
       console.error("Erreur lors du chargement des unités:", err);
@@ -69,9 +62,7 @@ export function InventoryProvider({ children }) {
 
   async function addItem(dto) {
     try {
-      const response = await axios.post(`${API_URL}/inventory-items`, dto, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
+      const response = await api.post(`/inventory-items`, dto);
       // recharger l'inventaire après ajout
       if (inventory?.id) loadInventory(user.id, inventory.groupId);
       return response.data;
@@ -83,9 +74,7 @@ export function InventoryProvider({ children }) {
 
   async function updateItem(itemId, dto) {
     try {
-      const response = await axios.put(`${API_URL}/inventory-items/${itemId}`, dto, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
+      const response = await api.put(`/inventory-items/${itemId}`, dto);
       if (inventory?.id) loadInventory(user.id, inventory.groupId);
       return response.data;
     } catch (err) {
@@ -96,9 +85,7 @@ export function InventoryProvider({ children }) {
 
   async function deleteItem(itemId) {
     try {
-      await axios.delete(`${API_URL}/inventory-items/${itemId}`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
+      await api.delete(`/inventory-items/${itemId}`);
       if (inventory?.id) loadInventory(user.id, inventory.groupId);
     } catch (err) {
       console.error("Erreur lors de la suppression de l'item:", err);
@@ -113,9 +100,8 @@ export function InventoryProvider({ children }) {
       if (userId) params.userId = userId;
       if (groupId) params.groupId = groupId;
 
-      const response = await axios.post(`${API_URL}/inventories/feed-from-shopping-list`, {}, {
+      const response = await api.post(`/inventories/feed-from-shopping-list`, {}, {
         params,
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       if (inventory?.id) loadInventory(user.id, inventory.groupId);
       return response.data;

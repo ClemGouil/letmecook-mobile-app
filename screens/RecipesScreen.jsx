@@ -195,7 +195,6 @@ const styles = StyleSheet.create({
   },
   row: {
     justifyContent: 'space-between',
-    paddingBottom: 8,
   },
   image: {
     width: '100%',

@@ -1,5 +1,5 @@
 import { createContext, useState, useEffect } from "react";
-import axios from "axios";
+import { api } from "../api/axiosInstance";
 import * as SecureStore from 'expo-secure-store';
 
 export const UserContext = createContext();
@@ -7,28 +7,25 @@ export const UserContext = createContext();
 export function UserProvider({children}) {
 
     const [user, setUser] = useState(null);
-    const [token, setToken] = useState("");
+    const [accessToken, setAccessToken] = useState("");
     const [isLoading, setIsLoading] = useState(true);
-
-    const API_URL = `${process.env.EXPO_PUBLIC_URL_BACKEND}/api/users`;
 
     useEffect(() => {
         const initAuth = async () => {
             try {
-                const storedToken = await SecureStore.getItemAsync('token');
+                const storedToken = await SecureStore.getItemAsync('accessToken');
 
                 if (storedToken) {
                     await loadUserFromToken(storedToken);
                 } else {
                     setUser(null);
                 }
-                setIsLoading(false);
             } catch (err) {
 
                 if (err.response?.status === 403 || err.response?.status === 401) {
-                    await SecureStore.deleteItemAsync('token');
+                    await SecureStore.deleteItemAsync('accessToken');
                     setUser(null);
-                    setToken("");
+                    setAccessToken("");
                     return;
                 }
             } finally {
@@ -41,12 +38,13 @@ export function UserProvider({children}) {
 
     async function login(email, password) {
         try {
-            const response = await axios.post(`${API_URL}/auth/login`, { email, password });
-            const { user: loggedUser, token: jwtToken } = response.data;
-
+            const response = await api.post(`/users/auth/login`, { email, password });
+            const { user: loggedUser, accessToken: accessJwtToken, refreshToken : refreshJwtToken } = response.data;
+            console.log(accessJwtToken)
             setUser(loggedUser);
-            setToken(jwtToken);
-            await SecureStore.setItemAsync('token', jwtToken);
+            setAccessToken(accessJwtToken);
+            await SecureStore.setItemAsync('accessToken', accessJwtToken);
+            await SecureStore.setItemAsync('refreshToken', refreshJwtToken);
 
             return loggedUser;
             } catch (err) {
@@ -57,12 +55,13 @@ export function UserProvider({children}) {
 
     async function register(username, firstName, lastName ,email, password) {
         try {
-            const response = await axios.post(`${API_URL}/auth/register`, { username, firstName, lastName ,email, password });
-            const { user: loggedUser, token: jwtToken } = response.data;
+            const response = await api.post(`/users/auth/register`, { username, firstName, lastName ,email, password });
+            const { user: loggedUser, accessToken: accessJwtToken, refreshToken : refreshJwtToken } = response.data;
 
             setUser(loggedUser);
-            setToken(jwtToken);
-            await SecureStore.setItemAsync('token', jwtToken);
+            setAccessToken(accessJwtToken);
+            await SecureStore.setItemAsync('accessToken', accessJwtToken);
+            await SecureStore.setItemAsync('refreshToken', refreshJwtToken);
 
             return loggedUser;
             } catch (err) {
@@ -71,33 +70,34 @@ export function UserProvider({children}) {
         }
     }
 
-    async function loadUserFromToken (storedToken) {
+    async function loadUserFromToken() {
         try {
-            const response = await axios.get(`${API_URL}/me`, {
-                headers: { Authorization: `Bearer ${storedToken}` }});
-
+            const response = await api.get(`/users/me`);
             setUser(response.data);
-            setToken(storedToken);
-            } catch (err) {
-                console.error("Auto login failed:", err);
-                await SecureStore.deleteItemAsync('token');
-                setUser(null);
-                setToken("");
-            throw err;
-            }
+        } catch (err) {
+            await SecureStore.deleteItemAsync('accessToken');
+            setUser(null);
+        }
     }
 
     async function logout() {
-        await SecureStore.deleteItemAsync('token');
+        try {
+            const refreshToken = await SecureStore.getItemAsync("refreshToken");
+
+            await api.post(`/users/auth/logout`, { refreshToken });
+        } catch (err) {
+            console.error("Logout error:", err.response?.data || err.message);
+        }
+        
+        await SecureStore.deleteItemAsync('accessToken');
+        await SecureStore.deleteItemAsync('refreshToken');
         setUser(null);
-        setToken("");
+        setAccessToken("");
     }
 
     async function updateUser(id ,updatedUser) {
         try {
-            const response = await axios.put(`${API_URL}/${id}`, updatedUser, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
+            const response = await api.put(`/users/${id}`, updatedUser);
             setUser(response.data);
             return response.data;
             } catch (err) {
@@ -109,11 +109,9 @@ export function UserProvider({children}) {
     async function deleteAccount() {
         if (!user?.id) throw new Error("Utilisateur non connecté");
         try {
-            await axios.delete(`${API_URL}/${user.id}`, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
+            await api.delete(`/users/${user.id}`);
             setUser(null);
-            setToken("");
+            setAccessToken("");
             } catch (err) {
             console.error("Delete account error:", err.response?.data || err.message);
             throw err;
@@ -123,10 +121,9 @@ export function UserProvider({children}) {
     async function changePassword(currentPassword, newPassword) {
         if (!user?.id) throw new Error("Utilisateur non connecté");
         try {
-            await axios.post(
-                `${API_URL}/change-password`,
+            await api.post(
+                `/users/change-password`,
                 { userId: user.id, currentPassword, newPassword },
-                { headers: { Authorization: `Bearer ${token}` } }
             );
             } catch (err) {
             console.error("Change password error:", err.response?.data || err.message);
@@ -136,9 +133,7 @@ export function UserProvider({children}) {
 
     async function getUserInfo(userId) {
         try {
-            const response = await axios.get(`${API_URL}/${userId}/public`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            const response = await api.get(`/users/${userId}/public`);
             return response.data;
             } catch (err) {
             console.error("No user information available:", err.response?.data || err.message);
@@ -150,7 +145,7 @@ export function UserProvider({children}) {
         <UserContext.Provider 
         value= {
             {user,
-            token,
+            accessToken,
             isLoading,
             login,
             register,

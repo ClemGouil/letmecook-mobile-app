@@ -1,14 +1,10 @@
 import { createContext, useState } from "react";
-import axios from "axios";
+import { api } from "../api/axiosInstance";
 import { useUser } from "../hooks/useUser";
 
 export const ImageContext = createContext();
 
 export function ImageProvider({ children }) {
-
-    const API_URL = `${process.env.EXPO_PUBLIC_URL_BACKEND}/api`;
-
-    const { token } = useUser();
 
     async function uploadImage(fileUri) {
         try {
@@ -23,9 +19,8 @@ export function ImageProvider({ children }) {
             type,
         });
 
-        const response = await axios.post(`${API_URL}/images/upload`, formData, {
+        const response = await api.post(`/images/upload`, formData, {
             headers: {
-            Authorization: `Bearer ${token}`,
             'Content-Type': 'multipart/form-data',
             },
         });

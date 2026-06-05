@@ -1,4 +1,4 @@
-import { createContext, useState, useEffect } from "react";
+import { createContext, useState, useEffect, useRef } from "react";
 import { api } from "../api/axiosInstance";
 import { useUser } from "../hooks/useUser";
 
@@ -7,14 +7,57 @@ export const NotifContext  = createContext();
 export function NotifProvider ({ children }) {
 
   const [notifications, setNotifications] = useState([]);
-
-  const { user } = useUser();
+  const { user, accessToken } = useUser();
+  const wsRef = useRef(null);
 
   useEffect(() => {
     if (user) {
       loadUnreadNotification(user.id);
     }
   }, [user]);
+
+  useEffect(() => {
+    if (!user?.id || !accessToken) return;
+
+    if (wsRef.current) {
+      wsRef.current.close();
+    }
+
+    const ws = new WebSocket(`ws://192.168.1.11:8080/ws?token=${accessToken}`);
+    wsRef.current = ws;
+
+    ws.onopen = () => {
+      console.log("WebSocket connecté");
+    };
+
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+
+        setNotifications(prev => {
+          const exists = prev.find(n => n.id === data.id);
+          if (exists) return prev;
+
+          return [data, ...prev];
+        });
+      } catch (e) {
+        console.log("Erreur parsing WS :", e);
+      }
+    };
+
+    ws.onerror = (err) => {
+      console.log("WS error :", err.message);
+    };
+
+    ws.onclose = () => {
+      console.log("WS fermé");
+    };
+
+    return () => {
+      console.log("Cleanup WS");
+      ws.close();
+    };
+  }, [user?.id, accessToken]);
 
   async function loadUnreadNotification(userId) {
     try {

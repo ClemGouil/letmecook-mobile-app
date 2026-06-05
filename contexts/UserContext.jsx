@@ -16,6 +16,7 @@ export function UserProvider({children}) {
                 const storedToken = await SecureStore.getItemAsync('accessToken');
 
                 if (storedToken) {
+                    setAccessToken(storedToken);
                     await loadUserFromToken(storedToken);
                 } else {
                     setUser(null);
@@ -40,7 +41,6 @@ export function UserProvider({children}) {
         try {
             const response = await api.post(`/users/auth/login`, { email, password });
             const { user: loggedUser, accessToken: accessJwtToken, refreshToken : refreshJwtToken } = response.data;
-            console.log(accessJwtToken)
             setUser(loggedUser);
             setAccessToken(accessJwtToken);
             await SecureStore.setItemAsync('accessToken', accessJwtToken);

@@ -9,6 +9,7 @@ import { useRecipe } from '../hooks/useRecipe'
 import { useShoppingList } from '../hooks/useShoppingList';
 import { useNavigation} from '@react-navigation/native';
 import { useAppContext } from '../hooks/useAppContext';
+import { useDate } from '../hooks/useDate';
 
 import FloatingButton  from '../components/FloatingButton';
 import ReusableModal from '../components/ReusableModal';
@@ -21,6 +22,7 @@ export default function MealPlanningScreen() {
 
   const { user} = useUser();
   const { currentContext } = useAppContext();
+  const { formatDateToLocalYYYYMMDD, getDayLabel } = useDate();
 
   const screenTitle = !currentContext
   ? "Inventaire"
@@ -42,29 +44,6 @@ export default function MealPlanningScreen() {
 
   const [selectedDay, setSelectedDay] = useState(null);
   const [dateRange, setDateRange] = useState({ start: null, end: null });
-
-  LocaleConfig.locales['fr'] = {
-    monthNames: [
-      'Janvier',
-      'Février',
-      'Mars',
-      'Avril',
-      'Mai',
-      'Juin',
-      'Juillet',
-      'Août',
-      'Septembre',
-      'Octobre',
-      'Novembre',
-      'Décembre'
-    ],
-    monthNamesShort: ['Janv.', 'Févr.', 'Mars', 'Avril', 'Mai', 'Juin', 'Juil.', 'Août', 'Sept.', 'Oct.', 'Nov.', 'Déc.'],
-    dayNames: ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'],
-    dayNamesShort: ['Dim.', 'Lun.', 'Mar.', 'Mer.', 'Jeu.', 'Ven.', 'Sam.'],
-    today: "Aujourd'hui"
-  };
-
-  LocaleConfig.defaultLocale = 'fr';
 
   useEffect(() => {
     const start = new Date();
@@ -134,13 +113,6 @@ export default function MealPlanningScreen() {
     return `${startDate.toLocaleDateString(undefined, options)} - ${endDate.toLocaleDateString(undefined, options)}`;
   };
 
-  const formatDateToLocalYYYYMMDD = (date) => {
-    const year = date.getFullYear();
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const day = date.getDate().toString().padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  }
-
   const groupMealPlanning = () => {
     const days = [];
     for(let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
@@ -165,33 +137,10 @@ export default function MealPlanningScreen() {
     setGroupedMealPlannings(days);
   }
 
-  const getDayLabel = (dateStr) => {
-    const date = new Date(dateStr);
-    const jours = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
-    const mois = [
-      'janvier', 'février', 'mars', 'avril', 'mai', 'juin',
-      'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'
-    ];
-    return `${jours[date.getDay()]} ${date.getDate()} ${mois[date.getMonth()]}`;
-  };
-
   const getMealType = (mt) => {
     const mealtype = { BREAKFAST : 'Petit-déjeuner', LUNCH : 'Déjeuner', DINNER : 'Dîner'}
     return mealtype[mt];
   };
-
-  const isToday =  (dateStr) => {
-    const today = new Date();
-    const todayStr = formatDateToLocalYYYYMMDD(today);
-    return todayStr === dateStr;
-  }
-
-  const isTomorrow =  (dateStr) => {
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const tomorrowStr = formatDateToLocalYYYYMMDD(tomorrow);
-    return tomorrowStr === dateStr;
-  }
 
   const handleDeletePlanning = async (id) => {
     try {
@@ -300,7 +249,7 @@ export default function MealPlanningScreen() {
           return (
               <View key={index} style={styles.dayCard}>
                 <View style={styles.dateContainer}>
-                  <Text style={styles.dayTitle}>{isToday(day.date) ? "Aujourd'hui" : isTomorrow(day.date) ? "Demain" : getDayLabel(day.date)}</Text>
+                  <Text style={styles.dayTitle}>{getDayLabel(day.date)}</Text>
                   <TouchableOpacity  
                     style={[ styles.addButton, availableMealTypes.length === 0 && { opacity : 0.2 }]} 
                     onPress={() => {

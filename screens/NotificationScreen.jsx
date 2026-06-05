@@ -3,14 +3,15 @@ import { Text, View, ScrollView, TouchableOpacity, StyleSheet, Image } from 'rea
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
 import { useNotif } from '../hooks/useNotif'
+import { useDate } from '../hooks/useDate';
 import { SafeAreaView } from 'react-native-safe-area-context';
-// import { useWSNotif } from '../hooks/useNotifWS';
 
 export default function NotificationScreen() {
 
   const navigation = useNavigation();
 
   const { notifications, markAsRead } = useNotif();
+  const { formatDateToLocalYYYYMMDD, getDayLabel } = useDate();
 
   const handleMarkAsRead = async (notif) => {
     if (!notif.read) {
@@ -23,16 +24,31 @@ export default function NotificationScreen() {
   };
 
   const markAllAsRead = () => {
-    notifications.map(notif => {markAsRead(notif)});
+    notifications.map(notif => {markAsRead(notif.id)});
   };
 
-  const unreadNotifications = notifications
-    .filter(n => !n.read)
-    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  const groupNotificationsByDay = (notifications) => {
+    const groups = {};
 
-  const readNotifications = notifications
-    .filter(n => n.read)
-    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    notifications
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .forEach((notif) => {
+        const date = new Date(notif.createdAt);
+
+        const dayKey = formatDateToLocalYYYYMMDD(date);
+
+        if (!groups[dayKey]) {
+          groups[dayKey] = [];
+        }
+
+        groups[dayKey].push(notif);
+      });
+
+    return groups;
+  };
+
+  const groupedNotifications = groupNotificationsByDay(notifications);
+  const sections = Object.keys(groupedNotifications);
 
 return (
     <SafeAreaView style={{ flex: 1 }} edges={['bottom', 'left', 'right']}>
@@ -50,46 +66,40 @@ return (
         </TouchableOpacity>
 
         <ScrollView style={styles.notificationsContainer}>
-          {unreadNotifications.length > 0 && (
-            <>
-              <Text style={styles.sectionTitle}>Notifications Non lues</Text>
-              {unreadNotifications.map(notif => (
+          {sections.map((section) => (
+            <View key={section}>
+              <Text style={styles.sectionTitle}>{getDayLabel(section)}</Text>
+
+              {groupedNotifications[section].map((notif) => (
                 <TouchableOpacity
                   key={notif.id}
                   onPress={() => handleMarkAsRead(notif)}
-                  style={[styles.notificationItem, styles.unreadNotification]}
+                  style={[
+                    styles.notificationItem,
+                    notif.read
+                      ? styles.readNotification
+                      : styles.unreadNotification,
+                  ]}
                 >
                   <View style={styles.notificationHeader}>
-                    <Text style={styles.notificationTitle}>{notif.title}</Text>
+                    <Text style={styles.notificationTitle}>
+                      {notif.title}
+                    </Text>
+
                     <Text style={styles.notificationDate}>
-                      {new Date(notif.createdAt).toLocaleString()}
+                      {new Date(notif.createdAt).toLocaleTimeString('fr-FR', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
                     </Text>
                   </View>
-                  <Text style={styles.notificationMessage}>{notif.message}</Text>
+                  <Text style={styles.notificationMessage}>
+                    {notif.message}
+                  </Text>
                 </TouchableOpacity>
               ))}
-            </>
-          )}
-
-          {readNotifications.length > 0 && (
-            <>
-              <Text style={styles.sectionTitle}>Notifications Lues</Text>
-              {readNotifications.map(notif => (
-                <View
-                  key={notif.id}
-                  style={[styles.notificationItem, styles.readNotification]}
-                >
-                  <View style={styles.notificationHeader}>
-                    <Text style={styles.notificationTitle}>{notif.title}</Text>
-                    <Text style={styles.notificationDate}>
-                      {new Date(notif.createdAt).toLocaleString()}
-                    </Text>
-                  </View>
-                  <Text style={styles.notificationMessage}>{notif.message}</Text>
-                </View>
-              ))}
-            </>
-          )}
+            </View>
+          ))}
         </ScrollView>
       </View>
     </SafeAreaView>

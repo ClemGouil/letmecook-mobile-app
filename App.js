@@ -13,7 +13,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { GroupProvider } from './contexts/GroupContext';
 import { ContextProvider } from './contexts/ContextContext';
 import { NotifProvider } from './contexts/NotifContext';
-import { NotifWSProvider } from './contexts/NotifWSContext';
 
 export default function App() {
   return (
@@ -21,7 +20,6 @@ export default function App() {
       <GroupProvider>
         <ContextProvider>
           <NotifProvider>
-            {/* <NotifWSProvider> */}
               <ImageProvider>
                 <RecipeProvider>
                   <InventoryProvider>
@@ -43,7 +41,6 @@ export default function App() {
                   </InventoryProvider>
                 </RecipeProvider>
               </ImageProvider>
-            {/* </NotifWSProvider> */}
           </NotifProvider>
         </ContextProvider>
       </GroupProvider>

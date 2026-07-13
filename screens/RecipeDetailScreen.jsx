@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, ScrollView } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
+import StarRating from 'react-native-star-rating-widget';
 
 import { useUser } from '../hooks/useUser'
 import { useRecipe } from '../hooks/useRecipe'
 import { useGroup } from '../hooks/useGroup';
+import { useReview } from '../hooks/useReview';
 import { useNavigation} from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import SelectGroupForm from '../components/SelectGroupForm';
@@ -16,6 +18,7 @@ export default function RecipeDetailScreen({ route }) {
   const navigation = useNavigation();
   const { user, getUserInfo } = useUser();
   const { groups} = useGroup();
+  const { getReviewStatsFromRecipe } = useReview();
 
   const { publicRecipes, privateRecipes, groupRecipes, addRecipe, addIngredientToRecipe, addInstructionToRecipe, deleteRecipe ,shareRecipeWithGroup, unshareRecipeFromGroup} = useRecipe();
   const recipe = privateRecipes.find(r => r.id === route.params.recipeId) || groupRecipes.find(r => r.recipe.id === route.params.recipeId)?.recipe || publicRecipes.find(r => r.id === route.params.recipeId) ;
@@ -38,6 +41,8 @@ export default function RecipeDetailScreen({ route }) {
   const [showGroupSelector, setShowGroupSelector] = useState(false);
   const [ownerInfo, setOwnerInfo] = useState(null);
 
+  const [reviewStats, setReviewStats] = useState(null);
+
   useEffect(() => {
     const loadOwner = async () => {
       try {
@@ -50,7 +55,20 @@ export default function RecipeDetailScreen({ route }) {
       }
     };
 
+    const loadStats = async () => {
+      try {
+        if (isPublic && recipe?.id) {
+          console.log(recipe.id)
+          const stats = await getReviewStatsFromRecipe(recipe.id);
+          setReviewStats(stats);
+        }
+      } catch (err) {
+        console.error("Erreur chargement stats:", err);
+      }
+    };
+
     loadOwner();
+    loadStats();
   }, [recipe, isPublic]);
 
   const getScaledQuantity = (originalQuantity) => {
@@ -254,6 +272,29 @@ export default function RecipeDetailScreen({ route }) {
               </Text>
             </View>
           </View>
+        </View>
+        )}
+
+        {isPublic && reviewStats && ( 
+        <View style={styles.cardContainer}>
+          <Text style={styles.statsTitle}>Avis des utilisateurs</Text>
+          {reviewStats.reviewsCount > 0 ? (
+            <View style={styles.statsContainer}>
+              <StarRating 
+                rating={reviewStats.averageRating}
+                onChange={() => {}}
+                starSize={30} />
+              <Text style={styles.reviewCount}>
+                ({reviewStats.reviewsCount} avis)
+              </Text>
+            </View>
+          ) : (
+            <Text style={styles.reviewCount}>
+              Aucun avis pour le moment
+            </Text>
+          )}
+
+          
         </View>
         )}
 
@@ -563,5 +604,21 @@ const styles = StyleSheet.create({
   editButtonText: {
     color: 'rgb(180, 180, 230)',
     fontWeight: 'bold',
+  },
+  statsTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 12,
+  },
+  statsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+  },
+  reviewCount: {
+    fontSize: 15,
+    color: 'gray',
+    fontWeight: '500',
   },
 });

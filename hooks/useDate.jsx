@@ -41,8 +41,26 @@ export function useDate() {
     return `${jours[d.getDay()]} ${d.getDate()} ${mois[d.getMonth()]}`;
   }, [isToday, isYesterday]);
 
+  const getDayPeriodFromToday = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+
+    const diffTime = Math.abs(now - date);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) return 'Aujourd\'hui';
+    if (diffDays === 1) return 'Hier';
+    if (diffDays < 7) return `${diffDays} jours`;
+    if (diffDays < 30) {
+      const weeks = Math.floor(diffDays / 7);
+      return `${weeks} semaine(s)`;
+    }
+    return date.toLocaleDateString();
+  };
+
   return {
     formatDateToLocalYYYYMMDD,
     getDayLabel,
+    getDayPeriodFromToday
   };
 }

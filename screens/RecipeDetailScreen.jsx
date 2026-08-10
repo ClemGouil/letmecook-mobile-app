@@ -7,18 +7,21 @@ import { useUser } from '../hooks/useUser'
 import { useRecipe } from '../hooks/useRecipe'
 import { useGroup } from '../hooks/useGroup';
 import { useReview } from '../hooks/useReview';
-import { useNavigation} from '@react-navigation/native';
+import { useDate } from '../hooks/useDate';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import SelectGroupForm from '../components/SelectGroupForm';
 import ReusableModal from '../components/ReusableModal';
 import BackButton from '../components/BackButton';
+import ReviewCard from '../components/ReviewCard';
 
 export default function RecipeDetailScreen({ route }) {
 
   const navigation = useNavigation();
   const { user, getUserInfo } = useUser();
   const { groups} = useGroup();
-  const { getReviewStatsFromRecipe } = useReview();
+  const { getReviewStatsFromRecipe, getReviewsFromRecipe, deleteReview} = useReview();
+  const { getDayPeriodFromToday } = useDate();
 
   const { publicRecipes, privateRecipes, groupRecipes, addRecipe, addIngredientToRecipe, addInstructionToRecipe, deleteRecipe ,shareRecipeWithGroup, unshareRecipeFromGroup} = useRecipe();
   const recipe = privateRecipes.find(r => r.id === route.params.recipeId) || groupRecipes.find(r => r.recipe.id === route.params.recipeId)?.recipe || publicRecipes.find(r => r.id === route.params.recipeId) ;
@@ -42,6 +45,13 @@ export default function RecipeDetailScreen({ route }) {
   const [ownerInfo, setOwnerInfo] = useState(null);
 
   const [reviewStats, setReviewStats] = useState(null);
+  const [myReview, setMyReview] = useState(null);
+  const [reviews, setReviews] = useState([]);
+  const [reviewOffset, setReviewOffset] = useState(0);
+  const [loadingReviews, setLoadingReviews] = useState(false);
+  const [hasMoreReviews, setHasMoreReviews] = useState(false);
+
+  const DefaultNbOfReview = 3;
 
   useEffect(() => {
     const loadOwner = async () => {
@@ -58,7 +68,6 @@ export default function RecipeDetailScreen({ route }) {
     const loadStats = async () => {
       try {
         if (isPublic && recipe?.id) {
-          console.log(recipe.id)
           const stats = await getReviewStatsFromRecipe(recipe.id);
           setReviewStats(stats);
         }
@@ -69,7 +78,38 @@ export default function RecipeDetailScreen({ route }) {
 
     loadOwner();
     loadStats();
+    loadReviews();
   }, [recipe, isPublic]);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      loadReviews();
+
+      if (isPublic && recipe?.id) {
+        getReviewStatsFromRecipe(recipe.id)
+          .then(stats => setReviewStats(stats))
+          .catch(err => console.error(err));
+      }
+
+    }, [recipe?.id, isPublic])
+  );
+
+  const loadReviews = async () => {
+    try {
+      if (isPublic && recipe?.id) {
+        const reviewsData = await getReviewsFromRecipe(recipe.id, user.id , DefaultNbOfReview);
+
+        setMyReview(reviewsData.myReview);
+        setReviews(reviewsData.reviews);
+        setReviewOffset(reviewsData.reviews.length);
+        setHasMoreReviews(
+          reviewsData.reviews.length === DefaultNbOfReview
+        );
+      }
+    } catch (err) {
+      console.error("Erreur chargement reviews:", err);
+    }
+  };
 
   const getScaledQuantity = (originalQuantity) => {
     const ratio = servings / recipe.servings;
@@ -183,13 +223,69 @@ export default function RecipeDetailScreen({ route }) {
     }
   };
 
+  const loadMoreReviews = async () => {
+    try {
+      if (!isPublic || !recipe?.id || loadingReviews) return;
+
+      setLoadingReviews(true);
+
+      const newReviews = await getReviewsFromRecipe(
+        recipe.id,
+        user?.id,
+        DefaultNbOfReview,
+        reviewOffset
+      );
+
+      setHasMoreReviews(newReviews.reviews.length === DefaultNbOfReview);
+      setReviews(prev => [...prev, ...newReviews.reviews]);      
+      setReviewOffset(reviewOffset + newReviews.reviews.length);
+
+    } catch (err) {
+      console.error("Erreur chargement reviews:", err);
+    } finally {
+      setLoadingReviews(false);
+    }
+  };
+
+  const handleDeleteReview = async (reviewId) => {
+   try {
+      await deleteReview(reviewId);
+      setMyReview(null);
+      const stats = await getReviewStatsFromRecipe(recipe.id);
+      setReviewStats(stats);
+    } catch(err) {
+      console.error(
+        "Erreur suppression avis :",
+        err
+      );
+    }
+  };
+
+  const handleEditReview = async (review) => {
+    navigation.navigate("ReviewForm", {
+      recipeId: recipe.id,
+      reviewToEdit: review
+    });
+  };
+
   return (
     <SafeAreaView style={{ flex: 1 }} >
       <>
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingVertical: 20 }}>
         <View style={styles.cardContainer}>
-          <BackButton onPress={() => navigation.goBack()}/>
-          <Text style={styles.title}>{recipe.name}</Text>
+          <View style={styles.header}>
+            <View style={styles.backButtonContainer}>
+              <BackButton onPress={() => navigation.goBack()} />
+            </View>
+
+            <Text
+              style={styles.title}
+              numberOfLines={3}
+              ellipsizeMode="tail"
+            >
+              {recipe.name}
+            </Text>
+          </View>
           <Image 
             source={
             recipe.imageUrl
@@ -198,6 +294,46 @@ export default function RecipeDetailScreen({ route }) {
             }
             style={styles.image} 
           />
+
+          {isPublic && (ownerInfo || reviewStats) && (
+            <View style={styles.recipeMetaContainer}>
+              {ownerInfo && (
+                <View style={styles.creatorCompact}>
+                  <Image
+                    source={
+                      ownerInfo.profilePhotoUrl
+                        ? { uri: ownerInfo.profilePhotoUrl }
+                        : { uri:'https://cdn-icons-png.flaticon.com/512/3135/3135715.png'}
+                    }
+                    style={styles.creatorAvatar}
+                  />
+                  <View>
+                    <Text style={styles.creatorName}>
+                      {ownerInfo.username}
+                    </Text>
+                    <Text style={styles.creatorLabel}>
+                      Créateur
+                    </Text>
+                  </View>
+                </View>
+              )}
+
+              {reviewStats && (
+                <View style={styles.ratingBadge}>
+                  <Icon name="star"  size={17} color="#F5B800"/>
+                  <View>
+                    <Text style={styles.ratingValue}>
+                      {reviewStats.averageRating.toFixed(1)}
+                    </Text>
+                    <Text style={styles.ratingCount}>
+                      {reviewStats.reviewsCount} avis
+                    </Text>
+                  </View>
+                </View>
+              )}
+            </View>
+          )}
+
           {!isGroupRecipe && isOwner && (
               <TouchableOpacity
                 style={styles.editButton}
@@ -251,52 +387,6 @@ export default function RecipeDetailScreen({ route }) {
             </TouchableOpacity>
           )}
         </View>
-
-        {isPublic && ownerInfo && ( 
-        <View style={styles.cardContainer}>
-          <View style={styles.profileSection}>
-            <Image
-              source={
-                ownerInfo.profilePhotoUrl
-                  ? { uri: ownerInfo.profilePhotoUrl }
-                  : { uri :'https://cdn-icons-png.flaticon.com/512/3135/3135715.png'}
-              }
-              style={styles.profileImage}
-            />
-            <View>
-              <Text style={styles.profileUsername}>
-                {ownerInfo.username}
-              </Text>
-              <Text style={styles.profileText}>
-                Créateur de la recette
-              </Text>
-            </View>
-          </View>
-        </View>
-        )}
-
-        {isPublic && reviewStats && ( 
-        <View style={styles.cardContainer}>
-          <Text style={styles.statsTitle}>Avis des utilisateurs</Text>
-          {reviewStats.reviewsCount > 0 ? (
-            <View style={styles.statsContainer}>
-              <StarRating 
-                rating={reviewStats.averageRating}
-                onChange={() => {}}
-                starSize={30} />
-              <Text style={styles.reviewCount}>
-                ({reviewStats.reviewsCount} avis)
-              </Text>
-            </View>
-          ) : (
-            <Text style={styles.reviewCount}>
-              Aucun avis pour le moment
-            </Text>
-          )}
-
-          
-        </View>
-        )}
 
         <View style={styles.timeContainer}>
           <View style={styles.timeSection}>
@@ -385,6 +475,65 @@ export default function RecipeDetailScreen({ route }) {
             />
           )}
         </View>
+        
+        {isPublic && reviews && (
+          <View style={styles.cardContainer}>
+
+            
+
+            <Text style={styles.reviewHeaderText}>
+              Avis des utilisateurs
+            </Text>
+
+            {myReview && (
+              <ReviewCard
+                review={myReview}
+                isMine={true}
+                onEdit={handleEditReview}
+                onDelete={handleDeleteReview}
+                getDayPeriodFromToday={getDayPeriodFromToday}
+              />
+            )}
+
+            {reviews.map(review => (
+              <ReviewCard
+                key={review.id}
+                review={review}
+                isMine={false}
+                getDayPeriodFromToday={getDayPeriodFromToday}
+              />
+            ))}
+
+            {hasMoreReviews && reviews.length > 0 && (
+              <TouchableOpacity
+                style={styles.moreReviewsButton}
+                onPress={() => loadMoreReviews()}
+                disabled={loadingReviews}
+              >
+                <Text style={styles.moreReviewsText}>
+                  {loadingReviews 
+                    ? "Chargement..."
+                    : "Voir plus d'avis"
+                  }
+                </Text>
+              </TouchableOpacity>
+            )}
+
+            {!myReview && (
+              <TouchableOpacity 
+                style={styles.moreReviewsButton} 
+                onPress={() => {
+                  navigation.navigate("ReviewForm", {
+                      recipeId: recipe.id,
+                      reviewToEdit : null
+                  });
+                }}
+              >
+                <Text style={styles.moreReviewsText}>Ajouter un avis</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
       </ScrollView>
 
       <ReusableModal
@@ -407,27 +556,78 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 16,
   },
+  header: {
+    position: 'relative',
+    minHeight: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  backButtonContainer: {
+    position: 'absolute',
+    left: 0,
+    zIndex: 10,
+    elevation: 10,
+  },
+
   title: {
+    width: '100%',
+    paddingLeft: 50,
+    paddingRight: 10,
+    textAlign: 'center',
     fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 12,
-    textAlign: 'center',
   },
   image: {
     width: '100%',
     height: 200,
     resizeMode: 'contain',
     borderRadius: 8,
-    marginBottom: 16,
+    marginVertical: 16,
   },
-  detailsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: 16,
+  recipeMetaContainer:{
+    flexDirection:'row',
+    justifyContent:'space-between',
+    alignItems:'center',
+    marginTop:10,
+    marginBottom:5,
+    paddingHorizontal:5,
   },
-  detailText: {
-    fontSize: 14,
-    fontWeight: '600',
+  creatorCompact:{
+    flexDirection:'row',
+    alignItems:'center',
+  },
+  creatorAvatar:{
+    width:36,
+    height:36,
+    borderRadius:18,
+    marginRight:10,
+  },
+  creatorName:{
+    fontSize:15,
+    fontWeight:'700',
+  },
+  creatorLabel:{
+    fontSize:12,
+    color:'#777',
+  },
+  ratingBadge:{
+    flexDirection:'row',
+    alignItems:'center',
+    gap:6,
+    backgroundColor:'#FFF3C4',
+    paddingHorizontal:10,
+    paddingVertical:6,
+    borderRadius:16,
+  },
+  ratingValue:{
+    fontSize:14,
+    fontWeight:'bold',
+    color:'#C98A00',
+  },
+  ratingCount:{
+    fontSize:11,
+    color:'#777',
   },
   cardContainer: {
     backgroundColor: '#fff', 
@@ -466,25 +666,6 @@ const styles = StyleSheet.create({
   timeValue: {
     fontSize: 16,
     fontWeight: 'bold',
-  },
-  profileSection :{ 
-    flexDirection: 'row',
-    alignItems: 'center', 
-    justifyContent  : 'center'
-  },
-  profileImage :{ 
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    marginRight: 10
-  },
-  profileUsername :{ 
-    fontSize: 16, 
-    fontWeight: 'bold'
-  },
-  profileText :{ 
-    fontSize: 12, 
-    color: 'gray'
   },
   separatorVertical: {
     width: 1,
@@ -620,5 +801,33 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: 'gray',
     fontWeight: '500',
+  },
+  reviewHeaderText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    textAlign: 'start',
+  },
+  username: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#222',
+  },
+  reviewActions: {
+    flexDirection: 'row',
+    gap: 6,
+  },
+  moreReviewsButton:{
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 16,
+    borderWidth: 2,
+    borderColor: 'rgb(180, 180, 230)',
+  },
+  moreReviewsText:{
+    color:'rgb(180,180,230)',
+    fontWeight:'bold'
   },
 });

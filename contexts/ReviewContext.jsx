@@ -6,14 +6,23 @@ export const ReviewContext = createContext();
 
 export function ReviewProvider({ children }) {
 
-    async function getReviewsFromRecipe(recipeId, limit = 5, offset = 0, append = false) {
+    async function getReviewsFromRecipe(recipeId, userId, limit = 5, offset = 0, append = false) {
         try {
-            const response = await api.get(`/recipe-reviews/${recipeId}`, {
-                params: {
+            const params = {
                 limit,
-                offset,
-                },
-            });
+                offset
+            };
+
+            if (userId) {
+                params.userId = userId;
+            }
+
+            const response = await api.get(
+                `/recipe-reviews/${recipeId}`,
+                {
+                params
+                }
+            );
 
             const reviews = response.data;
 

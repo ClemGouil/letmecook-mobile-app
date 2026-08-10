@@ -29,7 +29,7 @@ const RecipeCard = ({ recipe, onPress, isSelected, width, isGroup, owner }) => {
         <View style={styles.topRightBadge}>
           <Icon name="people-outline" size={16} color="rgb(180, 180, 230)" />
           <Image
-            source={{ uri: owner.profilePhotoUrl }}
+            source={{ uri: owner.profilePhotoUrl || 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png' }}
             style={styles.ownerAvatar}
           />
         </View>
@@ -47,7 +47,6 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: 'hidden',
     backgroundColor: 'rgba(114, 111, 111, 0.7)',
-    marginBottom: 12
   },
   overlayBadge: {
     position: 'absolute',
@@ -85,8 +84,8 @@ const styles = StyleSheet.create({
   },
   topRightBadge: {
     position: 'absolute',
-    top: 0,
-    right: 0,
+    top: 8,
+    right: 8,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(255,255,255,0.8)',

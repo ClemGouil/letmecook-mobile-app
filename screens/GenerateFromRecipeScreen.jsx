@@ -262,7 +262,7 @@ export default function GenerateFromRecipeScreen({ navigation }) {
   );
 };
 
-const CARD_MARGIN = 6;
+const CARD_MARGIN = 4;
 const CARD_WIDTH = ((Dimensions.get('window').width)/ 2) - (CARD_MARGIN * 3);
 
 const styles = StyleSheet.create({
@@ -308,6 +308,7 @@ const styles = StyleSheet.create({
   },
   row: {
     justifyContent: 'space-between',
+    paddingBottom: 8,
   },
   emptyText: {
     textAlign: 'center',

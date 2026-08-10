@@ -23,7 +23,9 @@ export function NotifProvider ({ children }) {
       wsRef.current.close();
     }
 
-    const ws = new WebSocket(`ws://192.168.1.11:8080/ws?token=${accessToken}`);
+    const ws = new WebSocket(
+      `${process.env.EXPO_PUBLIC_WS_URL}/ws?token=${accessToken}`
+    );
     wsRef.current = ws;
 
     ws.onopen = () => {

@@ -29,20 +29,43 @@ export default function ShoppingListDetailScreen({ route }) {
 
   const [editingItem, setEditingItem] = React.useState(null);
   const [addingItem, setAddingItem] = React.useState(false);
+  const [groupBy, setGroupBy] = React.useState('category');
 
   const [ingredientQuery, setIngredientQuery] = React.useState('');
   const [ingredientResults, setIngredientResults] = React.useState([]);
 
   const handleEdit = (item) => setEditingItem(item);
 
-  const categories = Object.entries(
-    items.reduce((acc, item) => {
-      const category = item.ingredient.category || 'Autres';
-      if (!acc[category]) acc[category] = [];
-      acc[category].push(item);
-      return acc;
-    }, {})
-  );
+  const groupedItems = React.useMemo(() => {
+    if (groupBy === 'category') {
+      return Object.entries(
+        items.reduce((acc, item) => {
+          const category = item.ingredient.category || 'Autres';
+          if (!acc[category]) acc[category] = [];
+          acc[category].push(item);
+          return acc;
+        }, {})
+      );
+    } else {
+      const recipeMap = {};
+      items.forEach(item => {
+        if (item.recipes && item.recipes.length > 0) {
+          item.recipes.forEach(recipe => {
+            if (!recipeMap[recipe.recipeName]) {
+              recipeMap[recipe.recipeName] = [];
+            }
+            recipeMap[recipe.recipeName].push(item);
+          });
+        } else {
+          if (!recipeMap['Autres']) {
+            recipeMap['Autres'] = [];
+          }
+          recipeMap['Autres'].push(item);
+        }
+      });
+      return Object.entries(recipeMap);
+    }
+  }, [items, groupBy]);
 
   React.useEffect(() => {
     const timeout = setTimeout(async () => {
@@ -121,20 +144,47 @@ export default function ShoppingListDetailScreen({ route }) {
           <BackButton onPress={() => navigation.goBack()}/>
           <Text style={styles.headerTitle}>{shoppingList.name}</Text>
         </View>
+        <View style={styles.modeContainer}>
+          <View style={styles.tagsWrapper}>
+            <TouchableOpacity
+              onPress={() => setGroupBy('category')}
+              style={[
+                styles.tagButton,
+                styles.firstTag,
+                groupBy === 'category' && styles.tagButtonActive,
+              ]}
+            >
+              <Text style={styles.tagText}>{groupBy === 'category' && '✓ '}Par Catégorie</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setGroupBy('recipe')}
+              style={[
+                styles.tagButton,
+                styles.lastTag,
+                groupBy === 'recipe' && styles.tagButtonActive,
+              ]}
+            >
+              <Text style={styles.tagText}>{groupBy === 'recipe' && '✓ '} Par Recette</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
         <FlatList
-          data={categories}
-          keyExtractor={([category]) => category}
+          data={groupedItems}
+          keyExtractor={([key]) => key}
           contentContainerStyle={{ paddingBottom: 60 }}
-          renderItem={({ item: [category, items] }) => (
+          renderItem={({ item: [key, items] }) => (
             <View style={styles.categoryCard}>
-              <Text style={styles.categoryTitle}>{category}</Text>
+              <Text style={styles.categoryTitle}>{key}</Text>
               {items.map((item, index) => (
                 <View key={item.ingredient.id + index}>
                   <IngredientListCard
                     ingredient={item.ingredient}
+                    recipes={item.recipes}
                     quantity={item.quantity}
                     unit={item.unit}
                     checked={item.checked}
+                    mode={groupBy}
+                    currentRecipe={key}
                     onToggleChecked={() => handleToggleChecked(item)}
                     onPress={() => handleEdit(item)}
                     onDelete={() => handleDelete(item)}
@@ -228,5 +278,39 @@ const styles = StyleSheet.create({
     color: '#222',
     letterSpacing: 0.4,
     marginLeft: 12,
+  },
+   modeContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginVertical: 8,
+  },
+  tagsWrapper: {
+    flexDirection: 'row',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgb(180, 180, 230)',
+    overflow: 'hidden',
+  },
+  tagButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRightWidth: 1,
+    borderColor: 'rgb(180, 180, 250)',
+  },
+  tagButtonActive: {
+    backgroundColor: 'rgb(221, 221, 250)',
+  },
+  tagText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: 'rgb(180, 180, 230)',
+  },
+  firstTag: {
+    borderTopLeftRadius: 20,
+    borderBottomLeftRadius: 20,
+  },
+  lastTag: {
+    borderTopRightRadius: 20,
+    borderBottomRightRadius: 20,
   },
 });

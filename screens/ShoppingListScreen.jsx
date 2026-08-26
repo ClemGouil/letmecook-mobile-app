@@ -9,7 +9,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import SearchBar from '../components/SearchBar';
 import ShoppingListCard from '../components/ShoppingListCard';
 import FloatingButton  from '../components/FloatingButton';
-import ReusableModal from '../components/ReusableModal';
+import ActionListModal from '../components/ActionListModal';
 import ChooseNameModal from '../components/ChooseNameModal';
 import ContextSelector from '../components/ContextSelector';
 
@@ -103,19 +103,26 @@ export default function ShoppingListScreen() {
         )}
         <FloatingButton onPress={() => setAddingShoppingList(true)}/>
 
-        <ReusableModal
+        <ActionListModal
           visible={addingShoppingList}
           onClose={() => setAddingShoppingList(false)}
-        >
-          <View style={styles.buttonRow}>
-            <TouchableOpacity style={styles.button} onPress={() => {setShowModalAdd(true); setAddingShoppingList(false);}}>
-                <Text style={styles.buttonText}>Créer une nouvelle liste de course</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.button} onPress={() => {setAddingShoppingList(false); navigation.navigate('GenerateFromRecipe');}}>
-                <Text style={styles.buttonText}>Générer une liste de course à partir de recettes</Text>
-            </TouchableOpacity>
-        </View>
-        </ReusableModal>
+          actions={[
+            {
+              label: 'Créer une nouvelle liste de course',
+              onPress: () => {
+                setShowModalAdd(true);
+                setAddingShoppingList(false);
+              },
+            },
+            {
+              label: 'Générer une liste de course à partir de recettes',
+              onPress: () => {
+                setAddingShoppingList(false);
+                navigation.navigate('GenerateFromRecipe');
+              },
+            },
+          ]}
+        />
 
         <ChooseNameModal
           visible={showModalAdd}
@@ -170,31 +177,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#333',
     marginVertical: 8,
-    textAlign: 'center',
-  },
-  buttonRow: {
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'space-around',
-    paddingVertical: 20,
-    backgroundColor: '#fff',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-  },
-  button: {
-    paddingVertical: 12,
-    borderRadius: 8,
-    marginVertical: 4,
-    marginHorizontal: 2,
-    width: '90%',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: 'rgb(180, 180, 230)',
-  },
-  buttonText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: 'rgb(180, 180, 230)',
     textAlign: 'center',
   },
 });

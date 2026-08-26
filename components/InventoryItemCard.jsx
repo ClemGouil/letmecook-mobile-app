@@ -1,16 +1,17 @@
 import React from 'react';
 import { TouchableOpacity, Image, View, Text, StyleSheet, Dimensions } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import SquareButton from './SquareButton';
 
 const InventoryItemCard = ({ item, onEdit, onDelete }) => (
-  <View style={styles.card}>
+  <TouchableOpacity
+      style={styles.card}
+      onPress={() => onEdit(item)}
+      activeOpacity={0.7}
+    >
     <View style={styles.actions}>
-      <TouchableOpacity style={styles.actionButton} onPress={() => onEdit(item)} title="Modifier">
-        <Icon name="edit" size={20} color="#333" />
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.actionButton} onPress={() => onDelete(item)} title="Supprimer">
-        <Icon name="delete" size={20} color="#333" />
-      </TouchableOpacity>
+      {/* <SquareButton iconName='create-outline' onPress={() => onEdit(item)} iconSize={18} size={30}/> */}
+      <SquareButton onPress={() => onDelete(item)} iconSize={18} size={30}/>
     </View>
 
     <View style={styles.imageContainer}>
@@ -25,27 +26,23 @@ const InventoryItemCard = ({ item, onEdit, onDelete }) => (
     <Text style={styles.ingredientInfo}>
       {item.quantity} {item.unit.symbol}
     </Text>
-  </View>
+  </TouchableOpacity>
 );
 
-const CARD_MARGIN = 6;
+const CARD_MARGIN = 8;
 const CARD_WIDTH = (Dimensions.get('window').width / 2) - (CARD_MARGIN * 3);
 
 const styles = StyleSheet.create({
   card: {
     width: CARD_WIDTH,
     backgroundColor: '#fff',
+    borderColor: 'rgb(180, 180, 230)',
+    borderWidth: 1,
     borderRadius: 12,
-    shadowColor: 'rgba(0, 0, 0, 0.08)',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 2,
     padding: 10,
     margin: 8,
     alignItems: 'center',
     justifyContent: 'space-between',
-    position: 'relative',
   },
   imageContainer: {
     height: 80,

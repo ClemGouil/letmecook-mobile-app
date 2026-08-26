@@ -14,6 +14,7 @@ import { Slider } from 'react-native-elements';
 import { useUser } from '../hooks/useUser';
 import BackButton from '../components/BackButton';
 import SaveButton from '../components/SaveButton';
+import SquareButton from '../components/SquareButton';
 
 export default function RecipeFormScreen({ route }) {
 
@@ -325,9 +326,7 @@ export default function RecipeFormScreen({ route }) {
                           {item.ingredient.name} - {item.quantity} {item.unit.symbol}
                         </Text>
                       </TouchableOpacity>
-                      <TouchableOpacity style={styles.deleteButton} onPress={() => handleDeleteIngredient(item.id)}>
-                        <Icon name="trash-outline" size={15} color="rgb(180, 180, 230)" />
-                      </TouchableOpacity>
+                      <SquareButton onPress={() => handleDeleteIngredient(item.id)} iconSize={16} size={30} />
                     </View>
                   )}
                 />
@@ -348,9 +347,7 @@ export default function RecipeFormScreen({ route }) {
                     <View style={styles.instructionItem}>
                       <View style={styles.instructionHeader}>
                       <Text style={styles.subTitleText}>Étape {item.stepNumber}</Text>
-                      <TouchableOpacity  style={styles.deleteButton} onPress={() => handleDeleteInstruction(item.id)}>
-                        <Icon name="trash-outline" size={15} color="rgb(180, 180, 230)" />
-                      </TouchableOpacity>
+                      <SquareButton onPress={() => handleDeleteInstruction(item.id)} iconSize={16} size={30} />
                       </View>
                       <TextInput
                         style={styles.input}
@@ -550,15 +547,6 @@ const styles = StyleSheet.create({
   publicRow: {
     flexDirection: 'row',
     justifyContent: 'flex-start',
-    alignItems: 'center',
-  },
-  deleteButton : {
-    width: 30,
-    height: 30,
-    borderWidth: 2,
-    borderColor: 'rgb(180, 180, 230)',
-    borderRadius: 4,
-    justifyContent: 'center',
     alignItems: 'center',
   },
   headerButtons: {

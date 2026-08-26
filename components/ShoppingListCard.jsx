@@ -1,6 +1,6 @@
 import React from 'react';
 import { Text, StyleSheet, TouchableOpacity, View } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons';
+import SquareButton from '../components/SquareButton';
 
 const ShoppingListCard = ({ shoppingList, onPress, onDelete }) => {
 
@@ -29,11 +29,9 @@ const ShoppingListCard = ({ shoppingList, onPress, onDelete }) => {
       <View style={styles.row}>
         <View style={styles.textContainer}>
           <Text style={styles.title}>{shoppingList.name}</Text>
-          <Text style={styles.date}>Crée {formatDate(shoppingList.createdAt)}</Text>
+          <Text style={styles.date}>{formatDate(shoppingList.createdAt)}</Text>
         </View>
-        <TouchableOpacity style={styles.deleteButton} onPress={onDelete}>
-          <Icon name="trash-outline" size={20} color="rgb(180, 180, 230)" />
-        </TouchableOpacity>
+        <SquareButton onPress={onDelete} iconSize={18} size={35}/>
       </View>
     </TouchableOpacity>
   );
@@ -64,15 +62,6 @@ const styles = StyleSheet.create({
   date: {
     fontSize: 10,
     color: '#555',
-  },
-  deleteButton: {
-    width: 36,
-    height: 36,
-    borderWidth: 2,
-    borderColor: 'rgb(180, 180, 230)',
-    borderRadius: 6,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
 });
 

@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import { Text, View, StyleSheet, TouchableOpacity, ScrollView, Image} from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useMealPlanning } from '../hooks/useMealPlanning';
@@ -12,9 +13,11 @@ import { useAppContext } from '../hooks/useAppContext';
 import { useDate } from '../hooks/useDate';
 
 import FloatingButton  from '../components/FloatingButton';
+import SquareButton from '../components/SquareButton';
 import ReusableModal from '../components/ReusableModal';
 import {Calendar, LocaleConfig} from 'react-native-calendars';
 import ContextSelector from '../components/ContextSelector';
+import ActionListModal from '../components/ActionListModal';
 
 export default function MealPlanningScreen() {
 
@@ -62,15 +65,17 @@ export default function MealPlanningScreen() {
     setRecipesMap(map);
   }, [privateRecipes]);
 
-  useEffect(() => {
-    if (user && currentContext && startDate && endDate) {
-      const startStr = formatDateToLocalYYYYMMDD(startDate);
-      const endStr = formatDateToLocalYYYYMMDD(endDate);
-      const userId = currentContext.type === "user" ? currentContext.id : user.id;
-      const groupId = currentContext.type === "group" ? currentContext.id : null;
-      loadMealPlanning(userId, startStr, endStr, groupId);
-    }
-  }, [user, startDate, endDate, currentContext]);
+  useFocusEffect(
+    React.useCallback(() => {
+      if (user && currentContext && startDate && endDate) {
+        const startStr = formatDateToLocalYYYYMMDD(startDate);
+        const endStr = formatDateToLocalYYYYMMDD(endDate);
+        const userId = currentContext.type === "user" ? currentContext.id : user.id;
+        const groupId = currentContext.type === "group" ? currentContext.id : null;
+        loadMealPlanning(userId, startStr, endStr, groupId);
+      }
+    }, [user, startDate, endDate, currentContext])
+    );
 
   useEffect(() => {
     if (recipesMap && mealPlannings.length > 0) {
@@ -280,9 +285,7 @@ export default function MealPlanningScreen() {
                         <Text style={styles.mealType}>{getMealType(mealType)}</Text>
                         <Text style={styles.mealType}>{meal.servings} Personnes</Text>
                       </View>
-                      <TouchableOpacity  style={styles.deleteButton} onPress={() => handleDeletePlanning(meal.id)}>
-                        <Icon name="trash-outline" size={20} color="rgb(180, 180, 230)"/>
-                      </TouchableOpacity>
+                      <SquareButton onPress={() => handleDeletePlanning(meal.id)} iconSize={18} size={35} />
                   </TouchableOpacity>
                   ) }
                 )}
@@ -290,20 +293,27 @@ export default function MealPlanningScreen() {
             )
           })}
         </ScrollView>
-
-        <ReusableModal
+        
+        <ActionListModal
           visible={generatingShoppingList}
           onClose={() => setGeneratingShoppingList(false)}
-        >
-          <View style={styles.buttonRow}>
-            <TouchableOpacity style={styles.button} onPress={() => { handleGenerateWeekShoppingList(); setGeneratingShoppingList(false);}}>
-                <Text style={styles.buttonText}>Générer la liste de course de la semaine</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.button} onPress={() => {setShowModalGeneratingShoppingListFromRange(true); setGeneratingShoppingList(false);}}>
-                <Text style={styles.buttonText}>Générer la liste de course à partir d'une plage</Text>
-            </TouchableOpacity>
-        </View>
-        </ReusableModal>
+          actions={[
+            {
+              label: 'Générer la liste de course de la semaine',
+              onPress: () => {
+                handleGenerateWeekShoppingList();
+                setGeneratingShoppingList(false);
+              },
+            },
+            {
+              label: "Générer la liste de course à partir d'une plage",
+              onPress: () => {
+                setShowModalGeneratingShoppingListFromRange(true);
+                setGeneratingShoppingList(false);
+              },
+            },
+          ]}
+        />
 
         <FloatingButton
           onPress={() => {setGeneratingShoppingList(true);}}
@@ -450,15 +460,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 4,
   },
-  deleteButton : {
-    width: 30,
-    height: 30,
-    borderWidth: 2,
-    borderColor: 'rgb(180, 180, 230)',
-    borderRadius: 4,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   dateContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -480,31 +481,6 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     elevation: 5,
-  },
-  buttonRow: {
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'space-around',
-    paddingVertical: 20,
-    backgroundColor: '#fff',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-  },
-  button: {
-    paddingVertical: 12,
-    borderRadius: 8,
-    marginVertical: 4,
-    marginHorizontal: 2,
-    width: '90%',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: 'rgb(180, 180, 230)',
-  },
-  buttonText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: 'rgb(180, 180, 230)',
-    textAlign: 'center',
   },
   buttonRowModal: {
     flexDirection: 'row',

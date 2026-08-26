@@ -1,30 +1,18 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, FlatList, Dimensions, Image } from "react-native";
-import Icon from 'react-native-vector-icons/Ionicons';
+import { View, Text, StyleSheet, Dimensions, Image } from "react-native";
 import { Picker } from '@react-native-picker/picker';
 import { useUser } from '../hooks/useUser';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import SearchBar from '../components/SearchBar';
-import RecipeCard from '../components/RecipeCard';
 import ServingsControl from '../components/ServingsControl'
 import BackButton from '../components/BackButton';
 import SaveButton from '../components/SaveButton';
+import RecipeSelector from '../components/RecipeSelector';
+import FolderRecipeSelector from '../components/FolderRecipeSelector';
 
-import { useRecipe } from '../hooks/useRecipe'
-import { useGroup } from '../hooks/useGroup';
 import { useMealPlanning } from '../hooks/useMealPlanning';
 
 export default function SelectRecipeToAddScreen({ route, navigation }) {
-
-  React.useEffect(() => {
-    setSelectedRecipe(null);
-    setSelectedServing(0);
-    setRecipeSelected(false);
-    setSearch('');
-    setActiveTab('privateRecipes');
-    setSubActiveTab(groups[0]?.id);
-  }, []);
 
   React.useEffect(() => {
     if (availableMealTypes?.length > 0) {
@@ -39,37 +27,15 @@ export default function SelectRecipeToAddScreen({ route, navigation }) {
   } = route.params || {};
 
   const { user } = useUser();
-
-  const [search, setSearch] = React.useState('');
-
-  const { privateRecipes, groupRecipes, loadGroupRecipes} = useRecipe();
-  const { groups} = useGroup();
   const { addMealPlanning } = useMealPlanning();
-
-  const [activeTab, setActiveTab] = useState('privateRecipes');
-  const [subActiveTab, setSubActiveTab] = useState(null);
-
   const [mealType, setMealType] = useState(availableMealTypes[0]);
-  
-  React.useEffect(() => {
-    if (activeTab === "groupRecipes" && subActiveTab) {
-      loadGroupRecipes(subActiveTab);
-    }
-  }, [activeTab, subActiveTab]);
-
-  const filteredRecipes = (privateRecipes || []).filter((r) => {
-    const matchesSearch = r.name.toLowerCase().includes(search.toLowerCase());
-    return matchesSearch;
-  });
-
-  const filteredGroupRecipes = (groupRecipes  || []).filter((r) => {
-    if (!r?.recipe?.name) return false;
-    return r.recipe.name.toLowerCase().includes(search.toLowerCase());
-  });
 
   const [selectedRecipe, setSelectedRecipe] = useState(null);
   const [selectedServing, setSelectedServing] = useState(0);
   const [recipeSelected, setRecipeSelected] = useState(false);
+
+  const [folderSelectorVisible, setFolderSelectorVisible] = useState(false);
+  const [selectedFolder, setSelectedFolder] = useState(null);
 
   const selectRecipe = (recipe) => {
     setSelectedRecipe(recipe);
@@ -88,9 +54,6 @@ export default function SelectRecipeToAddScreen({ route, navigation }) {
     setSelectedRecipe();
     setRecipeSelected(false);
     setSelectedServing(0);
-    setSearch('');
-    setActiveTab('privateRecipes');
-    setSubActiveTab(groups[0]?.id);
     navigation.goBack();
   };
 
@@ -126,99 +89,31 @@ export default function SelectRecipeToAddScreen({ route, navigation }) {
                 <SaveButton onPress={() => setRecipeSelected(true)} title = "Valider" disabled={selectedRecipe == null} />
             </View>
 
-            <View style={styles.searchContainer}>
-              <SearchBar search={search} setSearch={setSearch} />
-            </View>
-      
-            <View style={[styles.tabsCard, activeTab === 'privateRecipes' ? { marginBottom: 16 } : { marginBottom: 2 }]}>
-              <TouchableOpacity
-                style={[styles.tabButton, activeTab === 'privateRecipes' && styles.activeTab]}
-                onPress={() => setActiveTab('privateRecipes')}
-              >
-                <Text style={[styles.tabText, activeTab === 'privateRecipes' && styles.activeTabText]}>Mes Recettes</Text>
-              </TouchableOpacity>
-              <View style={styles.separator} />
-              <TouchableOpacity
-                style={[styles.tabButton, activeTab === 'groupRecipes' && styles.activeTab]}
-                onPress={() => setActiveTab('groupRecipes')}
-              >
-                <Text style={[styles.tabText, activeTab === 'groupRecipes' && styles.activeTabText]}>Recette de groupe</Text>
-              </TouchableOpacity>
-            </View>
-
-            {activeTab === 'privateRecipes' && (
-              <>
-                {filteredRecipes.length === 0 ? (
-                  <Text style={styles.emptyText}>Aucune recette trouvée</Text>
-                ) : (
-                  <FlatList
-                      data={filteredRecipes}
-                      keyExtractor={(item) => `private-${item.id}`}
-                      renderItem={({ item }) => {
-                        const isSelected = selectedRecipe?.id == item.id
-
-                        return (
-                          <View style={isSelected && styles.selectedWrapper}>
-                            <RecipeCard
-                              recipe={item}
-                              onPress={() => selectRecipe(item)}
-                              width={CARD_WIDTH}
-                            />
-                          </View>
-                        );
-                      }}
-                      numColumns={2}
-                      columnWrapperStyle={styles.row}
-                      contentContainerStyle={styles.list}
-                      showsVerticalScrollIndicator={false}
-                  />
-                )}
-              </>
-            )}
-
-            {activeTab === 'groupRecipes' && (
-              <>
-                <View style={styles.subtabsCard}>
-                  {groups.map((group) => (
-                    <TouchableOpacity
-                      key={group.id}
-                      style={[styles.tabButton, subActiveTab === group.id && styles.activeTab]}
-                      onPress={() => setSubActiveTab(group.id)}
-                    >
-                      <Text style={[styles.tabText, subActiveTab === group.id && styles.activeTabText]}>
-                        {group.name}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-
-                {filteredGroupRecipes.length === 0 ? (
-                    <Text style={styles.emptyText}>Aucune recette trouvée</Text>
-                  ) : (
-                    <FlatList
-                      data={filteredGroupRecipes}
-                      keyExtractor={(item) => `group-${item.recipe.id}`}
-                      renderItem={({ item }) => {
-                        const isSelected = selectedRecipe?.id == item.recipe.id
-
-                        return (
-                          <View style={isSelected && styles.selectedWrapper}>
-                            <RecipeCard
-                              recipe={item.recipe}
-                              onPress={() => selectRecipe(item.recipe)}
-                              width={CARD_WIDTH}
-                            />
-                          </View>
-                        );
-                      }}
-                      numColumns={2}
-                      columnWrapperStyle={styles.row}
-                      contentContainerStyle={styles.list}
-                      showsVerticalScrollIndicator={false}
-                      />
-                  )
-                }
-              </>
+            {folderSelectorVisible ? (
+               <FolderRecipeSelector 
+                folder={selectedFolder}
+                singleSelectionMode={true}
+                selectedRecipeId={selectedRecipe?.id}
+                onRecipePress={(recipe) => { 
+                  selectRecipe(recipe);
+                }} 
+                onBack={() => { 
+                  setFolderSelectorVisible(false);
+                }} 
+              />
+            ) : (
+              <RecipeSelector  
+                onRecipePress={(item, isGroup) => {  
+                  const recipe = isGroup ? item.recipe : item;  
+                  selectRecipe(recipe);  
+                }}  
+                selectedRecipeId={selectedRecipe?.id}  
+                singleSelectionMode={true}
+                onFolderPress={(folder) => {
+                  setSelectedFolder(folder);
+                  setFolderSelectorVisible(true);
+                }}
+              />
             )}
           </>
         )}
@@ -286,78 +181,11 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#000000',
   },
-  searchContainer: {
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  list: {
-    paddingBottom: 20,
-  },
-  row: {
-    justifyContent: 'space-between',
-    paddingBottom: 8,
-  },
-  emptyText: {
-    textAlign: 'center',
-    color: '#777',
-    marginTop: 40,
-    fontSize: 16,
-  },
   headerButtons: {
     paddingVertical : 10,
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 10,
-  },
-  tabsCard: {
-    flexDirection: 'row',
-    backgroundColor: "#fff",
-    borderRadius: 8,
-    padding: 4,
-    alignItems: 'center',
-    justifyContent: 'space-around',
-    borderWidth : 1,
-    borderColor : 'rgb(180, 180, 230)',
-  },
-  separator: {
-    width: 1,
-    height: '60%',
-    backgroundColor: '#ccc',
-  },
-  tabButton: {
-    flex: 1,
-    paddingVertical: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  activeTab: {
-    borderBottomWidth: 3,
-    borderBottomColor: 'rgb(180, 180, 230)',
-  },
-  tabText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  activeTabText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: 'rgb(180, 180, 230)',
-  },
-  subtabsCard: {
-    flexDirection: 'row',
-    backgroundColor: "#fff",
-    borderRadius: 8,
-    padding: 4,
-    marginBottom: 16,
-    alignItems: 'center',
-    justifyContent: 'space-around',
-    borderWidth : 1,
-    borderColor : 'rgb(180, 180, 230)',
-  },
-  selectedWrapper: {
-    borderWidth: 3,
-    borderColor: 'rgb(180, 180, 230)',
-    borderRadius: 20,
   },
   cardContainer: {
     backgroundColor: '#fff', 

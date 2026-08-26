@@ -1,262 +1,88 @@
-import React, { useState, useEffect } from 'react';
-import { Text, View, TouchableOpacity, StyleSheet, FlatList, Image, Dimensions, TextInput } from 'react-native';
-import { useRecipe } from '../hooks/useRecipe'
-import { useGroup } from '../hooks/useGroup';
-import { useUser } from '../hooks/useUser'
-import { useNavigation} from '@react-navigation/native';
+import React from 'react';
+import { Text, View, StyleSheet } from 'react-native';
+
+import { useUser } from '../hooks/useUser';
+import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import SearchBar from '../components/SearchBar';
-import RecipeCard from '../components/RecipeCard';
-import FloatingButton  from '../components/FloatingButton';
+import RecipeSelector from '../components/RecipeSelector';
+import FloatingButton from '../components/FloatingButton';
 
 export default function RecipesScreen() {
 
   const navigation = useNavigation();
   const { user } = useUser();
 
-  const { privateRecipes, groupRecipes, loadGroupRecipes} = useRecipe();
-  const { groups} = useGroup();
-
-  const [search, setSearch] = React.useState('');
-  const [activeTab, setActiveTab] = useState('privateRecipes');
-  const [subActiveTab, setSubActiveTab] = useState(null);
-
-  const screenTitle = "Mes recettes"
-
-  React.useEffect(() => {
-    if (activeTab !== "groupRecipes") return;
-    if (!subActiveTab) return;
-
-    loadGroupRecipes(subActiveTab);
-  }, [activeTab, subActiveTab]);
-
-  const filteredRecipes = privateRecipes.filter((r) => {
-    const matchesSearch = r.name.toLowerCase().includes(search.toLowerCase());
-    return matchesSearch;
-  });
-
-  const filteredGroupRecipes = groupRecipes.filter((r) => {
-    if (!r?.recipe?.name) return false;
-    return r.recipe.name.toLowerCase().includes(search.toLowerCase());
-  });
+  const screenTitle = 'Mes recettes';
 
   const handlePressRecipe = (item, isGroup) => {
+    if (!user) return;
+
     const currentUserId = user.id;
 
-    const isOwner = isGroup 
-      ? item.recipe.ownerId === currentUserId 
+    const isOwner = isGroup
+      ? item.recipe.ownerId === currentUserId
       : item.ownerId === currentUserId;
 
     navigation.navigate('RecipeDetail', {
       recipeId: isGroup ? item.recipe.id : item.id,
       groupId: isGroup ? item.groupId : null,
       isOwner,
-      isGroupRecipe: isGroup
+      isGroupRecipe: isGroup,
     });
   };
 
-  const getOwnerById = (groupMembers, ownerId) => {
-    const member = groupMembers.find(member => member.user.id === ownerId);
-    return member ? member.user : null;
+  const handlePressFolder = (folder) => {
+    navigation.navigate('FolderDetail', {
+      folder,
+    });
   };
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['top', 'left', 'right']}>
+    <SafeAreaView
+      style={{ flex: 1 }}
+      edges={['top', 'left', 'right']}
+    >
       <View style={styles.container}>
 
         <View style={styles.headerRow}>
-          <Text style={styles.titlePage}>{screenTitle}</Text>
+          <Text style={styles.titlePage}>
+            {screenTitle}
+          </Text>
+
           <View style={{ height: 60 }} />
         </View>
 
-        <View style={styles.searchContainer}>
-          <SearchBar search={search} setSearch={setSearch} />
-        </View>
+        <RecipeSelector
+          onRecipePress={handlePressRecipe}
+          onFolderPress={handlePressFolder}
+        />
 
-        <View style={[styles.tabsCard, activeTab === 'privateRecipes' ? { marginBottom: 16 } : { marginBottom: 2 }]}>
-          <TouchableOpacity
-            style={[styles.tabButton, activeTab === 'privateRecipes' && styles.activeTab]}
-            onPress={() => setActiveTab('privateRecipes')}
-          >
-            <Text style={[styles.tabText, activeTab === 'privateRecipes' && styles.activeTabText]}>Mes Recettes</Text>
-          </TouchableOpacity>
-          <View style={styles.separator} />
-          <TouchableOpacity
-            style={[styles.tabButton, activeTab === 'groupRecipes' && styles.activeTab]}
-            onPress={() => setActiveTab('groupRecipes')}
-          >
-            <Text style={[styles.tabText, activeTab === 'groupRecipes' && styles.activeTabText]}>Recette de groupe</Text>
-          </TouchableOpacity>
-        </View>
-
-        {activeTab === 'privateRecipes' && (
-          <>
-            {filteredRecipes.length === 0 ? (
-              <Text style={styles.emptyText}>Aucune recette trouvée</Text>
-            ) : (
-              <FlatList
-                data={filteredRecipes}
-                keyExtractor={(recipe) => recipe.id.toString()}
-                renderItem={({ item }) => (
-                  <RecipeCard
-                    recipe={item}
-                    onPress={() => handlePressRecipe(item, false)}
-                    width={CARD_WIDTH}
-                  />
-                )}
-                numColumns={2}
-                columnWrapperStyle={styles.row}
-                contentContainerStyle={styles.list}
-                showsVerticalScrollIndicator={false}
-              />
-            )}
-          </>
-        )}
-
-        {activeTab === 'groupRecipes' && (
-          <>
-            <View style={styles.subtabsCard}>
-              {groups?.map((group) => (
-                <TouchableOpacity
-                  key={group.id}
-                  style={[styles.tabButton, subActiveTab === group.id && styles.activeTab]}
-                  onPress={() => setSubActiveTab(group.id)}
-                >
-                  <Text style={[styles.tabText, subActiveTab === group.id && styles.activeTabText]}>
-                    {group.name}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-
-            {filteredGroupRecipes.length === 0 ? (
-                <Text style={styles.emptyText}>Aucune recette trouvée</Text>
-              ) : (
-                <FlatList
-                  data={filteredGroupRecipes}
-                  keyExtractor={(recipe) => recipe.id.toString()}
-                  renderItem={({ item }) => {
-                    const group = groups.find(g => g.id === item.groupId);
-                    const owner = group ? getOwnerById(group.members, item.recipe.ownerId) : null;
-                    return (
-                      <RecipeCard
-                        recipe={item.recipe}
-                        onPress={() => handlePressRecipe(item, true)}
-                        width={CARD_WIDTH}
-                        isGroup={true}
-                        owner={owner}
-                      />
-                    );
-                  }}
-                  numColumns={2}
-                  columnWrapperStyle={styles.row}
-                  contentContainerStyle={styles.list}
-                  showsVerticalScrollIndicator={false}
-                />
-              )
-            }
-          </>
-        )}
-        
-        <FloatingButton onPress={() => navigation.navigate('RecipeForm')}/>
+        <FloatingButton
+          onPress={() => navigation.navigate('RecipeForm')}
+        />
 
       </View>
     </SafeAreaView>
   );
 }
 
-const CARD_MARGIN = 4;
-const CARD_WIDTH = (Dimensions.get('window').width / 2) - (CARD_MARGIN * 3);
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 8,
   },
+
   headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     width: '100%',
-    marginBottom: 10,
   },
+
   titlePage: {
     fontSize: 20,
     fontWeight: '600',
     color: '#333',
   },
-  searchContainer: {
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  list: {
-    paddingBottom: 40,
-  },
-  row: {
-    justifyContent: 'space-between',
-    paddingBottom: 8,
-  },
-  image: {
-    width: '100%',
-    height: 120,
-  },
-  textContainer: {
-    padding: 10,
-  },
-  title: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  emptyText: {
-    textAlign: 'center',
-    color: '#777',
-    marginTop: 40,
-    fontSize: 16,
-  },
-  tabsCard: {
-    flexDirection: 'row',
-    backgroundColor: "#fff",
-    borderRadius: 8,
-    padding: 4,
-    alignItems: 'center',
-    justifyContent: 'space-around',
-    borderWidth : 1,
-    borderColor : 'rgb(180, 180, 230)',
-  },
-  separator: {
-    width: 1,
-    height: '60%',
-    backgroundColor: '#ccc',
-  },
-  tabButton: {
-    flex: 1,
-    paddingVertical: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  activeTab: {
-    borderBottomWidth: 3,
-    borderBottomColor: 'rgb(180, 180, 230)',
-  },
-  tabText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  activeTabText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: 'rgb(180, 180, 230)',
-  },
-  subtabsCard: {
-    flexDirection: 'row',
-    backgroundColor: "#fff",
-    borderRadius: 8,
-    padding: 4,
-    marginBottom: 16,
-    alignItems: 'center',
-    justifyContent: 'space-around',
-    borderWidth : 1,
-    borderColor : 'rgb(180, 180, 230)',
-  }
 });

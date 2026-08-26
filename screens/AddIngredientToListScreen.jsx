@@ -1,8 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Modal, TouchableOpacity, FlatList, Image, Button, StyleSheet, Switch , ScrollView} from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons';
-import { Picker } from '@react-native-picker/picker';
-import ServingsControl from '../components/ServingsControl'
+import { View, Text, StyleSheet, ScrollView} from 'react-native';
 import CustomSelect from '../components/CustomSelect';
 import ContextSelector from '../components/ContextSelector';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -11,6 +8,7 @@ import { useUser } from '../hooks/useUser';
 import { useShoppingList } from '../hooks/useShoppingList';
 import BackButton from '../components/BackButton';
 import SaveButton from '../components/SaveButton';
+import IngredientSelector from '../components/IngredientSelector';
 
 export default function AddIngredientToListScreen({ route, navigation }) {
 
@@ -30,6 +28,7 @@ export default function AddIngredientToListScreen({ route, navigation }) {
         setServing(data.serving || 1);
         setOriginalServing(data.serving || 1);
         setItems(data.items || [])
+        toggleAll()
     }
   }, [data]);
 
@@ -101,37 +100,17 @@ export default function AddIngredientToListScreen({ route, navigation }) {
                 selectedValue={selectedListId}
                 onValueChange={setSelectedListId}
               />
-              <Text style={styles.subtitle}>Proportions :</Text>
-              <ServingsControl
-                servings={serving}
+              <IngredientSelector 
+                title={"Eléments à ajouter à la liste"}
+                items={items}
+                selectedIngredients={selectedIngredients}
+                serving={serving}
+                toggleAll={toggleAll}
+                isSelected={isSelected}
+                toggleSelection={toggleSelection}
+                getScaledQuantity={getScaledQuantity}
                 onIncrease={increaseServings}
                 onDecrease={decreaseServings}
-              />
-
-              <Text style={styles.subtitle}>Eléments à ajouter à la liste</Text>
-
-              <TouchableOpacity style={styles.button} onPress={() => toggleAll()}>
-                  <Text style={styles.buttonText}>{selectedIngredients.length === items.length ? 'Tout désélectionner' : 'Tout sélectionner'}</Text>
-              </TouchableOpacity>
-
-              <FlatList
-                scrollEnabled={false}
-                data={items}
-                keyExtractor={(item) => item.id}
-                renderItem={({ item }) => (
-                  <View style={styles.ingredientSection}>
-                    <Switch
-                      value={isSelected(item)}
-                      onValueChange={(checked) => toggleSelection(item, checked)}
-                    />
-                    <View style={styles.checkboxContent}>
-                      <Image source={{ uri: item.ingredient.imageUrl }} style={styles.image} />
-                      <Text>
-                        {item.ingredient.name} - {getScaledQuantity(item.quantity)} {item.unit.symbol}
-                      </Text>
-                    </View>
-                  </View>
-                )}
               />
             </View>
           </View>
@@ -156,6 +135,13 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
+  headerButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginVertical: 8,
+    marginBottom: 14,
+  },
   titlePage: {
     flex: 1,
     textAlign: 'center',
@@ -164,58 +150,5 @@ const styles = StyleSheet.create({
     color: '#000000',
   },
   content: {
-  },
-  pickerContainer: {
-    borderWidth: 2,
-    borderColor: 'rgb(180, 180, 230)',
-    borderRadius: 8,
-    marginBottom: 20,
-    overflow: 'hidden',
-  },
-  picker: {
-    height: 50,
-    width: '100%',
-  },
-  button: {
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginVertical: 6,
-    borderWidth: 2,
-    borderColor: 'rgb(180, 180, 230)',
-  },
-  buttonText: {
-    color: 'rgb(180, 180, 230)',
-    fontWeight: 'bold',
-  },
-  subtitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#555',
-    marginVertical : 6
-  },
-  ingredientSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical : 6
-  },
-  checkboxContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginLeft: 10,
-  },
-  image: {
-    width: 50,
-    height: 50,
-    marginRight: 12,
-    borderRadius: 4,
-  },
-  headerButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginVertical: 8,
-    marginBottom: 14,
   },
 });

@@ -5,6 +5,8 @@ import RecipesScreen from '../screens/RecipesScreen';
 import RecipeDetailScreen from '../screens/RecipeDetailScreen';
 import RecipeFormScreen from '../screens/RecipeFormScreen';
 import AddIngredientToListScreen from '../screens/AddIngredientToListScreen';
+import FolderDetailScreen from '../screens/FolderDetailScreen';
+import FolderAddRecipesScreen from '../screens/FolderAddRecipesScreen';
 
 const Stack = createStackNavigator();
 
@@ -29,6 +31,16 @@ export default function RecipeStack() {
       <Stack.Screen
         name="AddIngredientToList"
         component={AddIngredientToListScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="FolderDetail"
+        component={FolderDetailScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="FolderAddRecipes"
+        component={FolderAddRecipesScreen}
         options={{ headerShown: false }}
       />
     </Stack.Navigator>

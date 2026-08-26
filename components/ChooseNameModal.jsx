@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { View, Text, Modal, TextInput, TouchableOpacity, StyleSheet } from "react-native";
 
-const ChooseNameModal = ({ visible, title, placeholder, onSubmit, onCancel }) => {
+const ChooseNameModal = ({ visible, title, initialValue = '', placeholder, onSubmit, onCancel }) => {
 
-  const [name, setName] = useState('');
+  const [name, setName] = useState(initialValue);
 
   const handleSubmit = () => {
     if (name.trim() !== "") {

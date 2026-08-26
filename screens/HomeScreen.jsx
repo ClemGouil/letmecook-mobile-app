@@ -10,6 +10,8 @@ import RecipeCard from '../components/RecipeCard';
 
 export default function HomeScreen() {
 
+  const RECIPE_PUBLIC_LOAD_SIZE = 10;
+
   const navigation = useNavigation();
 
   const { publicRecipes, searchIngredients,  loadPublicRecipes} = useRecipe();
@@ -24,6 +26,7 @@ export default function HomeScreen() {
   const [offset, setOffset] = React.useState(0);
   const [refreshing, setRefreshing] = React.useState(false);
   const [loadingMore, setLoadingMore] = React.useState(false);
+  const [hasMore, setHasMore] = React.useState(true);
 
   const ingredientIds = React.useMemo(
     () => selectedIngredients.map(i => i.id),
@@ -33,7 +36,10 @@ export default function HomeScreen() {
   React.useEffect(() => {
     if (!user?.id) return;
     setOffset(0);
-    loadPublicRecipes( user.id, search.length >= 2 ? search : null, 10, 0, ingredientIds, false);
+    setHasMore(true);
+    loadPublicRecipes( user.id, search.length >= 2 ? search : null, RECIPE_PUBLIC_LOAD_SIZE, 0, ingredientIds, false).then((recipes) => {
+      setHasMore(recipes.length === RECIPE_PUBLIC_LOAD_SIZE);
+    });
   }, [search, ingredientIds]);
 
 
@@ -53,19 +59,43 @@ export default function HomeScreen() {
     
     setRefreshing(true);
     setOffset(0);
+    setHasMore(true);
+    try {
+      const recipes = await loadPublicRecipes(
+        user.id,
+        search,
+        RECIPE_PUBLIC_LOAD_SIZE,
+        0,
+        ingredientIds,
+        false
+      );
 
-    await loadPublicRecipes( user.id, search, 10, 0, ingredientIds, false);
-
-    setRefreshing(false);
+      setHasMore(recipes.length === RECIPE_PUBLIC_LOAD_SIZE);
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   const loadMoreRecipes = async () => {
-    if (loadingMore) return;
+    if (loadingMore || !hasMore) return;
     setLoadingMore(true);
-    const newOffset = offset + 10;
-    await loadPublicRecipes( user.id, search, 10, newOffset, ingredientIds, true);
-    setOffset(newOffset);
-    setLoadingMore(false);
+    try {
+      const newOffset = offset + RECIPE_PUBLIC_LOAD_SIZE;
+
+      const recipes = await loadPublicRecipes(
+        user.id,
+        search,
+        RECIPE_PUBLIC_LOAD_SIZE,
+        newOffset,
+        ingredientIds,
+        true
+      );
+
+      setOffset(newOffset);
+      setHasMore(recipes.length === RECIPE_PUBLIC_LOAD_SIZE);
+    } finally {
+      setLoadingMore(false);
+    }
   };
 
   const addIngredient = (ingredient) => {

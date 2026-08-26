@@ -38,6 +38,7 @@ export function RecipeProvider({ children }) {
       setPublicRecipes(prev =>
         append ? [...prev, ...newData] : newData
       );
+      return response.data;
     } catch (err) {
       console.error("Erreur lors du chargement des recettes publiques:", err);
     }

@@ -14,6 +14,7 @@ import { GroupProvider } from './contexts/GroupContext';
 import { ContextProvider } from './contexts/ContextContext';
 import { NotifProvider } from './contexts/NotifContext';
 import { ReviewProvider } from './contexts/ReviewContext';
+import { FolderProvider } from './contexts/FolderContext';
 
 export default function App() {
   return (
@@ -27,17 +28,19 @@ export default function App() {
                     <ShoppingListProvider>
                       <MealPlanningProvider>
                         <ReviewProvider>
-                          <LinearGradient
-                                  colors={['rgb(252, 228, 252)', 'rgb(218, 228, 255)']}
-                                  start={{ x: 0, y: 0 }}
-                                  end={{ x: 1, y: 1 }}
-                                  style={styles.container}
-                                >
-                            <NavigationContainer  
+                          <FolderProvider>
+                            <LinearGradient
+                              colors={['rgb(252, 228, 252)', 'rgb(218, 228, 255)']}
+                              start={{ x: 0, y: 0 }}
+                              end={{ x: 1, y: 1 }}
+                              style={styles.container}
+                            >
+                              <NavigationContainer  
                                 theme={MyTheme}>
-                              <RootNavigator />
-                            </NavigationContainer>
-                          </LinearGradient>
+                                <RootNavigator />
+                              </NavigationContainer>
+                            </LinearGradient>
+                          </FolderProvider>
                         </ReviewProvider>
                       </MealPlanningProvider>
                     </ShoppingListProvider>

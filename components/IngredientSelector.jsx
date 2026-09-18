@@ -1,42 +1,113 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, FlatList, Image, Switch, StyleSheet } from 'react-native';
-import ServingsControl from '../components/ServingsControl'
+import React, { useEffect, useState } from 'react';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  FlatList,
+  TextInput,
+} from 'react-native';
 
-const IngredientSelector = ({ title, items, selectedIngredients, serving, toggleAll, isSelected, toggleSelection, getScaledQuantity, onIncrease, onDecrease }) => {
+import { useRecipe } from '../hooks/useRecipe';
+
+const IngredientSelector = ({
+  selectedIngredients = [],
+  onChange,
+  placeholder = "Rechercher par ingrédient...",
+}) => {
+
+  const { searchIngredients } = useRecipe();
+
+  const [ingredientSearch, setIngredientSearch] = useState('');
+  const [suggestions, setSuggestions] = useState([]);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (ingredientSearch.length >= 1) {
+        searchIngredients(ingredientSearch, 5)
+          .then(setSuggestions);
+      } else {
+        setSuggestions([]);
+      }
+    }, 300);
+
+    return () => clearTimeout(timeout);
+  }, [ingredientSearch]);
+
+  const addIngredient = (ingredient) => {
+    if (selectedIngredients.some(i => i.id === ingredient.id)) {
+      return;
+    }
+
+    onChange?.([
+      ...selectedIngredients,
+      {
+        id: ingredient.id,
+        name: ingredient.name,
+      },
+    ]);
+
+    setIngredientSearch('');
+    setSuggestions([]);
+  };
+
+  const removeIngredient = (id) => {
+    onChange?.(
+      selectedIngredients.filter(
+        ingredient => ingredient.id !== id
+      )
+    );
+  };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.subtitle}>Proportions :</Text>
-      <ServingsControl
-        servings={serving}
-        onIncrease={onIncrease}
-        onDecrease={onDecrease}
-      />
-      <Text style={styles.subtitle}>{title}</Text>
 
-      <TouchableOpacity style={styles.button} onPress={() => toggleAll()}>
-          <Text style={styles.buttonText}>{selectedIngredients.length === items.length ? 'Tout désélectionner' : 'Tout sélectionner'}</Text>
-      </TouchableOpacity>
+      <View style={styles.searchContainer}>
+        <TextInput
+          style={styles.input}
+          placeholder={placeholder}
+          value={ingredientSearch}
+          onChangeText={setIngredientSearch}
+        />
 
-      <FlatList
-        scrollEnabled={false}
-        data={items}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <View style={styles.ingredientSection}>
-            <Switch
-              value={isSelected(item)}
-              onValueChange={(checked) => toggleSelection(item, checked)}
-            />
-            <View style={styles.checkboxContent}>
-              <Image source={{ uri: item.ingredient.imageUrl }} style={styles.image} />
-              <Text>
-                {item.ingredient.name} - {getScaledQuantity(item.quantity)} {item.unit.symbol}
-              </Text>
-            </View>
-          </View>
+        {ingredientSearch.length > 0 && (
+          <FlatList
+            data={suggestions}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                style={styles.ingredientItem}
+                onPress={() => addIngredient(item)}
+              >
+                <Text>{item.name}</Text>
+              </TouchableOpacity>
+            )}
+            style={styles.ingredientList}
+            keyboardShouldPersistTaps="handled"
+          />
         )}
-      />
+      </View>
+
+      {selectedIngredients.length > 0 && (
+        <View style={styles.selectedContainer}>
+          {selectedIngredients.map((ingredient) => (
+            <View
+              key={ingredient.id}
+              style={styles.chip}
+            >
+              <Text>{ingredient.name}</Text>
+
+              <TouchableOpacity
+                onPress={() => removeIngredient(ingredient.id)}
+              >
+                <Text style={styles.removeButton}>
+                  ×
+                </Text>
+              </TouchableOpacity>
+            </View>
+          ))}
+        </View>
+      )}
 
     </View>
   );
@@ -44,40 +115,59 @@ const IngredientSelector = ({ title, items, selectedIngredients, serving, toggle
 
 const styles = StyleSheet.create({
   container: {
-    //marginVertical: 10,
+    width: '100%',
   },
-  subtitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
+
+  searchContainer: {
+    paddingHorizontal: 10,
   },
-  button: {
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginVertical: 6,
+
+  input: {
+    height: 40,
     borderWidth: 2,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    backgroundColor: '#fff',
     borderColor: 'rgb(180, 180, 230)',
   },
-  buttonText: {
-    color: 'rgb(180, 180, 230)',
+
+  ingredientList: {
+    marginTop: 5,
+    maxHeight: 150,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    backgroundColor: '#fff',
+  },
+
+  ingredientItem: {
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+
+  selectedContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginVertical: 10,
+    paddingHorizontal: 10,
+  },
+
+  chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgb(205, 205, 255)',
+    borderRadius: 20,
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    margin: 4,
+  },
+
+  removeButton: {
+    marginLeft: 8,
+    color: 'red',
+    fontSize: 16,
     fontWeight: 'bold',
-  },
-  ingredientSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 6,
-  },
-  checkboxContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginLeft: 10,
-  },
-  image: {
-    width: 50,
-    height: 50,
-    marginRight: 12,
-    borderRadius: 4,
   },
 });
 

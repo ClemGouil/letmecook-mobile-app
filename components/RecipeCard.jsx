@@ -4,15 +4,19 @@ import Icon from 'react-native-vector-icons/Ionicons';
 
 const RecipeCard = ({ recipe, onPress, isSelected, width, isGroup, owner }) => {
 
+  const category = recipe.categories?.find(
+    category => category.type === 'MEAL_TYPE'
+  );
+
   return (
     <TouchableOpacity
       style={[styles.card, { width }]}
       onPress={onPress}
     >
       <View style={styles.overlayBadge}>
-        {recipe.category && (
+        {category && (
           <View style={styles.categoryBadge}>
-            <Text style={styles.categoryText}>{recipe.category}</Text>
+            <Text style={styles.categoryText}>{category.name}</Text>
           </View>
         )}
       </View>

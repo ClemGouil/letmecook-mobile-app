@@ -66,14 +66,14 @@ export function MealPlanningProvider({ children }) {
     }
   }
 
-  async function deleteForPeriod(userId, start, end) {
+  async function deleteForPeriod(userId, startDate, endDate) {
     try {
-      const params = { start, end };
+      const params = { startDate, endDate };
       await api.delete(`/mealPlanning/deleteAll/user/${userId}`, {
         params
       });
       setMealPlannings((prev) =>
-        prev.filter((mp) => mp.date < start || mp.date > end)
+        prev.filter((mp) => mp.date < startDate || mp.date > endDate)
       );
     } catch (err) {
       console.error(err);

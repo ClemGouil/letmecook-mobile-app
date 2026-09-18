@@ -13,7 +13,7 @@ export default function RecipesScreen() {
   const navigation = useNavigation();
   const { user } = useUser();
 
-  const screenTitle = 'Mes recettes';
+  const screenTitle = 'Mes Recettes';
 
   const handlePressRecipe = (item, isGroup) => {
     if (!user) return;

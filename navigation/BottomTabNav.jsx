@@ -64,7 +64,7 @@ export default function BottomTabNavigator() {
             } else if (route.name === 'ListeDeCourse') {
               iconName = 'cart-outline';
             } else if (route.name === 'Inventaire') {
-              iconName = 'cube-outline';
+              iconName = 'basket-outline';
             }
             return <Icon name={iconName} size={size} color={color} />;
           },

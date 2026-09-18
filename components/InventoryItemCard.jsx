@@ -23,7 +23,7 @@ const InventoryItemCard = ({ item, onEdit, onDelete }) => (
     </View>
 
     <Text style={styles.ingredientInfo}>{item.ingredient.name}</Text>
-    <Text style={styles.ingredientInfo}>
+    <Text style={styles.ingredientInfoQuantity}>
       {item.quantity} {item.unit.symbol}
     </Text>
   </TouchableOpacity>
@@ -57,11 +57,18 @@ const styles = StyleSheet.create({
     resizeMode: 'contain',
   },
   ingredientInfo: {
+    fontSize: 12,
+    color: '#5c3d1f',
+    fontWeight: '700',
+    textAlign: 'center',
+    marginTop: 4,
+  },
+  ingredientInfoQuantity: {
     fontSize: 10,
     color: '#5c3d1f',
     fontWeight: '500',
     textAlign: 'center',
-    marginTop: 8,
+    marginTop: 4,
   },
   actions: {
     position: 'absolute',

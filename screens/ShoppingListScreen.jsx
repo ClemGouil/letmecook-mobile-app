@@ -12,6 +12,7 @@ import FloatingButton  from '../components/FloatingButton';
 import ActionListModal from '../components/ActionListModal';
 import ChooseNameModal from '../components/ChooseNameModal';
 import ContextSelector from '../components/ContextSelector';
+import EmptyState from '../components/EmptyState';
 
 export default function ShoppingListScreen() {
 
@@ -24,7 +25,7 @@ export default function ShoppingListScreen() {
   const screenTitle = !currentContext
   ? "Listes de courses"
   : currentContext.type === "user"
-    ? "Mes listes de courses"
+    ? "Mes Listes De Courses"
     : `Listes de ${currentContext.name}`;
 
   const [search, setSearch] = React.useState('');
@@ -82,7 +83,11 @@ export default function ShoppingListScreen() {
         </View>
 
         {filteredShoppingLists.length === 0 ? (
-          <Text style={styles.emptyText}>Aucune liste de course trouvées</Text>
+          <EmptyState
+            iconName="cart-outline"
+            title="Liste de courses vide"
+            message="Aucun ingrédient dans votre liste de courses."
+          />
         ) : (
           <>
             <FlatList

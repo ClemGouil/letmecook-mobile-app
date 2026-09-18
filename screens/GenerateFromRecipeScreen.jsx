@@ -6,7 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import RecipeSelector from '../components/RecipeSelector';
 import FolderRecipeSelector from '../components/FolderRecipeSelector';
-import IngredientSelector from '../components/IngredientSelector';
+import IngredientCheckboxSelector from '../components/IngredientCheckboxSelector';
 import BackButton from '../components/BackButton';
 import SaveButton from '../components/SaveButton';
 
@@ -208,7 +208,7 @@ export default function GenerateFromRecipeScreen({ navigation }) {
                 />
                 <Text style={styles.title}>{recipe.name}</Text>
               </View>
-              <IngredientSelector 
+              <IngredientCheckboxSelector 
                 title={"Eléments à ajouter à la liste"}
                 items={recipe.ingredients}
                 selectedIngredients={selectedIngredients[recipe.recipeId] || []}

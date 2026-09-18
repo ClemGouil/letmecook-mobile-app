@@ -1,107 +1,154 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef  } from "react";
 import { View, Text, Modal, TextInput, TouchableOpacity, StyleSheet } from "react-native";
 
 const ChooseNameModal = ({ visible, title, initialValue = '', placeholder, onSubmit, onCancel }) => {
 
   const [name, setName] = useState(initialValue);
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    setName(initialValue);
+    if (visible) {
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 300);
+    }
+  }, [initialValue, visible]);
 
   const handleSubmit = () => {
-    if (name.trim() !== "") {
-        onSubmit(name.trim());
-        setName("");
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+      return;
     }
-  }
+    onSubmit(trimmedName);
+  };
+
+  const handleCancel = () => {
+    setName(initialValue);
+    onCancel?.();
+  };
 
   return (
-
     <Modal
       visible={visible}
-      transparent={true}
+      transparent
       animationType="fade"
-      onRequestClose={() => onClose()}
+      onRequestClose={handleCancel}
     >
-    <View style={styles.modalBackground}>
-      <View style={styles.modalContainer}>
-        <Text style={styles.label}>{title}</Text>
-        <TextInput
+      <View style={styles.overlay}>
+        <View style={styles.container}>
+          <Text style={styles.title}>{title}</Text>
+
+          <TextInput
+            ref={inputRef}
             style={styles.input}
-            placeholder={placeholder}
             value={name}
+            placeholder={placeholder}
             onChangeText={setName}
-        />
-        <View style={styles.buttonRow}>
-            <TouchableOpacity style={styles.saveButton} onPress={handleSubmit}>
-                <Text style={styles.saveText}>Valider</Text>
+          />
+
+          <View style={styles.buttonRow}>
+            <TouchableOpacity
+              style={[styles.button, styles.cancelButton]}
+              onPress={handleCancel}
+            >
+              <Text style={styles.cancelText}>Annuler</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.cancelButton} onPress={onCancel}>
-                <Text style={styles.cancelText}>Annuler</Text>
+            <TouchableOpacity
+              style={[
+                styles.button,
+                styles.submitButton,
+                !name.trim() && styles.disabledButton,
+              ]}
+              onPress={handleSubmit}
+              disabled={!name.trim()}
+            >
+              <Text
+                style={[
+                  styles.submitText,
+                  !name.trim() && styles.disabledText,
+                ]}
+              >
+                Valider
+              </Text>
             </TouchableOpacity>
+          </View>
         </View>
-      </View>
       </View>
     </Modal>
   );
 };
 
 const styles = StyleSheet.create({
-  modalBackground: {
+  overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.3)', 
-    justifyContent: 'flex-start',
-    alignItems: 'center',
-    paddingTop: 40,
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingTop: 50,
   },
-  modalContainer: {
-    width: '90%',
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 15,
+  container: {
+    width: "90%",
+    maxWidth: 500,
+    padding: 20,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: "rgb(180, 180, 230)",
   },
-  label: {
-    marginBottom: 6,
-    fontWeight: '600',
-    fontSize: 16,
-    color: '#333',
+  title: {
+    marginBottom: 12,
+    color: "#333333",
+    fontSize: 18,
+    fontWeight: "700",
   },
   input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 15,
+    minHeight: 50,
+    paddingHorizontal: 14,
+    borderWidth: 2,
+    borderColor: "rgb(180, 180, 230)",
+    borderRadius: 10,
+    backgroundColor: "#FAFAFF",
+    color: "#222222",
     fontSize: 16,
   },
   buttonRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    gap: 12,
+    marginTop: 18,
   },
-  saveButton: {
+  button: {
     flex: 1,
-    backgroundColor: '#3f51b5',
-    paddingVertical: 12,
-    borderRadius: 8,
-    marginRight: 10,
-    alignItems: 'center',
+    minHeight: 48,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 10,
+  },
+  submitButton: {
+    backgroundColor: "rgb(180, 180, 230)",
   },
   cancelButton: {
-    flex: 1,
-    backgroundColor: '#ccc',
-    paddingVertical: 12,
-    borderRadius: 8,
-    marginLeft: 10,
-    alignItems: 'center',
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "rgb(180, 180, 230)",
   },
-  saveText: {
-    color: '#fff',
-    fontWeight: '600',
-    fontSize: 16,
+  submitText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize : 16
   },
   cancelText: {
-    color: '#333',
-    fontWeight: '600',
+    color: "#555555",
     fontSize: 16,
-  }
+    fontWeight: "600",
+  },
+  disabledButton: {
+    backgroundColor: '#ccc',
+  },
+  disabledText: {
+    color: '#888',
+  },
 });
 
 export default ChooseNameModal;

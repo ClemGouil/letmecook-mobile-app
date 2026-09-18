@@ -1,19 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, ScrollView } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import StarRating from 'react-native-star-rating-widget';
 
 import { useUser } from '../hooks/useUser'
 import { useRecipe } from '../hooks/useRecipe'
 import { useGroup } from '../hooks/useGroup';
 import { useReview } from '../hooks/useReview';
 import { useDate } from '../hooks/useDate';
+import { usePaginatedList } from '../hooks/usePaginatedList';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import SelectGroupForm from '../components/SelectGroupForm';
 import ReusableModal from '../components/ReusableModal';
 import BackButton from '../components/BackButton';
 import ReviewCard from '../components/ReviewCard';
+import Chipset from '../components/Chipset';
+import LoadingState from '../components/LoadingState';
+import EmptyState from '../components/EmptyState';
 
 export default function RecipeDetailScreen({ route }) {
 
@@ -23,93 +26,135 @@ export default function RecipeDetailScreen({ route }) {
   const { getReviewStatsFromRecipe, getReviewsFromRecipe, deleteReview} = useReview();
   const { getDayPeriodFromToday } = useDate();
 
-  const { publicRecipes, privateRecipes, groupRecipes, addRecipe, addIngredientToRecipe, addInstructionToRecipe, deleteRecipe ,shareRecipeWithGroup, unshareRecipeFromGroup} = useRecipe();
-  const recipe = privateRecipes.find(r => r.id === route.params.recipeId) || groupRecipes.find(r => r.recipe.id === route.params.recipeId)?.recipe || publicRecipes.find(r => r.id === route.params.recipeId) ;
-
-  if (!recipe) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <Text>Recette introuvable</Text>
-      </View>
-    );
-  }
+  const { getRecipeById, addRecipe, addIngredientToRecipe, addInstructionToRecipe, deleteRecipe ,shareRecipeWithGroup, unshareRecipeFromGroup} = useRecipe();
 
   const isGroupRecipe = route.params.isGroupRecipe;
   const isOwner = route.params.isOwner;
   const isPublic = route.params.isPublic;
   const groupId = route.params.groupId;
 
+  const [recipe, setRecipe] = useState(null);
+  const [loadingRecipe, setLoadingRecipe] = useState(true);
   const [activeTab, setActiveTab] = useState('ingredients');
-  const [servings, setServings] = useState(recipe.servings);
+  const [servings, setServings] = useState(0);
   const [showGroupSelector, setShowGroupSelector] = useState(false);
   const [ownerInfo, setOwnerInfo] = useState(null);
 
   const [reviewStats, setReviewStats] = useState(null);
   const [myReview, setMyReview] = useState(null);
-  const [reviews, setReviews] = useState([]);
-  const [reviewOffset, setReviewOffset] = useState(0);
-  const [loadingReviews, setLoadingReviews] = useState(false);
-  const [hasMoreReviews, setHasMoreReviews] = useState(false);
 
   const DefaultNbOfReview = 3;
 
+  const loadReviewPage = React.useCallback(
+    async (offset, limit) => {
+      if (!isPublic || !recipe?.id) {
+        return [];
+      }
+
+      const result = await getReviewsFromRecipe(
+        recipe.id,
+        user?.id,
+        limit,
+        offset
+      );
+
+      setMyReview(result.myReview);
+
+      return result.reviews;
+    },
+    [
+      recipe?.id,
+      user?.id,
+      isPublic,
+      getReviewsFromRecipe,
+    ]
+  );
+
+  const { 
+    items: reviews, loading: loadingReviews, loadingMore: loadingMoreReviews, hasMore: hasMoreReviews, loadInitial: loadReviews, loadMore: loadMoreReviews, refresh: refreshReviews 
+  } = usePaginatedList({
+    loadPage: loadReviewPage,
+    pageSize: DefaultNbOfReview,
+  });
+  
+  useFocusEffect(
+    React.useCallback(() => {
+      let isMounted = true;
+
+      const loadRecipe = async () => {
+        try {
+          setLoadingRecipe(true);
+          const data = await getRecipeById(route.params.recipeId);
+          if (!isMounted) return;
+          setRecipe(data);
+          setServings(data?.servings ?? 0);
+
+        } catch (err) {
+          if (!isMounted) return;
+          console.error(
+            "Erreur lors du chargement de la recette :",
+            err
+          );
+          setRecipe(null);
+        } finally {
+          if (isMounted) {
+            setLoadingRecipe(false);
+          }
+        }
+      };
+      loadRecipe();
+      return () => {isMounted = false;};
+    }, [route.params.recipeId, getRecipeById])
+  );
+
   useEffect(() => {
-    const loadOwner = async () => {
+    if (!recipe?.id || !isPublic) {
+      return;
+    }
+
+    const loadPublicData = async () => {
       try {
-        if (isPublic && recipe?.ownerId) {
+        if (recipe.ownerId) {
           const info = await getUserInfo(recipe.ownerId);
           setOwnerInfo(info);
         }
+        const stats = await getReviewStatsFromRecipe(recipe.id);
+        setReviewStats(stats);
+
+        await loadReviews();
+
       } catch (err) {
-        console.error("Erreur chargement owner:", err);
+        console.error(
+          "Erreur lors du chargement des données publiques :",
+          err
+        );
       }
     };
 
-    const loadStats = async () => {
-      try {
-        if (isPublic && recipe?.id) {
-          const stats = await getReviewStatsFromRecipe(recipe.id);
-          setReviewStats(stats);
-        }
-      } catch (err) {
-        console.error("Erreur chargement stats:", err);
-      }
-    };
-
-    loadOwner();
-    loadStats();
-    loadReviews();
-  }, [recipe, isPublic]);
+    loadPublicData();
+  }, [
+    recipe?.id,
+    isPublic,
+    loadReviews,
+    getUserInfo,
+    getReviewStatsFromRecipe,
+  ]);
 
   useFocusEffect(
     React.useCallback(() => {
-      loadReviews();
+      if (!isPublic || !recipe?.id) {return;}
+      refreshReviews();
+      getReviewStatsFromRecipe(recipe.id)
+        .then(stats => setReviewStats(stats))
+        .catch(err => console.error(err));
 
-      if (isPublic && recipe?.id) {
-        getReviewStatsFromRecipe(recipe.id)
-          .then(stats => setReviewStats(stats))
-          .catch(err => console.error(err));
-      }
-
-    }, [recipe?.id, isPublic])
+    }, [
+      recipe?.id,
+      isPublic,
+      refreshReviews,
+      getReviewStatsFromRecipe,
+    ])
   );
-
-  const loadReviews = async () => {
-    try {
-      if (isPublic && recipe?.id) {
-        const reviewsData = await getReviewsFromRecipe(recipe.id, user.id , DefaultNbOfReview);
-
-        setMyReview(reviewsData.myReview);
-        setReviews(reviewsData.reviews);
-        setReviewOffset(reviewsData.reviews.length);
-        setHasMoreReviews(
-          reviewsData.reviews.length === DefaultNbOfReview
-        );
-      }
-    } catch (err) {
-      console.error("Erreur chargement reviews:", err);
-    }
-  };
 
   const getScaledQuantity = (originalQuantity) => {
     const ratio = servings / recipe.servings;
@@ -171,7 +216,7 @@ export default function RecipeDetailScreen({ route }) {
     try {
       const dto = {
         name: recipe.name,
-        category : recipe.category,
+        categories : recipe.categories,
         prepTime : recipe.prepTime,
         cookTime : recipe.cookTime,
         servings : recipe.servings,
@@ -223,30 +268,6 @@ export default function RecipeDetailScreen({ route }) {
     }
   };
 
-  const loadMoreReviews = async () => {
-    try {
-      if (!isPublic || !recipe?.id || loadingReviews) return;
-
-      setLoadingReviews(true);
-
-      const newReviews = await getReviewsFromRecipe(
-        recipe.id,
-        user?.id,
-        DefaultNbOfReview,
-        reviewOffset
-      );
-
-      setHasMoreReviews(newReviews.reviews.length === DefaultNbOfReview);
-      setReviews(prev => [...prev, ...newReviews.reviews]);      
-      setReviewOffset(reviewOffset + newReviews.reviews.length);
-
-    } catch (err) {
-      console.error("Erreur chargement reviews:", err);
-    } finally {
-      setLoadingReviews(false);
-    }
-  };
-
   const handleDeleteReview = async (reviewId) => {
    try {
       await deleteReview(reviewId);
@@ -267,6 +288,18 @@ export default function RecipeDetailScreen({ route }) {
       reviewToEdit: review
     });
   };
+
+  if (loadingRecipe) {
+    return <LoadingState />;
+  }
+
+  if (!recipe) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <Text>Recette introuvable</Text>
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView style={{ flex: 1 }} >
@@ -293,6 +326,10 @@ export default function RecipeDetailScreen({ route }) {
               : require('../assets/default.png')
             }
             style={styles.image} 
+          />
+          <Chipset
+            items={recipe?.categories}
+            disabled
           />
 
           {isPublic && (ownerInfo || reviewStats) && (
@@ -479,8 +516,6 @@ export default function RecipeDetailScreen({ route }) {
         {isPublic && reviews && (
           <View style={styles.cardContainer}>
 
-            
-
             <Text style={styles.reviewHeaderText}>
               Avis des utilisateurs
             </Text>
@@ -495,23 +530,31 @@ export default function RecipeDetailScreen({ route }) {
               />
             )}
 
-            {reviews.map(review => (
-              <ReviewCard
-                key={review.id}
-                review={review}
-                isMine={false}
-                getDayPeriodFromToday={getDayPeriodFromToday}
+            {reviews.length > 0 ? (
+              reviews.map(review => (
+                <ReviewCard
+                  key={review.id}
+                  review={review}
+                  isMine={false}
+                  getDayPeriodFromToday={getDayPeriodFromToday}
+                />
+              ))
+            ) : !myReview ? (
+              <EmptyState
+                iconName="chatbubble-ellipses-outline"
+                title="Aucun avis"
+                message="Soyez le premier à donner votre avis sur cette recette."
               />
-            ))}
+            ) : null}
 
             {hasMoreReviews && reviews.length > 0 && (
               <TouchableOpacity
                 style={styles.moreReviewsButton}
-                onPress={() => loadMoreReviews()}
-                disabled={loadingReviews}
+                onPress={loadMoreReviews}
+                disabled={loadingMoreReviews}
               >
                 <Text style={styles.moreReviewsText}>
-                  {loadingReviews 
+                  {loadingMoreReviews 
                     ? "Chargement..."
                     : "Voir plus d'avis"
                   }

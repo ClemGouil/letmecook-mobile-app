@@ -18,8 +18,9 @@ export default function Register() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
 
-  const { user, register } = useUser();
+  const { register } = useUser();
 
   const handleSubmit = async () => {
     setError('');
@@ -52,6 +53,7 @@ export default function Register() {
       setIsLoading(true);
       setError('');
       await register(username, firstName, lastName, email, password);
+      setSuccess(true);
     } catch (err) {
       console.error('Register error:', err);
       setError("Erreur lors de l'inscription");
@@ -59,6 +61,26 @@ export default function Register() {
       setIsLoading(false);
     }
   };
+
+  if (success) { 
+    return ( 
+      <View style={styles.screen}> 
+        <View style={styles.container}> 
+        <Text style={styles.title}> Vérifiez votre email </Text>
+        <Icon name="mail-outline" size={52} color="rgb(180, 180, 230)" style={styles.icon} /> 
+          <Text style={styles.subtitle}> Votre compte a bien été créé. Un email de vérification a été envoyé à :
+            <Text style={styles.emailText}> {email} </Text> 
+          </Text> 
+         <Text style={styles.subtitle}> Cliquez sur le lien présent dans cet email pour activer votre compte. </Text> 
+         <TouchableOpacity 
+            style={styles.button} 
+            onPress={() => navigation.navigate('Login', { email: email, }) } >
+            <Text style={styles.buttonText}> Aller à la connexion </Text> 
+         </TouchableOpacity> 
+        </View> 
+      </View> 
+    ); 
+  }
 
   return (
     <View style={styles.screen}>
@@ -98,6 +120,8 @@ export default function Register() {
         <TextInput
             placeholder="Email"
             keyboardType="email-address"
+            autoCapitalize="none"
+            autoCorrect={false}
             style={styles.input}
             value={email} 
             onChangeText={(text) => {
@@ -189,11 +213,21 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 5,
   },
+  icon: { 
+    alignSelf: 'center', 
+    marginBottom: 16, 
+  },
   title: {
     textAlign: 'center',
     fontSize: 28,
     fontWeight: 'bold',
     marginBottom: 24,
+  },
+  subtitle: { 
+    textAlign: 'center', 
+    color: '#666', 
+    lineHeight: 20, 
+    marginBottom: 24, 
   },
   input: {
     width: '100%',
@@ -203,6 +237,16 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 10,
     marginBottom: 16,
+  },
+  passwordContainer: {
+    position: "relative",
+    width: "100%",
+  },
+  eyeButton: {
+    position: "absolute",
+    right: 10,
+    top: 12,
+    padding: 5,
   },
   button: {
     width: '100%',
@@ -232,14 +276,10 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     textAlign: 'center',
   },
-  passwordContainer: {
-    position: "relative",
-    width: "100%",
-  },
-  eyeButton: {
-    position: "absolute",
-    right: 10,
-    top: 12,
-    padding: 5,
+  emailText: { 
+    textAlign: 'center', 
+    fontSize: 16, 
+    fontWeight: '600', 
+    marginBottom: 16, 
   },
 })

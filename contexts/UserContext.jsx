@@ -56,18 +56,53 @@ export function UserProvider({children}) {
     async function register(username, firstName, lastName ,email, password) {
         try {
             const response = await api.post(`/users/auth/register`, { username, firstName, lastName ,email, password });
-            const { user: loggedUser, accessToken: accessJwtToken, refreshToken : refreshJwtToken } = response.data;
-
-            setUser(loggedUser);
-            setAccessToken(accessJwtToken);
-            await SecureStore.setItemAsync('accessToken', accessJwtToken);
-            await SecureStore.setItemAsync('refreshToken', refreshJwtToken);
-
-            return loggedUser;
+            return response.data; 
             } catch (err) {
             console.error("Register error:", err.response?.data || err.message);
             throw err;
         }
+    }
+
+    async function resendVerificationEmail(email) { 
+        try { 
+            const response = await api.post( `/users/auth/send-verification`, { email } ); 
+            return response.data; 
+        } catch (err) { 
+            console.error( "Resend verification email error:", err.response?.data || err.message ); 
+            throw err; 
+        } 
+    }
+
+    async function verifyEmail(token) { 
+        try { 
+            const response = await api.get(`/users/auth/verify-email`, {
+                params: { token }
+            });
+            return response.data; 
+        } catch (err) { 
+            console.error( "Verify email error:", err.response?.data || err.message ); 
+            throw err; 
+        }
+    }
+
+    async function forgotPassword(email) { 
+        try { 
+            const response = await api.post( `/users/auth/forgot-password`, { email } ); 
+            return response.data; 
+        } catch (err) { 
+            console.error( "Forgot password error:", err.response?.data || err.message ); 
+            throw err; 
+        } 
+    } 
+            
+    async function resetPassword(token, newPassword) { 
+        try { 
+            const response = await api.post( `/users/auth/reset-password`, { token, newPassword } ); 
+            return response.data; 
+        } catch (err) { 
+            console.error( "Reset password error:", err.response?.data || err.message ); 
+            throw err; 
+        } 
     }
 
     async function loadUserFromToken() {
@@ -149,6 +184,10 @@ export function UserProvider({children}) {
             isLoading,
             login,
             register,
+            resendVerificationEmail,
+            verifyEmail,
+            forgotPassword,
+            resetPassword,
             logout,
             updateUser,
             deleteAccount,

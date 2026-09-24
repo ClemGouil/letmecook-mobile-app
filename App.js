@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { StyleSheet} from 'react-native';
+import * as Linking from 'expo-linking';
 
 import RootNavigator from './navigation/RootNavigator';
 import { UserProvider } from './contexts/UserContext';
@@ -17,6 +18,22 @@ import { ReviewProvider } from './contexts/ReviewContext';
 import { FolderProvider } from './contexts/FolderContext';
 
 export default function App() {
+  const linking = {
+    prefixes: [
+      'https://letmecook-app.mblabs.fr',
+      'letmecook://',
+    ],
+    config: {
+      screens: {
+        Login: 'login',
+        Register: 'register',
+        ForgotPassword: 'forgot-password',
+        VerifyEmail: 'verify-email',
+        ResetPassword: 'reset-password',
+      },
+    },
+  };
+
   return (
     <UserProvider>
       <GroupProvider>
@@ -36,7 +53,9 @@ export default function App() {
                               style={styles.container}
                             >
                               <NavigationContainer  
-                                theme={MyTheme}>
+                                theme={MyTheme} 
+                                linking={linking} 
+                              >
                                 <RootNavigator />
                               </NavigationContainer>
                             </LinearGradient>

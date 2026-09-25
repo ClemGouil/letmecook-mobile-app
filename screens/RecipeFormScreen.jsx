@@ -15,41 +15,33 @@ import { useUser } from '../hooks/useUser';
 import BackButton from '../components/BackButton';
 import SaveButton from '../components/SaveButton';
 import SquareButton from '../components/SquareButton';
+import CategorySelector from '../components/CategorySelector';
+import LoadingState from '../components/LoadingState';
 
 export default function RecipeFormScreen({ route }) {
 
   const navigation = useNavigation();
 
-  const { privateRecipes, units, searchIngredients, addRecipe, addIngredientToRecipe, deleteAllIngredientsFromRecipe, addInstructionToRecipe, deleteAllInstructionsFromRecipe, updateRecipe} = useRecipe();
+  const { units, getRecipeById, searchIngredients, addRecipe, addIngredientToRecipe, deleteAllIngredientsFromRecipe, addInstructionToRecipe, deleteAllInstructionsFromRecipe, updateRecipe} = useRecipe();
   const {  uploadImage } = useImage();
   const { user } = useUser();
 
   const isNew = !route.params?.recipeId;
-  const recipe = isNew
-  ? {
-      id: null,
-      name: "",
-      category: "",
-      prepTime: 20,
-      cookTime: 20,
-      servings: 2,
-      imageUrl: null,
-      ingredients: [],
-      instructions: [],
-      isPublic: false
-    }
-  : privateRecipes.find(r => r.id === route.params.recipeId);
+  const recipeId = route.params?.recipeId;
 
-  const [title, setTitle] = useState(recipe.name);
-  const [category, setCategory] = useState(recipe.category);
-  const [prepTime, setPrepTime] = useState(recipe.prepTime);
-  const [cookTime, setCookTime] = useState(recipe.cookTime);
-  const [servings, setServings] = useState(recipe.servings);
-  const [imageUrl, setImageUrl] = useState(recipe.imageUrl);
-  const [isPublic, setIsPublic] = useState(recipe.isPublic);
+  const [recipe, setRecipe] = useState(null);
+  const [loadingRecipe, setLoadingRecipe] = useState(!isNew);
 
-  const [localIngredients, setLocalIngredients] = useState(recipe.ingredients ?? []);
-  const [localInstructions, setLocalInstructions] = useState(recipe.instructions ?? []);
+  const [title, setTitle] = useState("");
+  const [categories, setCategories] = useState([]);
+  const [prepTime, setPrepTime] = useState(20);
+  const [cookTime, setCookTime] = useState(20);
+  const [servings, setServings] = useState(2);
+  const [imageUrl, setImageUrl] = useState(null);
+  const [isPublic, setIsPublic] = useState(false);
+
+  const [localIngredients, setLocalIngredients] = useState([]);
+  const [localInstructions, setLocalInstructions] = useState([]);
 
   const [editingItem, setEditingItem] = React.useState(null);
   const [addingItem, setAddingItem] = React.useState(false);
@@ -59,6 +51,44 @@ export default function RecipeFormScreen({ route }) {
 
   const [ingredientQuery, setIngredientQuery] = React.useState('');
   const [ingredientResults, setIngredientResults] = React.useState([]);
+
+  React.useEffect(() => {
+    if (isNew) {
+      return;
+    }
+
+    const loadRecipe = async () => {
+      try {
+        setLoadingRecipe(true);
+
+        const data = await getRecipeById(recipeId);
+
+        setRecipe(data);
+
+        setTitle(data.name ?? "");
+        setCategories(data.categories ?? []);
+        setPrepTime(data.prepTime ?? 20);
+        setCookTime(data.cookTime ?? 20);
+        setServings(data.servings ?? 2);
+        setImageUrl(data.imageUrl ?? null);
+        setIsPublic(data.isPublic ?? false);
+
+        setLocalIngredients(data.ingredients ?? []);
+        setLocalInstructions(data.instructions ?? []);
+
+      } catch (err) {
+        console.error(
+          "Erreur lors du chargement de la recette :",
+          err
+        );
+      } finally {
+        setLoadingRecipe(false);
+      }
+    };
+
+    loadRecipe();
+
+  }, [isNew, recipeId, getRecipeById]);
 
   React.useEffect(() => {
     const timeout = setTimeout(async () => {
@@ -79,14 +109,14 @@ export default function RecipeFormScreen({ route }) {
   const handleSaveRecipe = async () => {
     try {
       let finalImageUrl = imageUrl;
-      let recipeId = recipe?.id;
+      let currentRecipeId = recipeId;
 
       if (imageUrl && imageUrl.startsWith("file://")) {
         finalImageUrl = await uploadImage(imageUrl);
       }
       const dto = {
         name: title,
-        category,
+        categories : categories,
         prepTime,
         cookTime,
         servings,
@@ -94,10 +124,10 @@ export default function RecipeFormScreen({ route }) {
         ownerId: isNew ? user.id : recipe.ownerId,
         isPublic,
       };
-
+      
       if (isNew) {
         const created = await addRecipe(dto);
-        recipeId = created.id;
+        currentRecipeId = created.id;
       } else {
         await updateRecipe(recipe.id, dto);
         await deleteAllIngredientsFromRecipe(recipe.id);
@@ -105,8 +135,9 @@ export default function RecipeFormScreen({ route }) {
       }
       
       for (const ing of localIngredients) {
+        console.log(currentRecipeId)
         await addIngredientToRecipe({
-          recipeId,
+          recipeId: currentRecipeId,
           ingredientId: ing.ingredient.id,
           quantity: ing.quantity,
           unitId: ing.unit.id,
@@ -116,7 +147,7 @@ export default function RecipeFormScreen({ route }) {
       for (let i = 0; i < localInstructions.length; i++) {
         const inst = localInstructions[i];
         await addInstructionToRecipe({
-          recipeId,
+          recipeId: currentRecipeId,
           stepNumber: inst.stepNumber,
           description: inst.description,
         });
@@ -199,6 +230,10 @@ export default function RecipeFormScreen({ route }) {
     setLocalInstructions(prev => prev.filter(item => item.id !== id).map((item, index) => ({...item, stepNumber : index + 1 })));
   };
 
+  if (loadingRecipe) {
+    return <LoadingState />;
+  }
+
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <KeyboardAvoidingView
@@ -221,12 +256,10 @@ export default function RecipeFormScreen({ route }) {
               value={title}
             />
 
-            <Text style={styles.subTitleText}>Catégorie</Text>
-            <TextInput 
-              style={styles.input} 
-              value={category} 
-              onChangeText={setCategory} 
-              placeholder="Catégorie" 
+            <Text style={styles.subTitleText}>Catégories</Text>
+            <CategorySelector
+              selectedCategories={categories}
+              onChange={setCategories}
             />
             <Text style={styles.subTitleText}>Temps de préparation</Text>
             <View style={styles.sliderContainer}>

@@ -5,7 +5,6 @@ import {
   StyleSheet,
   FlatList,
   Dimensions,
-  ActivityIndicator,
 } from 'react-native';
 
 import { useFolder } from '../hooks/useFolder';
@@ -14,8 +13,9 @@ import SearchBar from './SearchBar';
 import RecipeCard from './RecipeCard';
 import BackButton from './BackButton';
 import SaveButton from './SaveButton';
-
-import Icon from 'react-native-vector-icons/Ionicons';
+import EmptyState from './EmptyState';
+import LoadingState from './LoadingState';
+import { usePaginatedList } from '../hooks/usePaginatedList';
 
 export default function FolderRecipeSelector({
   folder,
@@ -30,63 +30,40 @@ export default function FolderRecipeSelector({
   const { loadRecipesOfFolder } = useFolder();
 
   const [search, setSearch] = useState('');
-  const [recipes, setRecipes] = useState([]);
-
-  const [offset, setOffset] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
 
   const RECIPE_FOLDER_LOAD_SIZE = 10;
 
-  const loadRecipes = async (newOffset = 0, reset = false) => {
-    if (loading && !reset) return;
-
-    try {
-      setLoading(true);
-
-      const result = await loadRecipesOfFolder(
-        folder.id,
-        search,
-        RECIPE_FOLDER_LOAD_SIZE,
-        newOffset
-      );
-
-      if (reset) {
-        setRecipes(result);
-      } else {
-        setRecipes(prev => [...prev, ...result]);
+  const loadRecipePage = React.useCallback(
+    async (offset, limit) => {
+      if (!folder?.id) {
+        return [];
       }
 
-      setOffset(newOffset);
-
-      setHasMore(
-        result.length >= RECIPE_FOLDER_LOAD_SIZE
+      return await loadRecipesOfFolder(
+        folder.id,
+        search.length >= 2 ? search : null,
+        limit,
+        offset
       );
+    },
+    [folder?.id, search, loadRecipesOfFolder]
+  );
 
-    } catch (err) {
-      console.error(
-        'Erreur lors du chargement des recettes du dossier :',
-        err
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
+  const {
+    items: recipes,
+    loading,
+    loadingMore,
+    hasMore,
+    loadInitial,
+    loadMore,
+  } = usePaginatedList({
+    loadPage: loadRecipePage,
+    pageSize: RECIPE_FOLDER_LOAD_SIZE,
+  });
 
   useEffect(() => {
-    setOffset(0);
-    setHasMore(true);
-
-    loadRecipes(0, true);
-  }, [search, folder.id]);
-
-  const loadMoreRecipes = () => {
-    if (loading || !hasMore) return;
-
-    loadRecipes(
-      offset + RECIPE_FOLDER_LOAD_SIZE
-    );
-  };
+    loadInitial();
+  }, [loadInitial]);
 
   const handleRecipePress = (recipe) => {
 
@@ -151,32 +128,13 @@ export default function FolderRecipeSelector({
     );
   };
 
-  const renderEmpty = () => {
-
-    if (loading) {
-      return null;
-    }
-
-    return (
-      <View style={styles.emptyContainer}>
-
-        <Icon
-          name="folder-open-outline"
-          size={42}
-          color="rgb(180, 180, 230)"
-        />
-
-        <Text style={styles.emptyTitle}>
-          Aucune recette
-        </Text>
-
-        <Text style={styles.emptyText}>
-          Ce dossier ne contient aucune recette.
-        </Text>
-
-      </View>
-    );
-  };
+  const renderEmpty = () => (
+    <EmptyState
+      iconName="folder-open-outline"
+      title="Aucune recette"
+      message="Ce dossier ne contient aucune recette."
+    />
+  );
 
   return (
     <View style={styles.container}>
@@ -211,32 +169,33 @@ export default function FolderRecipeSelector({
         />
       </View>
 
-      <FlatList
-        data={recipes}
-        keyExtractor={(item) =>
-          `folder-recipe-selector-${item.id}`
-        }
-        renderItem={renderRecipe}
-        numColumns={2}
-        columnWrapperStyle={styles.row}
-        contentContainerStyle={styles.list}
-        showsVerticalScrollIndicator={false}
-        ListEmptyComponent={renderEmpty}
-        onEndReached={loadMoreRecipes}
-        onEndReachedThreshold={0.5}
-        ListFooterComponent={
-          loading && recipes.length > 0 ? (
-            <View style={styles.loadingContainer}>
-
-              <ActivityIndicator
+      {loading ? (
+        <LoadingState />
+      ) : (
+        <FlatList
+          data={recipes}
+          keyExtractor={(item) =>
+            `folder-recipe-selector-${item.id}`
+          }
+          renderItem={renderRecipe}
+          numColumns={2}
+          columnWrapperStyle={styles.row}
+          contentContainerStyle={styles.list}
+          showsVerticalScrollIndicator={false}
+          ListEmptyComponent={renderEmpty}
+          onEndReached={loadMore}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={
+            loadingMore && recipes.length > 0 ? (
+              <LoadingState
+                fullScreen={false}
+                text={"Chargement..."}
                 size="small"
-                color="rgb(180, 180, 230)"
               />
-
-            </View>
-          ) : null
-        }
-      />
+            ) : null
+          }
+        />
+      )}
 
       {multipleSelectionMode && (
         <View style={styles.bottomButtonContainer}>

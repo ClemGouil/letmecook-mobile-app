@@ -1,4 +1,4 @@
-import { createContext, useState, useEffect} from "react";
+import { createContext, useState, useEffect, useCallback} from "react";
 import { api } from "../api/axiosInstance";
 import { useUser } from "../hooks/useUser";
 
@@ -6,65 +6,115 @@ export const RecipeContext = createContext();
 
 export function RecipeProvider({ children }) {
 
-  const [publicRecipes, setPublicRecipes] = useState([]);
-  const [privateRecipes, setPrivateRecipes] = useState([]);
-  const [groupRecipes, setGroupRecipes] = useState([]);
   const [units, setUnits] = useState([]);
+  const [categories, setCategories] = useState([]);
 
   const { user } = useUser();
 
   useEffect(() => {
     if (user) {
-      loadPrivateRecipes(user.id);
       loadUnits();
+      loadCategories();
     }
   }, [user]);
 
-  async function loadPublicRecipes(userId, query = null, limit = 5, offset = 0, ingredientIds = [], append = false) {
-    const safeIngredientIds = ingredientIds?.length ? ingredientIds : undefined;
+  const loadPublicRecipes = useCallback( 
+    async (userId, query = null, limit = 5, offset = 0, ingredientIds = [], categoryIds = []) => {
+      const safeIngredientIds = ingredientIds?.length ? ingredientIds : undefined;
+      const safecategoryIds = categoryIds?.length ? categoryIds : undefined;
+      try {
+        const response = await api.get(`/recipes/public/${userId}`, {
+          params: {
+            query,
+            ingredientIds: safeIngredientIds,
+            minMatch: safeIngredientIds ? 1 : undefined,
+            categoryIds: safecategoryIds,
+            limit,
+            offset,
+          },
+        });
+        
+        return response.data;
+      } catch (err) {
+        console.error("Erreur lors du chargement des recettes publiques:", err);
+      }
+      return [];
+    },
+    []
+  );
+
+  const loadPrivateRecipes = useCallback(
+  async (userId, query = null, limit = 10, offset = 0) => {
     try {
-      const response = await api.get(`/recipes/public/${userId}`, {
-        params: {
-          query,
-          ingredientIds: safeIngredientIds,
-          minMatch: safeIngredientIds ? 1 : undefined,
-          limit,
-          offset,
-        },
-      });
-
-      const newData = response.data;
-
-      setPublicRecipes(prev =>
-        append ? [...prev, ...newData] : newData
+      const response = await api.get(`/recipes/user/${userId}`,
+        {
+          params: {
+            query,
+            limit,
+            offset,
+          },
+        }
       );
+
       return response.data;
     } catch (err) {
-      console.error("Erreur lors du chargement des recettes publiques:", err);
-    }
-  }
-
-  async function loadPrivateRecipes(userId) {
-    try {
-      const response = await api.get(`/recipes/user/${userId}`);
-      setPrivateRecipes(response.data);
-    } catch (err) {
-      console.error("Erreur lors du chargement des recettes privées:", err);
-    }
-  }
-
-  async function loadGroupRecipes(groupId) {
-    try {
-      const response = await api.get(`/group-recipes/${groupId}/recipes`);
-
-      const data = response.data.map(r => ({
-      ...r, groupId: groupId})
+      console.error(
+        "Erreur lors du chargement des recettes privées:",
+        err
       );
-      setGroupRecipes(data);
-    } catch (err) {
-      console.error("Erreur lors du chargement des recettes de groupe:", err);
+      return [];
     }
-  }
+  },
+  []
+);
+
+  const loadGroupRecipes = useCallback(
+    async (groupId, query = null, limit = 10, offset = 0) => {
+      try {
+        const response = await api.get(`/group-recipes/${groupId}/recipes`,
+          {
+            params: {
+              query,
+              limit,
+              offset,
+            },
+          }
+        );
+
+        return response.data.map(recipe => ({
+          ...recipe,
+          groupId,
+        }));
+      } catch (err) {
+        console.error(
+          "Erreur lors du chargement des recettes de groupe:",
+          err
+        );
+        return [];
+      }
+    },
+    []
+  );
+
+  const getRecipeById = useCallback(
+    async (recipeId) => {
+      try {
+        const response = await api.get(
+          `/recipes/${recipeId}`
+        );
+
+        return response.data;
+      } catch (err) {
+        console.error(
+          "Erreur lors du chargement de la recette:",
+          err
+        );
+
+        throw err;
+      }
+    },
+    []
+  );
 
   async function searchIngredients(query, limit = 5) {
     try {
@@ -89,10 +139,18 @@ export function RecipeProvider({ children }) {
     }
   }
 
+  async function loadCategories() {
+    try {
+      const response = await api.get(`/recipe-categories`);
+      setCategories(response.data);
+    } catch (err) {
+      console.error("Erreur lors du chargement des categories:", err);
+    }
+  }
+
   async function addRecipe(dto) {
     try {
       const res = await api.post(`/recipes`, dto);
-      setPrivateRecipes(prev => [...prev, res.data]);
       return res.data;
     } catch (err) {
       console.error(err);
@@ -104,9 +162,6 @@ export function RecipeProvider({ children }) {
     try {
       const response = await api.put(`/recipes/${id}`, dto );
       const updated = response.data;
-      setPrivateRecipes(
-        prev => prev.map(recipe => (recipe.id === updated.id ? updated : recipe))
-      );
       return updated;
     } catch (err) {
       console.error(err);
@@ -117,7 +172,6 @@ export function RecipeProvider({ children }) {
   async function deleteRecipe(id) {
     try {
       await api.delete(`/recipes/${id}`);
-      setPrivateRecipes(prev => prev.filter(recipe => recipe.id !== id));
     } catch (err) {
       console.error(err);
       throw err;
@@ -129,18 +183,6 @@ export function RecipeProvider({ children }) {
       const response = await api.post(`/recipe-ingredients`, dto);
 
       const newIngredient = response.data;
-
-      setPrivateRecipes((prevRecipe) =>
-        prevRecipe.map((recipe) => {
-          if (recipe.id === dto.recipeId) {
-            return {
-              ...recipe,
-              ingredients: [...(recipe.ingredients ?? []), newIngredient],
-            };
-          }
-          return recipe;
-        })
-      );
 
       return newIngredient;
     } catch (err) {
@@ -155,18 +197,6 @@ export function RecipeProvider({ children }) {
 
       const newInstruction = response.data;
 
-      setPrivateRecipes((prevRecipe) =>
-        prevRecipe.map((recipe) => {
-          if (recipe.id === dto.recipeId) {
-            return {
-              ...recipe,
-              instructions: [...(recipe.instructions ?? []), newInstruction],
-            };
-          }
-          return recipe;
-        })
-      );
-
       return newInstruction;
     } catch (err) {
       console.error(err);
@@ -177,17 +207,6 @@ export function RecipeProvider({ children }) {
   async function deleteAllInstructionsFromRecipe(id) {
     try {
       await api.delete(`/recipe-instructions/deleteAll/${id}`);
-      setPrivateRecipes((prevRecipe) =>
-        prevRecipe.map((recipe) => {
-          if (recipe.id === id) {
-            return {
-              ...recipe,
-              instructions: [],
-            };
-          }
-          return recipe;
-        })
-      );
     } catch (err) {
       console.error(err);
       throw err;
@@ -197,17 +216,6 @@ export function RecipeProvider({ children }) {
   async function deleteAllIngredientsFromRecipe(id) {
     try {
       await api.delete(`/recipe-ingredients/deleteAll/${id}`);
-      setPrivateRecipes((prevRecipe) =>
-        prevRecipe.map((recipe) => {
-          if (recipe.id === id) {
-            return {
-              ...recipe,
-              ingredients: [],
-            };
-          }
-          return recipe;
-        })
-      );
     } catch (err) {
       console.error(err);
       throw err;
@@ -223,8 +231,6 @@ export function RecipeProvider({ children }) {
 
       const newSharedRecipe = response.data;
 
-      loadGroupRecipes(groupId);
-
       return newSharedRecipe;
 
     } catch (err) {
@@ -239,8 +245,6 @@ export function RecipeProvider({ children }) {
           params: { userId },
       });
 
-      loadGroupRecipes(groupId);
-
     } catch (err) {
       console.error(err);
       throw err;
@@ -250,14 +254,13 @@ export function RecipeProvider({ children }) {
   return (
     <RecipeContext.Provider
       value={{
-        publicRecipes,
-        privateRecipes,
-        groupRecipes,
         units,
+        categories,
         searchIngredients,
         loadPublicRecipes,
         loadPrivateRecipes,
         loadGroupRecipes,
+        getRecipeById,
         addRecipe,
         deleteAllIngredientsFromRecipe,
         deleteAllInstructionsFromRecipe,

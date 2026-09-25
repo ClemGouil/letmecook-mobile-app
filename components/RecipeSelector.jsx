@@ -5,17 +5,20 @@ import { useRecipe } from '../hooks/useRecipe';
 import { useGroup } from '../hooks/useGroup';
 import { useFolder } from '../hooks/useFolder';
 import { useUser } from '../hooks/useUser';
+import { usePaginatedList } from '../hooks/usePaginatedList';
 import { useNavigation } from '@react-navigation/native';
 
 import SearchBar from './SearchBar';
 import RecipeCard from './RecipeCard';
 import ChooseNameModal from './ChooseNameModal';
+import EmptyState from './EmptyState';
+import LoadingState from './LoadingState';
 
 export default function RecipeSelector({ onRecipePress, singleSelectionMode = false, selectedRecipeId, multipleSelectionMode = false, selectedRecipes = [], onSelectionChange, hideFolders= false, onFolderPress}) {
 
   const navigation = useNavigation();
 
-  const { privateRecipes, groupRecipes, loadGroupRecipes } = useRecipe();
+  const { loadPrivateRecipes, loadGroupRecipes } = useRecipe();
   const { groups } = useGroup();
   const { folders, addFolder } = useFolder();
   const { user } = useUser();
@@ -32,28 +35,73 @@ export default function RecipeSelector({ onRecipePress, singleSelectionMode = fa
     }
   }, [groups]);
 
+  const RECIPE_PRIVATE_LOAD_SIZE = 10;
+  const RECIPE_GROUP_LOAD_SIZE = 10;
+
+  const loadPrivateRecipePage = React.useCallback(
+    async (offset, limit) => {
+      if (!user?.id) return [];
+
+      return await loadPrivateRecipes(
+        user.id,
+        search.length >= 2 ? search : null,
+        limit,
+        offset,
+      );
+    },
+    [user?.id, search, loadPrivateRecipes]
+  );
+
+  const { items: privateRecipes, loading: privateLoading, refreshing: privateRefreshing, loadingMore: privateLoadingMore,
+    loadInitial: loadPrivateInitial, loadMore: loadPrivateMore, refresh: refreshPrivate, reset: resetPrivate } = usePaginatedList({
+    loadPage: loadPrivateRecipePage,
+    pageSize: RECIPE_PRIVATE_LOAD_SIZE,
+  });
+
+  useEffect(() => {
+    if (!user?.id) return;
+    resetPrivate();
+    loadPrivateInitial();
+  }, [
+    user?.id,
+    search,
+    loadPrivateInitial,
+    resetPrivate,
+  ]);
+
+  const loadGroupRecipePage = React.useCallback(
+    async (offset, limit) => {
+      if (!subActiveTab) return [];
+
+      return await loadGroupRecipes(
+        subActiveTab,
+        search.length >= 2 ? search : null,
+        limit,
+        offset,
+      );
+    },
+    [subActiveTab, search, loadGroupRecipes]
+  );
+
+  const { items: groupRecipes, loading: groupLoading, refreshing: groupRefreshing, loadingMore: groupLoadingMore,
+    loadInitial: loadGroupInitial, loadMore: loadGroupMore, refresh: refreshGroup, reset: resetGroup } = usePaginatedList({
+    loadPage: loadGroupRecipePage,
+    pageSize: RECIPE_GROUP_LOAD_SIZE,
+  });
+
   useEffect(() => {
     if (activeTab !== 'groupRecipes') return;
     if (!subActiveTab) return;
 
-    loadGroupRecipes(subActiveTab);
-  }, [activeTab, subActiveTab]);
-
-  const filteredRecipes = privateRecipes.filter((recipe) => {
-    if (!recipe?.name) return false;
-
-    return recipe.name
-      .toLowerCase()
-      .includes(search.toLowerCase());
-  });
-
-  const filteredGroupRecipes = groupRecipes.filter((item) => {
-    if (!item?.recipe?.name) return false;
-
-    return item.recipe.name
-      .toLowerCase()
-      .includes(search.toLowerCase());
-  });
+    resetGroup();
+    loadGroupInitial();
+  }, [
+    activeTab,
+    subActiveTab,
+    search,
+    loadGroupInitial,
+    resetGroup,
+  ]);
 
   const getOwnerById = (groupMembers, ownerId) => {
     const member = groupMembers?.find(
@@ -208,10 +256,22 @@ export default function RecipeSelector({ onRecipePress, singleSelectionMode = fa
   );
 
   const renderEmptyComponent = () => (
-    <Text style={styles.emptyText}>
-      Aucune recette trouvée
-    </Text>
+    <EmptyState
+      iconName="book-outline"
+      title="Aucune recette"
+      message={ search.trim()
+        ? "Aucune recette ne correspond à votre recherche."
+        : activeTab === 'privateRecipes'
+          ? "Vous n'avez aucune recette à afficher."
+          : "Aucune recette disponible dans ce groupe."
+      }
+    />
   );
+
+  const isLoadingInitial =
+    activeTab === 'privateRecipes'
+      ? privateLoading
+      : groupLoading;
 
   return (
     <View style={styles.container}>
@@ -275,8 +335,8 @@ export default function RecipeSelector({ onRecipePress, singleSelectionMode = fa
       <FlatList
         data={
           activeTab === 'privateRecipes'
-            ? filteredRecipes
-            : filteredGroupRecipes
+            ? privateRecipes
+            : groupRecipes
         }
         keyExtractor={(item) =>
           activeTab === 'privateRecipes'
@@ -284,7 +344,15 @@ export default function RecipeSelector({ onRecipePress, singleSelectionMode = fa
             : `group-${item.recipe.id}`
         }
         ListHeaderComponent={renderListHeader}
-        ListEmptyComponent={renderEmptyComponent}
+        ListEmptyComponent={
+          isLoadingInitial
+            ? <LoadingState
+                fullScreen={false}
+                text={"Chargement..."}
+                size="small"
+              />
+            : renderEmptyComponent()
+          }
         renderItem={({ item }) => {
 
           if (activeTab === 'privateRecipes') {
@@ -305,13 +373,6 @@ export default function RecipeSelector({ onRecipePress, singleSelectionMode = fa
                 onPress={() => handleRecipePress(item, false)}
                 width={CARD_WIDTH}
                 
-              />
-              <ChooseNameModal
-                visible={showAddFolder}
-                title="Nom du dossier :"
-                placeholder="Mes Desserts"
-                onSubmit={handleAddFolder}
-                onCancel={() => setShowAddFolder(false)}
               />
             </View>
             );
@@ -354,6 +415,43 @@ export default function RecipeSelector({ onRecipePress, singleSelectionMode = fa
         columnWrapperStyle={styles.row}
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
+        refreshing={
+          activeTab === 'privateRecipes'
+            ? privateRefreshing
+            : groupRefreshing
+        }
+        onRefresh={
+          activeTab === 'privateRecipes'
+            ? refreshPrivate
+            : refreshGroup
+        }
+        onEndReached={
+          activeTab === 'privateRecipes'
+            ? loadPrivateMore
+            : loadGroupMore
+        }
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={
+          (
+            activeTab === 'privateRecipes'
+              ? privateLoadingMore
+              : groupLoadingMore
+          ) ? (
+            <LoadingState
+              fullScreen={false}
+              text={"Chargement..."}
+              size="small"
+            />
+          ) : null
+        }
+      />
+
+      <ChooseNameModal
+        visible={showAddFolder}
+        title="Nom du dossier :"
+        placeholder="Mes Desserts"
+        onSubmit={handleAddFolder}
+        onCancel={() => setShowAddFolder(false)}
       />
 
     </View>
@@ -380,12 +478,6 @@ const styles = StyleSheet.create({
   row: {
     justifyContent: 'space-between',
     paddingBottom: 8,
-  },
-  emptyText: {
-    textAlign: 'center',
-    color: '#777',
-    marginTop: 40,
-    fontSize: 16,
   },
   tabsCard: {
     flexDirection: 'row',
@@ -426,7 +518,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 8,
     padding: 4,
-    marginBottom: 16,
+    marginBottom: 8,
     alignItems: 'center',
     justifyContent: 'space-around',
     borderWidth: 1,
@@ -447,7 +539,7 @@ const styles = StyleSheet.create({
   foldersContainer: {
     flexDirection: 'row',
     paddingHorizontal: 8,
-    marginBottom: 16,
+    marginBottom: 8,
   },
   folderCard: {
     backgroundColor: '#fff',

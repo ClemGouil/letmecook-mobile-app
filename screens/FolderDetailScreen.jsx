@@ -1,8 +1,9 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
-import {View, Text, StyleSheet, FlatList, Dimensions, TouchableOpacity, ActivityIndicator} from 'react-native';
+import {View, Text, StyleSheet, FlatList, Dimensions, TouchableOpacity} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFolder } from '../hooks/useFolder';
+import { usePaginatedList } from '../hooks/usePaginatedList';
 
 import SearchBar from '../components/SearchBar';
 import RecipeCard from '../components/RecipeCard';
@@ -10,7 +11,8 @@ import BackButton from '../components/BackButton';
 import ChooseNameModal from '../components/ChooseNameModal';
 import FloatingButton from '../components/FloatingButton';
 import ReusableModal from '../components/ReusableModal';
-
+import LoadingState from '../components/LoadingState';
+import EmptyState from '../components/EmptyState';
 import Icon from 'react-native-vector-icons/Ionicons';
 
 export default function FolderDetailScreen({ route, navigation }) {
@@ -20,11 +22,6 @@ export default function FolderDetailScreen({ route, navigation }) {
   const { loadRecipesOfFolder, updateFolder, deleteFolder } = useFolder();
 
   const [search, setSearch] = useState('');
-  const [recipes, setRecipes] = useState([]);
-
-  const [offset, setOffset] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
 
   const [showAddFolder, setShowAddFolder] = React.useState(false);
   const [showModalFolder, setShowModalFolder] = React.useState(false);
@@ -32,56 +29,38 @@ export default function FolderDetailScreen({ route, navigation }) {
 
   const RECIPE_FOLDER_LOAD_SIZE = 10;
 
-  const loadRecipes = async (newOffset = 0, reset = false) => {
-    if (loading && !reset) return;
-
-    try {
-      setLoading(true);
-
-      const result = await loadRecipesOfFolder(
+  const loadRecipePage = useCallback(
+    async (offset, limit) => {
+      if (!folder?.id) {
+        return [];
+      }
+      return await loadRecipesOfFolder(
         folder.id,
-        search,
-        RECIPE_FOLDER_LOAD_SIZE,
-        newOffset
+        search.length >= 2 ? search : null,
+        limit,
+        offset
       );
+    },
+    [folder.id, search, loadRecipesOfFolder]
+  );
 
-      if (reset) {
-        setRecipes(result);
-      } else {
-        setRecipes(prev => [...prev, ...result]);
-      }
-
-      setOffset(newOffset);
-
-      if (result.length < RECIPE_FOLDER_LOAD_SIZE) {
-        setHasMore(false);
-      } else {
-        setHasMore(true);
-      }
-    } catch (err) {
-      console.error(
-        'Erreur lors du chargement des recettes du dossier :',
-        err
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
+  const {
+    items: recipes,
+    loading,
+    loadingMore,
+    hasMore,
+    loadInitial,
+    loadMore,
+  } = usePaginatedList({
+    loadPage: loadRecipePage,
+    pageSize: RECIPE_FOLDER_LOAD_SIZE,
+  });
 
   useFocusEffect(
     useCallback(() => {
-      setOffset(0);
-      setHasMore(true);
-
-      loadRecipes(0, true);
-    }, [search])
+      loadInitial();
+    }, [loadInitial])
   );
-
-  const loadMoreRecipes = () => {
-    if (loading || !hasMore) return;
-
-    loadRecipes(offset + RECIPE_FOLDER_LOAD_SIZE);
-  };
 
   const handleRecipePress = (recipe) => {
     navigation.navigate('RecipeDetail', {
@@ -134,27 +113,13 @@ export default function FolderDetailScreen({ route, navigation }) {
     );
   };
 
-  const renderEmpty = () => {
-    if (loading) return null;
-
-    return (
-      <View style={styles.emptyContainer}>
-        <Icon
-          name="folder-open-outline"
-          size={42}
-          color="rgb(180, 180, 230)"
-        />
-
-        <Text style={styles.emptyTitle}>
-          Aucune recette
-        </Text>
-
-        <Text style={styles.emptyText}>
-          Ce dossier ne contient aucune recette.
-        </Text>
-      </View>
-    );
-  };
+  const renderEmpty = () => (
+    <EmptyState
+      iconName="folder-open-outline"
+      title="Aucune recette"
+      message="Ce dossier ne contient aucune recette."
+    />
+  );
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
@@ -206,29 +171,33 @@ export default function FolderDetailScreen({ route, navigation }) {
             setSearch={setSearch}
           />
         </View>
-
-        <FlatList
-          data={recipes}
-          keyExtractor={(item) => `folder-recipe-${item.id}`}
-          renderItem={renderRecipe}
-          numColumns={2}
-          columnWrapperStyle={styles.row}
-          contentContainerStyle={styles.list}
-          showsVerticalScrollIndicator={false}
-          ListEmptyComponent={renderEmpty}
-          onEndReached={loadMoreRecipes}
-          onEndReachedThreshold={0.5}
-          ListFooterComponent={
-            loading && recipes.length > 0 ? (
-              <View style={styles.loadingContainer}>
-                <ActivityIndicator
+        
+        {loading ? (
+          <LoadingState />
+        ) :
+          <FlatList
+            data={recipes}
+            keyExtractor={(item) => `folder-recipe-${item.id}`}
+            renderItem={renderRecipe}
+            numColumns={2}
+            columnWrapperStyle={styles.row}
+            contentContainerStyle={styles.list}
+            showsVerticalScrollIndicator={false}
+            ListEmptyComponent={renderEmpty}
+            onEndReached={loadMore}
+            onEndReachedThreshold={0.5}
+            ListFooterComponent={
+              loadingMore ? (
+                <LoadingState
+                  fullScreen={false}
+                  text="Chargement..."
                   size="small"
-                  color="rgb(180, 180, 230)"
                 />
-              </View>
-            ) : null
-          }
-        />
+              ) : null
+            }
+          />
+        }
+
         {!singleSelectionMode && !multipleSelectionMode && (
           <FloatingButton
             onPress={() =>
@@ -325,28 +294,6 @@ const styles = StyleSheet.create({
   row: {
     justifyContent: 'space-between',
     paddingBottom: 8,
-  },
-  loadingContainer: {
-    paddingVertical: 20,
-    alignItems: 'center',
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 60,
-    paddingHorizontal: 30,
-  },
-  emptyTitle: {
-    marginTop: 12,
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  emptyText: {
-    marginTop: 6,
-    fontSize: 14,
-    color: '#777',
-    textAlign: 'center',
   },
   buttonRow: {
     flexDirection: 'column',

@@ -6,7 +6,6 @@ import { useMealPlanning } from '../hooks/useMealPlanning';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useUser } from '../hooks/useUser'
-import { useRecipe } from '../hooks/useRecipe'
 import { useShoppingList } from '../hooks/useShoppingList';
 import { useNavigation} from '@react-navigation/native';
 import { useAppContext } from '../hooks/useAppContext';
@@ -15,7 +14,7 @@ import { useDate } from '../hooks/useDate';
 import FloatingButton  from '../components/FloatingButton';
 import SquareButton from '../components/SquareButton';
 import ReusableModal from '../components/ReusableModal';
-import {Calendar, LocaleConfig} from 'react-native-calendars';
+import {Calendar} from 'react-native-calendars';
 import ContextSelector from '../components/ContextSelector';
 import ActionListModal from '../components/ActionListModal';
 
@@ -28,24 +27,21 @@ export default function MealPlanningScreen() {
   const { formatDateToLocalYYYYMMDD, getDayLabel } = useDate();
 
   const screenTitle = !currentContext
-  ? "Inventaire"
+  ? "Planning"
   : currentContext.type === "user"
-    ? "Mon planning"
+    ? "Mon Planning"
     : `Planning de ${currentContext.name}`;
 
-  const { mealPlannings, loadMealPlanning ,addMealPlanning, deleteMealPlanning} = useMealPlanning();
-  const { privateRecipes } = useRecipe();
+  const { mealPlannings, loadMealPlanning, deleteMealPlanning} = useMealPlanning();
   const { generateShoppingListFromPlanning } = useShoppingList();
 
-  const [startDate, setStartDate] = React.useState(new Date());
-  const [endDate, setEndDate] = React.useState(new Date());
+  const [startDate, setStartDate] = useState(new Date());
+  const [endDate, setEndDate] = useState(new Date());
   const [groupedMealPlannings, setGroupedMealPlannings] = useState([]);
-  const [recipesMap, setRecipesMap] = useState({});
 
-  const [generatingShoppingList, setGeneratingShoppingList] = React.useState(false);
-  const [showModalGeneratingShoppingListFromRange, setShowModalGeneratingShoppingListFromRange] = React.useState(false);
+  const [generatingShoppingList, setGeneratingShoppingList] = useState(false);
+  const [showModalGeneratingShoppingListFromRange, setShowModalGeneratingShoppingListFromRange] = useState(false);
 
-  const [selectedDay, setSelectedDay] = useState(null);
   const [dateRange, setDateRange] = useState({ start: null, end: null });
 
   useEffect(() => {
@@ -57,16 +53,8 @@ export default function MealPlanningScreen() {
     setEndDate(end);
   }, []);
 
-  useEffect(() => {
-    const map = {};
-    privateRecipes.forEach((r) => {
-      map[r.id] = r;
-    });
-    setRecipesMap(map);
-  }, [privateRecipes]);
-
   useFocusEffect(
-    React.useCallback(() => {
+    useCallback(() => {
       if (user && currentContext && startDate && endDate) {
         const startStr = formatDateToLocalYYYYMMDD(startDate);
         const endStr = formatDateToLocalYYYYMMDD(endDate);
@@ -78,7 +66,7 @@ export default function MealPlanningScreen() {
     );
 
   useEffect(() => {
-    if (recipesMap && mealPlannings.length > 0) {
+    if (mealPlannings.length > 0) {
       groupMealPlanning();
     } else {
       const days = [];
@@ -87,7 +75,7 @@ export default function MealPlanningScreen() {
       }
       setGroupedMealPlannings(days);
     }
-  }, [mealPlannings, recipesMap, startDate, endDate]);
+  }, [mealPlannings, startDate, endDate]);
 
   const moveBackward = () => {
     const newStart = new Date(startDate);
@@ -135,8 +123,8 @@ export default function MealPlanningScreen() {
       if(day) {
         day.meals[mp.mealType] = { 
           id: mp.id,
-          recipe: recipesMap[mp.recipeId], 
-          servings: mp.servings ?? recipesMap[mp.recipeId].servings };;
+          recipe: mp.recipe, 
+          servings: mp.servings ?? mp.recipe.servings };
       }
     });
     setGroupedMealPlannings(days);

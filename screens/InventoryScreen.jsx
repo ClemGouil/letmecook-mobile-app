@@ -11,6 +11,7 @@ import EditAddItemForm from '../components/EditAddItemForm';
 import ReusableModal from '../components/ReusableModal';
 import FloatingButton  from '../components/FloatingButton';
 import ContextSelector from '../components/ContextSelector';
+import EmptyState from '../components/EmptyState';
 
 export default function InventoryScreen() {
 
@@ -104,7 +105,11 @@ export default function InventoryScreen() {
         </View>
 
         {filteredInventoryItems.length === 0 ? (
-          <Text style={styles.emptyText}>Aucun ingrédient trouvé</Text>
+          <EmptyState
+            iconName="basket-outline"
+            title="Inventaire vide"
+            message="Aucun ingrédient dans votre inventaire."
+          />
         ) : (
           <>
             <FlatList

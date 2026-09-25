@@ -8,7 +8,7 @@ import { useUser } from '../hooks/useUser';
 import { useShoppingList } from '../hooks/useShoppingList';
 import BackButton from '../components/BackButton';
 import SaveButton from '../components/SaveButton';
-import IngredientSelector from '../components/IngredientSelector';
+import IngredientCheckboxSelector from '../components/IngredientCheckboxSelector';
 
 export default function AddIngredientToListScreen({ route, navigation }) {
 
@@ -100,7 +100,7 @@ export default function AddIngredientToListScreen({ route, navigation }) {
                 selectedValue={selectedListId}
                 onValueChange={setSelectedListId}
               />
-              <IngredientSelector 
+              <IngredientCheckboxSelector 
                 title={"Eléments à ajouter à la liste"}
                 items={items}
                 selectedIngredients={selectedIngredients}

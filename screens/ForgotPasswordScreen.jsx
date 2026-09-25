@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native'
 import { useUser } from '../hooks/useUser'
 import { useNavigation} from '@react-navigation/native';
+import Icon from 'react-native-vector-icons/Ionicons';
 
 export default function ForgotPasswordScreen() {
 
@@ -50,51 +51,77 @@ export default function ForgotPasswordScreen() {
   
   return (
     <View style={styles.screen}>
-      <View style={styles.container}>
-        <Text style={styles.title}>Mot de passe oublié </Text>
+      {success ? (
+        <View style={styles.container}>
+          <Text style={styles.title}>
+            Vérifiez votre boîte mail
+          </Text>
 
-        <Text style={styles.subtitle}> Entrez votre adresse e-mail et nous vous enverrons un lien pour réinitialiser votre mot de passe. </Text>
+          <Icon name="checkmark-circle-outline" size={60} color="rgb(100, 180, 120)" style={styles.icon} />
 
-         <TextInput
-            placeholder="Email"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            autoCorrect={false}
-            style={styles.input}
-            value={email} 
-            onChangeText={(text) => {
-              setEmail(text);
-              setError('');
-            }}
-          />
+          <Text style={styles.subtitle}>
+            {success}
+          </Text>
 
-        {error ? (
-          <Text style={styles.errorText}>{error}</Text>
-        ) : null}
+          <Text style={styles.redirectText}>
+            Consultez votre boîte de réception et cliquez sur le lien
+            pour choisir un nouveau mot de passe.
+          </Text>
 
-        {success ? ( <Text style={styles.successText}> {success} </Text> ) : null}
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => navigation.navigate('Login')}
+          >
+            <Text style={styles.buttonText}>
+              Retour à la connexion
+            </Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <View style={styles.container}>
+          <Text style={styles.title}>Mot de passe oublié </Text>
 
-        <TouchableOpacity style={styles.button} disabled={isLoading} onPress={handleSubmit}>
-          {isLoading ? ( 
-            <ActivityIndicator color="#fff" /> ) : ( 
-              <Text style={styles.buttonText}>Envoyer le lien</Text>
-          )}
-        </TouchableOpacity>
+          <Text style={styles.subtitle}> Entrez votre adresse e-mail et nous vous enverrons un lien pour réinitialiser votre mot de passe. </Text>
 
-        <TouchableOpacity onPress={() => navigation.navigate('Login')} > 
-          <Text style={styles.loginText}> Annuler ? <Text style={styles.loginLink}>Retour à la connexion</Text></Text> 
-        </TouchableOpacity>
+          <TextInput
+              placeholder="Email"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+              style={styles.input}
+              value={email} 
+              onChangeText={(text) => {
+                setEmail(text);
+                setError('');
+              }}
+            />
 
-        {/* A enlever */}
-        <TouchableOpacity
-          onPress={() => navigation.navigate('ResetPassword', {
-            token: 'YYhfMgtZDZYBKp2iUTHqsbaBERyz1mNScqKPRb_sAj0',
-          })}
-        >
-          <Text> Tester Oublie de mdp</Text>
-        </TouchableOpacity>
+          {error ? (
+            <Text style={styles.errorText}>{error}</Text>
+          ) : null}
 
-      </View>
+          <TouchableOpacity style={styles.button} disabled={isLoading} onPress={handleSubmit}>
+            {isLoading ? ( 
+              <ActivityIndicator color="#fff" /> ) : ( 
+                <Text style={styles.buttonText}>Envoyer le lien</Text>
+            )}
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={() => navigation.navigate('Login')} > 
+            <Text style={styles.loginText}> Annuler ? <Text style={styles.loginLink}>Retour à la connexion</Text></Text> 
+          </TouchableOpacity>
+
+          {/* A enlever */}
+          <TouchableOpacity
+            onPress={() => navigation.navigate('ResetPassword', {
+              token: '1WXjxNgLnnXGRKIjXXsjkBGPm7lI_Y2jVTpX7MR7FlE',
+            })}
+          >
+            <Text> Tester Oublie de mdp</Text>
+          </TouchableOpacity>
+
+        </View>
+      )}
     </View>
   )
 }
@@ -170,5 +197,15 @@ const styles = StyleSheet.create({
   loginLink: {
     color: '#3f51b5',
     fontWeight: '500',
+  },
+  redirectText: {
+    textAlign: 'center',
+    color: '#666',
+    lineHeight: 20,
+    marginBottom: 20,
+  },
+  icon: { 
+    alignSelf: 'center', 
+    marginBottom: 16, 
   },
 })

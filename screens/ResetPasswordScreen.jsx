@@ -53,7 +53,10 @@ export default function ResetPasswordScreen() {
       await resetPassword(token, newPassword);
 
       setSuccess('Votre mot de passe a été réinitialisé avec succès.');
-      //navigation.navigate('Login');
+      
+      setTimeout(() => {
+        navigation.navigate('Login');
+      }, 2000);
 
     } catch (err) {
       console.error('Reset Password error:', err);
@@ -63,13 +66,28 @@ export default function ResetPasswordScreen() {
     }
   };
 
-  return (
-    <View style={styles.screen}>
+return (
+  <View style={styles.screen}>
+    {success ? (
       <View style={styles.container}>
-        <Text style={styles.title}>Réinitialisation de mot de passe </Text>
+        <Text style={styles.successText}>
+          {success}
+        </Text>
 
-        <Text style={styles.subtitle}> Choisissez un nouveau mot de passe pour votre compte. </Text>
-        
+        <Text style={styles.redirectText}>
+          Vous allez être redirigé vers la connexion...
+        </Text>
+      </View>
+    ) : (
+      <View style={styles.container}>
+        <Text style={styles.title}>
+          Réinitialisation de mot de passe
+        </Text>
+
+        <Text style={styles.subtitle}>
+          Choisissez un nouveau mot de passe pour votre compte.
+        </Text>
+
         <View style={styles.passwordContainer}>
           <TextInput
             placeholder="Mot de passe"
@@ -81,6 +99,7 @@ export default function ResetPasswordScreen() {
               setError('');
             }}
           />
+
           <TouchableOpacity
             onPress={() => setShowPassword(prev => !prev)}
             style={styles.eyeButton}
@@ -96,14 +115,15 @@ export default function ResetPasswordScreen() {
         <View style={styles.passwordContainer}>
           <TextInput
             placeholder="Confirmez le mot de passe"
-            secureTextEntry = {!showConfirmPassword}
+            secureTextEntry={!showConfirmPassword}
             style={styles.input}
-            value={confirmPassword} 
+            value={confirmPassword}
             onChangeText={(text) => {
               setConfirmPassword(text);
               setError('');
             }}
           />
+
           <TouchableOpacity
             onPress={() => setShowConfirmPassword(prev => !prev)}
             style={styles.eyeButton}
@@ -117,25 +137,39 @@ export default function ResetPasswordScreen() {
         </View>
 
         {error ? (
-          <Text style={styles.errorText}>{error}</Text>
+          <Text style={styles.errorText}>
+            {error}
+          </Text>
         ) : null}
 
-        {success ? ( <Text style={styles.successText}> {success} </Text> ) : null}
-        
-        <TouchableOpacity style={styles.button} disabled={isLoading} onPress={handleSubmit}>
-          {isLoading ? ( 
-            <ActivityIndicator color="#fff" /> ) : ( 
-              <Text style={styles.buttonText}> Changer </Text>
+        <TouchableOpacity
+          style={styles.button}
+          disabled={isLoading}
+          onPress={handleSubmit}
+        >
+          {isLoading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.buttonText}>
+              Changer
+            </Text>
           )}
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => navigation.navigate('Login')} > 
-          <Text style={styles.loginText}> Annuler ? <Text style={styles.loginLink}>Retour à la connexion</Text></Text> 
+        <TouchableOpacity
+          onPress={() => navigation.navigate('Login')}
+        >
+          <Text style={styles.loginText}>
+            Annuler ?{' '}
+            <Text style={styles.loginLink}>
+              Retour à la connexion
+            </Text>
+          </Text>
         </TouchableOpacity>
-
       </View>
-    </View>
-  )
+    )}
+  </View>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -155,6 +189,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 10,
     elevation: 5,
+  },
+  redirectText: {
+    textAlign: 'center',
+    color: '#666',
+    marginTop: 10,
   },
   title: {
     textAlign: 'center',

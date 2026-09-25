@@ -28,7 +28,10 @@ export default function VerifyEmailScreen() {
         } 
       try { 
         await verifyEmail(token); 
-        setSuccess(true); 
+        setSuccess(true);
+        setTimeout(() => {
+          navigation.navigate('Login');
+        }, 2000)
       } catch (err) { 
         console.error('Erreur vérification email:', err); 
         setError( "Ce lien de vérification est invalide ou a expiré." ); 
@@ -53,14 +56,14 @@ export default function VerifyEmailScreen() {
           </> 
         ) : success ? ( 
           <>  
-              <Text style={styles.title}> Adresse e-mail vérifiée ! </Text> 
-              <Icon name="checkmark-circle-outline" size={60} color="rgb(100, 180, 120)" style={styles.icon} />
+            <Text style={styles.title}> Adresse e-mail vérifiée ! </Text> 
+            <Icon name="checkmark-circle-outline" size={60} color="rgb(100, 180, 120)" style={styles.icon} />
 
-              <Text style={styles.subtitle}> Votre adresse e-mail a bien été vérifiée. Vous pouvez maintenant vous connecter. </Text> 
-              
-              <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Login')} > 
-                <Text style={styles.buttonText}> Se connecter </Text> 
-              </TouchableOpacity> 
+            <Text style={styles.subtitle}> Votre adresse e-mail a bien été vérifiée. Vous pouvez maintenant vous connecter. </Text> 
+            
+            <Text style={styles.redirectText}>
+              Vous allez être redirigé vers la connexion...
+            </Text>
           </> 
         ) : ( 
           <> 
@@ -123,6 +126,12 @@ const styles = StyleSheet.create({
     color: '#666', 
     lineHeight: 20, 
     marginBottom: 24, 
+  },
+  redirectText: {
+    textAlign: 'center',
+    color: '#666',
+    lineHeight: 20,
+    marginBottom: 20,
   },
   errorText: {
     color: 'red',

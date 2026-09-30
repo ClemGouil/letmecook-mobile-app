@@ -1,6 +1,7 @@
 import React, { useMemo, useState} from 'react';
 import { View, StyleSheet, Text, TouchableOpacity } from 'react-native';
 import RadioGroup from 'react-native-radio-buttons-group';
+import ModalButton from "./ModalButton";
 
 const SelectNewOwnerForm = ({ members, group ,onSave, onCancel }) => {
 
@@ -29,20 +30,17 @@ const SelectNewOwnerForm = ({ members, group ,onSave, onCancel }) => {
       />
 
       <View style={styles.buttonRow}>
-        <TouchableOpacity
-          style={[
-            styles.saveButton,
-            !selectedNewOwnerId && styles.disabledButton
-          ]}
-          disabled={!selectedNewOwnerId}
+        <ModalButton
+          title="Choisir"
           onPress={() => onSave(group, selectedNewOwnerId)}
-        >
-          <Text style={styles.saveText}>Choisir</Text>
-        </TouchableOpacity>
+          disabled={!selectedNewOwnerId}
+        />
 
-        <TouchableOpacity style={styles.cancelButton} onPress={onCancel}>
-          <Text style={styles.cancelText}>Annuler</Text>
-        </TouchableOpacity>
+        <ModalButton
+          title="Annuler"
+          variant="secondary"
+          onPress={onCancel}
+        />
       </View>
 
     </View>
@@ -69,40 +67,6 @@ const styles = StyleSheet.create({
   buttonRow: {
     flexDirection: 'row',
     marginTop: 20,
-  },
-
-  saveButton: {
-    flex: 1,
-    backgroundColor: '#3f51b5',
-    paddingVertical: 12,
-    borderRadius: 8,
-    marginRight: 10,
-    alignItems: 'center',
-  },
-
-  cancelButton: {
-    flex: 1,
-    backgroundColor: '#ccc',
-    paddingVertical: 12,
-    borderRadius: 8,
-    marginLeft: 10,
-    alignItems: 'center',
-  },
-
-  saveText: {
-    color: '#fff',
-    fontWeight: '600',
-    fontSize: 16,
-  },
-
-  cancelText: {
-    color: '#333',
-    fontWeight: '600',
-    fontSize: 16,
-  },
-
-  disabledButton: {
-    opacity: 0.5,
   },
 });
 

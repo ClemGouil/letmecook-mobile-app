@@ -2,6 +2,7 @@ import React, { useState,useEffect } from 'react'
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native'
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useUser } from '../hooks/useUser'
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 
 export default function VerifyEmailScreen() {
@@ -43,53 +44,55 @@ export default function VerifyEmailScreen() {
   }, [token]);
 
   return (
-    <View style={styles.screen}> 
-      <View style={styles.container}> 
-      
-        {isLoading ? ( 
-          <> 
-            <Text style={styles.title}> Vérification de votre adresse e-mail </Text> 
+    <SafeAreaView style={{ flex: 1 }}>
+      <View style={styles.screen}> 
+        <View style={styles.container}> 
+        
+          {isLoading ? ( 
+            <> 
+              <Text style={styles.title}> Vérification de votre adresse e-mail </Text> 
 
-            <ActivityIndicator size="large" color="rgb(180, 180, 230)" /> 
+              <ActivityIndicator size="large" color="rgb(180, 180, 230)" /> 
+                
+              <Text style={styles.subtitle}> Nous vérifions votre adresse e-mail... </Text> 
+            </> 
+          ) : success ? ( 
+            <>  
+              <Text style={styles.title}> Adresse e-mail vérifiée ! </Text> 
+              <Icon name="checkmark-circle-outline" size={60} color="rgb(100, 180, 120)" style={styles.icon} />
+
+              <Text style={styles.subtitle}> Votre adresse e-mail a bien été vérifiée. Vous pouvez maintenant vous connecter. </Text> 
               
-            <Text style={styles.subtitle}> Nous vérifions votre adresse e-mail... </Text> 
-          </> 
-        ) : success ? ( 
-          <>  
-            <Text style={styles.title}> Adresse e-mail vérifiée ! </Text> 
-            <Icon name="checkmark-circle-outline" size={60} color="rgb(100, 180, 120)" style={styles.icon} />
+              <Text style={styles.redirectText}>
+                Vous allez être redirigé vers la connexion...
+              </Text>
+            </> 
+          ) : ( 
+            <> 
+              <Text style={styles.title}> Vérification de votre adresse e-mail impossible </Text> 
+              <Icon name="close-circle-outline" size={60} color="red" style={styles.icon} /> 
 
-            <Text style={styles.subtitle}> Votre adresse e-mail a bien été vérifiée. Vous pouvez maintenant vous connecter. </Text> 
-            
-            <Text style={styles.redirectText}>
-              Vous allez être redirigé vers la connexion...
-            </Text>
-          </> 
-        ) : ( 
-          <> 
-            <Text style={styles.title}> Vérification de votre adresse e-mail impossible </Text> 
-            <Icon name="close-circle-outline" size={60} color="red" style={styles.icon} /> 
+              <Text style={styles.errorText}> {error} </Text> 
 
-            <Text style={styles.errorText}> {error} </Text> 
+              <TouchableOpacity 
+                style={styles.button} 
+                onPress={() => navigation.navigate('Login', {
+                    resendVerification: true,
+                    email,
+                  })
+                } 
+              > 
+                <Text style={styles.buttonText}> Renvoyer l'e-mail </Text> 
+              </TouchableOpacity>
 
-            <TouchableOpacity 
-              style={styles.button} 
-              onPress={() => navigation.navigate('Login', {
-                  resendVerification: true,
-                  email,
-                })
-              } 
-            > 
-              <Text style={styles.buttonText}> Renvoyer l'e-mail </Text> 
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Login')} > 
-              <Text style={styles.buttonText}> Retour à la connexion </Text> 
-            </TouchableOpacity> 
-          </> 
-        )} 
-      </View> 
-    </View>
+              <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Login')} > 
+                <Text style={styles.buttonText}> Retour à la connexion </Text> 
+              </TouchableOpacity> 
+            </> 
+          )} 
+        </View> 
+      </View>
+    </SafeAreaView>
   )
 }
 

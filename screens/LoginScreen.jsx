@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native'
 import { useUser } from '../hooks/useUser'
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Ionicons';
 
 export default function Login() {
@@ -129,222 +130,217 @@ export default function Login() {
 
 if (emailVerificationMode) {
   return (
-    <View style={styles.screen}>
-      <View style={styles.container}>
+    <SafeAreaView style={{ flex: 1 }}>
+      <View style={styles.screen}>
+        <View style={styles.container}>
 
-        {success ? (
-          <>
-            <Text style={styles.title}>
-              Email envoyé !
-            </Text>
-
-            <Icon
-              name="checkmark-circle-outline"
-              size={60}
-              color="rgb(100, 180, 120)"
-              style={styles.icon}
-            />
-
-            <Text style={styles.subtitle}>
-              {success}
-            </Text>
-
-            <Text style={styles.redirectText}>
-              Consultez votre boîte de réception et cliquez sur le lien
-              de vérification pour activer votre compte.
-            </Text>
-
-            <TouchableOpacity
-              style={styles.button}
-              onPress={handleBackToLogin}
-            >
-              <Text style={styles.buttonText}>
-                Retour à la connexion
+          {success ? (
+            <>
+              <Text style={styles.title}>
+                Email envoyé !
               </Text>
-            </TouchableOpacity>
-          </>
-        ) : !showResend ? (
-          <>
-            <Text style={styles.title}>
-              Vérifiez votre email
-            </Text>
 
-            <Icon
-              name="mail-outline"
-              size={52}
-              color="rgb(180, 180, 230)"
-              style={styles.icon}
-            />
+              <Icon
+                name="checkmark-circle-outline"
+                size={60}
+                color="rgb(100, 180, 120)"
+                style={styles.icon}
+              />
 
-            <Text style={styles.subtitle}>
-              Un email de vérification vous a été envoyé.
-              {'\n\n'}
-              <Text style={{ fontWeight: '600' }}>
-                Ouvrez votre boîte mail
+              <Text style={styles.subtitle}>
+                {success}
               </Text>
-              {' '}et cliquez sur le lien de vérification pour activer votre compte.
-              {'\n\n'}
-              Pensez également à vérifier vos courriers indésirables ou votre dossier spam.
-            </Text>
 
-            <TouchableOpacity
-              onPress={() => {
-                setShowResend(true);
-                setError('');
-                setSuccess('');
-              }}
-            >
-              <Text style={styles.resendLink}>
-                Vous n'avez pas reçu l'email ?
+              <Text style={styles.redirectText}>
+                Consultez votre boîte de réception et cliquez sur le lien
+                de vérification pour activer votre compte.
               </Text>
-            </TouchableOpacity>
-          </>
-        ) : (
-          <>
-            <Text style={styles.title}>
-              Renvoyer l'email
-            </Text>
 
-            <Icon
-              name="mail-outline"
-              size={52}
-              color="rgb(180, 180, 230)"
-              style={styles.icon}
-            />
-
-            <Text style={styles.subtitle}>
-              Si vous n'avez pas reçu l'email de vérification,
-              renseignez votre adresse email ci-dessous pour demander
-              un nouvel envoi.
-            </Text>
-
-            <TextInput
-              placeholder="Email"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-              style={styles.input}
-              value={email}
-              onChangeText={(text) => {
-                setEmail(text);
-                setError('');
-              }}
-            />
-
-            {error ? (
-              <Text style={styles.errorText}>
-                {error}
-              </Text>
-            ) : null}
-
-            <TouchableOpacity
-              style={styles.button}
-              disabled={isResending}
-              onPress={handleResendVerification}
-            >
-              {isResending ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
+              <TouchableOpacity
+                style={styles.button}
+                onPress={handleBackToLogin}
+              >
                 <Text style={styles.buttonText}>
-                  Renvoyer l'email
-                </Text>
-              )}
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={handleBackToLogin}
-              disabled={isResending}
-            >
-              <Text style={styles.loginText}>
-                C'est fait ?{' '}
-                <Text style={styles.loginLink}>
                   Retour à la connexion
                 </Text>
+              </TouchableOpacity>
+            </>
+          ) : !showResend ? (
+            <>
+              <Text style={styles.title}>
+                Vérifiez votre email
               </Text>
-            </TouchableOpacity>
-          </>
-        )}
 
+              <Icon
+                name="mail-outline"
+                size={52}
+                color="rgb(180, 180, 230)"
+                style={styles.icon}
+              />
+
+              <Text style={styles.subtitle}>
+                Un email de vérification vous a été envoyé.
+                {'\n\n'}
+                <Text style={{ fontWeight: '600' }}>
+                  Ouvrez votre boîte mail
+                </Text>
+                {' '}et cliquez sur le lien de vérification pour activer votre compte.
+                {'\n\n'}
+                Pensez également à vérifier vos courriers indésirables ou votre dossier spam.
+              </Text>
+
+              <TouchableOpacity
+                onPress={() => {
+                  setShowResend(true);
+                  setError('');
+                  setSuccess('');
+                }}
+              >
+                <Text style={styles.resendLink}>
+                  Vous n'avez pas reçu l'email ?
+                </Text>
+              </TouchableOpacity>
+            </>
+          ) : (
+            <>
+              <Text style={styles.title}>
+                Renvoyer l'email
+              </Text>
+
+              <Icon
+                name="mail-outline"
+                size={52}
+                color="rgb(180, 180, 230)"
+                style={styles.icon}
+              />
+
+              <Text style={styles.subtitle}>
+                Si vous n'avez pas reçu l'email de vérification,
+                renseignez votre adresse email ci-dessous pour demander
+                un nouvel envoi.
+              </Text>
+
+              <TextInput
+                placeholder="Email"
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+                style={styles.input}
+                value={email}
+                onChangeText={(text) => {
+                  setEmail(text);
+                  setError('');
+                }}
+              />
+
+              {error ? (
+                <Text style={styles.errorText}>
+                  {error}
+                </Text>
+              ) : null}
+
+              <TouchableOpacity
+                style={styles.button}
+                disabled={isResending}
+                onPress={handleResendVerification}
+              >
+                {isResending ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={styles.buttonText}>
+                    Renvoyer l'email
+                  </Text>
+                )}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={handleBackToLogin}
+                disabled={isResending}
+              >
+                <Text style={styles.loginText}>
+                  C'est fait ?{' '}
+                  <Text style={styles.loginLink}>
+                    Retour à la connexion
+                  </Text>
+                </Text>
+              </TouchableOpacity>
+            </>
+          )}
+
+        </View>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
   return (
-    <View style={styles.screen}>
-      <View style={styles.container}>
-        <Text style={styles.title}>Se connecter</Text>
+    <SafeAreaView style={{ flex: 1 }}>
+      <View style={styles.screen}>
+        <View style={styles.container}>
+          <Text style={styles.title}>Se connecter</Text>
 
-        <TextInput
-          placeholder="Email"
-          keyboardType="email-address"
-          autoCapitalize="none"
-          autoCorrect={false}
-          style={styles.input}
-          value={email}
-          onChangeText={(text) => {
-            setEmail(text);
-            setError('');
-            setSuccess('');
-          }}
-        />
-
-        <View style={styles.passwordContainer}>
           <TextInput
-            placeholder="Mot de passe"
-            secureTextEntry={!showPassword}
+            placeholder="Email"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoCorrect={false}
             style={styles.input}
-            value={password}
+            value={email}
             onChangeText={(text) => {
-              setPassword(text);
+              setEmail(text);
               setError('');
               setSuccess('');
             }}
           />
-          <TouchableOpacity
-            onPress={() => setShowPassword(prev => !prev)}
-            style={styles.eyeButton}
-          >
-            <Icon
-              name={showPassword ? "eye-off-outline" : "eye-outline"}
-              size={22}
-              color="rgb(180, 180, 230)"
+
+          <View style={styles.passwordContainer}>
+            <TextInput
+              placeholder="Mot de passe"
+              secureTextEntry={!showPassword}
+              style={styles.input}
+              value={password}
+              onChangeText={(text) => {
+                setPassword(text);
+                setError('');
+                setSuccess('');
+              }}
             />
+            <TouchableOpacity
+              onPress={() => setShowPassword(prev => !prev)}
+              style={styles.eyeButton}
+            >
+              <Icon
+                name={showPassword ? "eye-off-outline" : "eye-outline"}
+                size={22}
+                color="rgb(180, 180, 230)"
+              />
+            </TouchableOpacity>
+          </View>
+
+          {error ? (
+            <Text style={styles.errorText}>{error}</Text>
+          ) : null}
+
+          <TouchableOpacity style={styles.button} disabled={isLoading} onPress={handleSubmit}>
+            {isLoading ? ( 
+              <ActivityIndicator color="#fff" /> ) : ( 
+                <Text style={styles.buttonText}>Se connecter</Text>
+            )}
           </TouchableOpacity>
+
+          <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')} > 
+            <Text style={styles.forgotPasswordText}> Mot de passe oublié ? </Text> 
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+            <Text style={styles.signUpText}>
+              Vous n'avez pas de compte ? <Text style={styles.signUpLink}>Inscrivez-vous ici</Text>
+            </Text>
+          </TouchableOpacity>
+          
         </View>
-
-        {error ? (
-          <Text style={styles.errorText}>{error}</Text>
-        ) : null}
-
-        <TouchableOpacity style={styles.button} disabled={isLoading} onPress={handleSubmit}>
-          {isLoading ? ( 
-            <ActivityIndicator color="#fff" /> ) : ( 
-              <Text style={styles.buttonText}>Se connecter</Text>
-          )}
-        </TouchableOpacity>
-
-        <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')} > 
-          <Text style={styles.forgotPasswordText}> Mot de passe oublié ? </Text> 
-        </TouchableOpacity>
-
-        <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-          <Text style={styles.signUpText}>
-            Vous n'avez pas de compte ? <Text style={styles.signUpLink}>Inscrivez-vous ici</Text>
-          </Text>
-        </TouchableOpacity>
-        
-        {/* A enlever */}
-        <TouchableOpacity
-          onPress={() => navigation.navigate('VerifyEmail', {
-            token: 'tDdWb1FS0mcIUri3GRJrn4CB6pGU2Edw3Ew9zJb7kOg',
-            email: email,
-          })}
-        >
-          <Text> Tester la vérification email</Text>
-        </TouchableOpacity>
       </View>
-    </View>
+    </SafeAreaView>
   )
 }
 

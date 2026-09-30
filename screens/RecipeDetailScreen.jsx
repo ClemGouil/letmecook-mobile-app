@@ -319,14 +319,16 @@ export default function RecipeDetailScreen({ route }) {
               {recipe.name}
             </Text>
           </View>
-          <Image 
-            source={
-            recipe.imageUrl
-              ? { uri: recipe.imageUrl }
-              : require('../assets/default.png')
-            }
-            style={styles.image} 
-          />
+          <View style={styles.imageContainer}>
+            <Image 
+              source={
+                recipe.imageUrl
+                  ? { uri: recipe.imageUrl }
+                  : require('../assets/default.png')
+              }
+              style={styles.image}
+            />
+          </View>
           <Chipset
             items={recipe?.categories}
             disabled
@@ -605,14 +607,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-
   backButtonContainer: {
     position: 'absolute',
     left: 0,
     zIndex: 10,
     elevation: 10,
   },
-
   title: {
     width: '100%',
     paddingLeft: 50,
@@ -621,12 +621,19 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
   },
+  imageContainer: {
+    width: '75%',
+    height: 200,
+    borderRadius: 16,
+    overflow: 'hidden',
+    alignSelf: 'center',
+    marginVertical: 16,
+    backgroundColor: '#f3f3f8',
+  },
   image: {
     width: '100%',
-    height: 200,
-    resizeMode: 'contain',
-    borderRadius: 8,
-    marginVertical: 16,
+    height: '100%',
+    resizeMode: 'cover',
   },
   recipeMetaContainer:{
     flexDirection:'row',

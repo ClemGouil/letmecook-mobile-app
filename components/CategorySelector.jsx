@@ -4,7 +4,7 @@ import Chipset from './Chipset';
 
 import { useRecipe } from '../hooks/useRecipe';
 
-const CategorySelector = ({selectedCategories = [], onChange }) => {
+const CategorySelector = ({selectedCategories = [], onChange, requiredMealType = true }) => {
 
   const { categories } = useRecipe();
 
@@ -15,7 +15,8 @@ const CategorySelector = ({selectedCategories = [], onChange }) => {
 
     acc[category.typeName].push({
       id : category.id,
-      name : category.name
+      name : category.name,
+      type : category.type
       }
     );
     return acc;
@@ -27,14 +28,20 @@ const CategorySelector = ({selectedCategories = [], onChange }) => {
     );
 
     if (isSelected) {
+      if (category.type === 'MEAL_TYPE' && requiredMealType) {
+        return;
+      }
       onChange?.(
         selectedCategories.filter(
           selected => selected.id !== category.id
         )
       );
     } else {
+      const newSelection = selectedCategories.filter(
+        selected => selected.type !== category.type 
+      );
       onChange?.([
-        ...selectedCategories,
+        ...newSelection,
         category,
       ]);
     }

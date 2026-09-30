@@ -1,12 +1,13 @@
 import React, { useState, useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import Chipset from './Chipset';
+import SearchBar from './SearchBar';
 
 import IngredientSelector from '../components/IngredientSelector';
 import CategorySelector from '../components/CategorySelector';
 import { useRecipe } from '../hooks/useRecipe';
 
-const RecipeFilter = ({ onFiltersChange, onOpenChange }) => {
+const RecipeFilter = ({ search, onSearchChange, onFiltersChange, onOpenChange }) => {
 
   const { categories } = useRecipe();
 
@@ -74,6 +75,17 @@ const RecipeFilter = ({ onFiltersChange, onOpenChange }) => {
 
   return (
     <View style={styles.container}>
+      <View style={styles.searchContainer}>
+        <SearchBar
+          search={search}
+          setSearch={onSearchChange}
+        />
+        {search.length === 1 && (
+          <Text style={styles.searchHint}>
+            Saisissez au moins 2 caractères
+          </Text>
+        )}
+      </View>
       {!activeFilter && (
         <Chipset
           items={categoryTypes}
@@ -113,7 +125,7 @@ const RecipeFilter = ({ onFiltersChange, onOpenChange }) => {
           </View>
           <View style={styles.categoryContainer}>
             <View style={styles.categorySection}>
-              <Text style={styles.categoryTitle}>Ingrédients :</Text>
+              <Text style={styles.categoryTitle}>Recherche par Ingrédients :</Text>
               <IngredientSelector
                 selectedIngredients={selectedIngredients}
                 onChange={setSelectedIngredients}
@@ -123,6 +135,7 @@ const RecipeFilter = ({ onFiltersChange, onOpenChange }) => {
               <CategorySelector
                 selectedCategories={selectedCategories}
                 onChange={setSelectedCategories}
+                requiredMealType = {false}
               />
             </View>
           </View>
@@ -139,6 +152,10 @@ const RecipeFilter = ({ onFiltersChange, onOpenChange }) => {
 
 const styles = StyleSheet.create({
   container: {
+  },
+  searchContainer: {
+    alignItems: 'center',
+    marginBottom: 8,
   },
   filterMenu: {
     padding: 14,
@@ -208,6 +225,13 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 14,
     fontWeight: '700',
+  },
+  searchHint: {
+    alignSelf: 'flex-start',
+    marginTop: 4,
+    marginLeft: 8,
+    fontSize: 12,
+    color: '#777',
   },
 });
 

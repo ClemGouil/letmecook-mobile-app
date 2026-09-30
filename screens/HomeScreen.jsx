@@ -6,7 +6,6 @@ import { usePaginatedList } from '../hooks/usePaginatedList';
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import SearchBar from '../components/SearchBar';
 import RecipeCard from '../components/RecipeCard';
 import RecipeFilter from '../components/RecipeFilter';
 import EmptyState from '../components/EmptyState';
@@ -39,7 +38,6 @@ export default function HomeScreen() {
 
   const loadRecipePage = React.useCallback(
     async (offset, limit) => {
-      console.log('LOAD PAGE', { offset, limit });
       if (!user?.id) {
         return [];
       }
@@ -118,12 +116,11 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={{ flex: 1 }} edges={['left', 'right']}>
       <View style={styles.container}>
-        <View style={styles.searchContainer}>
-          <SearchBar search={search} setSearch={setSearch} />
-        </View>
         
         <View style={styles.filterContainer}>
           <RecipeFilter
+            search={search}
+            onSearchChange={setSearch}
             onFiltersChange={handleFiltersChange}
             onOpenChange={setFiltersOpen}
           />
@@ -182,10 +179,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 8,
-  },
-  searchContainer: {
-    alignItems: 'center',
-    marginBottom: 8,
   },
   filterContainer: {
     alignItems: 'center',

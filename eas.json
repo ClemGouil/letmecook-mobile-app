@@ -7,8 +7,11 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
       "env": {
-        "EXPO_PUBLIC_URL_BACKEND": "http://192.168.1.11:8080",
+        "EXPO_PUBLIC_URL_BACKEND": "http://192.168.1.12:8080",
         "EXPO_PUBLIC_WS_URL": "ws://192.168.1.12:8080"
       }
     },

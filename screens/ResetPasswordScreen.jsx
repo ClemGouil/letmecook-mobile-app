@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native'
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useUser } from '../hooks/useUser'
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 
 export default function ResetPasswordScreen() {
@@ -67,108 +68,110 @@ export default function ResetPasswordScreen() {
   };
 
 return (
-  <View style={styles.screen}>
-    {success ? (
-      <View style={styles.container}>
-        <Text style={styles.successText}>
-          {success}
-        </Text>
+  <SafeAreaView style={{ flex: 1 }}>
+    <View style={styles.screen}>
+      {success ? (
+        <View style={styles.container}>
+          <Text style={styles.successText}>
+            {success}
+          </Text>
 
-        <Text style={styles.redirectText}>
-          Vous allez être redirigé vers la connexion...
-        </Text>
-      </View>
-    ) : (
-      <View style={styles.container}>
-        <Text style={styles.title}>
-          Réinitialisation de mot de passe
-        </Text>
+          <Text style={styles.redirectText}>
+            Vous allez être redirigé vers la connexion...
+          </Text>
+        </View>
+      ) : (
+        <View style={styles.container}>
+          <Text style={styles.title}>
+            Réinitialisation de mot de passe
+          </Text>
 
-        <Text style={styles.subtitle}>
-          Choisissez un nouveau mot de passe pour votre compte.
-        </Text>
+          <Text style={styles.subtitle}>
+            Choisissez un nouveau mot de passe pour votre compte.
+          </Text>
 
-        <View style={styles.passwordContainer}>
-          <TextInput
-            placeholder="Mot de passe"
-            secureTextEntry={!showPassword}
-            style={styles.input}
-            value={newPassword}
-            onChangeText={(text) => {
-              setNewPassword(text);
-              setError('');
-            }}
-          />
+          <View style={styles.passwordContainer}>
+            <TextInput
+              placeholder="Mot de passe"
+              secureTextEntry={!showPassword}
+              style={styles.input}
+              value={newPassword}
+              onChangeText={(text) => {
+                setNewPassword(text);
+                setError('');
+              }}
+            />
+
+            <TouchableOpacity
+              onPress={() => setShowPassword(prev => !prev)}
+              style={styles.eyeButton}
+            >
+              <Icon
+                name={showPassword ? "eye-off-outline" : "eye-outline"}
+                size={22}
+                color="rgb(180, 180, 230)"
+              />
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.passwordContainer}>
+            <TextInput
+              placeholder="Confirmez le mot de passe"
+              secureTextEntry={!showConfirmPassword}
+              style={styles.input}
+              value={confirmPassword}
+              onChangeText={(text) => {
+                setConfirmPassword(text);
+                setError('');
+              }}
+            />
+
+            <TouchableOpacity
+              onPress={() => setShowConfirmPassword(prev => !prev)}
+              style={styles.eyeButton}
+            >
+              <Icon
+                name={showConfirmPassword ? "eye-off-outline" : "eye-outline"}
+                size={22}
+                color="rgb(180, 180, 230)"
+              />
+            </TouchableOpacity>
+          </View>
+
+          {error ? (
+            <Text style={styles.errorText}>
+              {error}
+            </Text>
+          ) : null}
 
           <TouchableOpacity
-            onPress={() => setShowPassword(prev => !prev)}
-            style={styles.eyeButton}
+            style={styles.button}
+            disabled={isLoading}
+            onPress={handleSubmit}
           >
-            <Icon
-              name={showPassword ? "eye-off-outline" : "eye-outline"}
-              size={22}
-              color="rgb(180, 180, 230)"
-            />
+            {isLoading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.buttonText}>
+                Changer
+              </Text>
+            )}
           </TouchableOpacity>
-        </View>
-
-        <View style={styles.passwordContainer}>
-          <TextInput
-            placeholder="Confirmez le mot de passe"
-            secureTextEntry={!showConfirmPassword}
-            style={styles.input}
-            value={confirmPassword}
-            onChangeText={(text) => {
-              setConfirmPassword(text);
-              setError('');
-            }}
-          />
 
           <TouchableOpacity
-            onPress={() => setShowConfirmPassword(prev => !prev)}
-            style={styles.eyeButton}
+            onPress={() => navigation.navigate('Login')}
           >
-            <Icon
-              name={showConfirmPassword ? "eye-off-outline" : "eye-outline"}
-              size={22}
-              color="rgb(180, 180, 230)"
-            />
+            <Text style={styles.loginText}>
+              Annuler ?{' '}
+              <Text style={styles.loginLink}>
+                Retour à la connexion
+              </Text>
+            </Text>
           </TouchableOpacity>
         </View>
-
-        {error ? (
-          <Text style={styles.errorText}>
-            {error}
-          </Text>
-        ) : null}
-
-        <TouchableOpacity
-          style={styles.button}
-          disabled={isLoading}
-          onPress={handleSubmit}
-        >
-          {isLoading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.buttonText}>
-              Changer
-            </Text>
-          )}
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          onPress={() => navigation.navigate('Login')}
-        >
-          <Text style={styles.loginText}>
-            Annuler ?{' '}
-            <Text style={styles.loginLink}>
-              Retour à la connexion
-            </Text>
-          </Text>
-        </TouchableOpacity>
-      </View>
-    )}
-  </View>
+      )}
+    </View>
+  </SafeAreaView>
   );
 }
 

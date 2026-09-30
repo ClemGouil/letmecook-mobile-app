@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, TextInput, Button, StyleSheet, Text, TouchableOpacity, Image, FlatList } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import ModalButton from "./ModalButton";
 
 const EditAddItemForm = ({ item, unitsList, ingredientsList, onSearchIngredient, onSave, onCancel }) => {
 
@@ -108,25 +109,25 @@ const EditAddItemForm = ({ item, unitsList, ingredientsList, onSearchIngredient,
         
 
       <View style={styles.buttonRow}>
-        <TouchableOpacity
-          style={styles.saveButton}
+        <ModalButton
+          title="Enregistrer"
           onPress={() => {
             if (!selectedIngredient) return;
+
             onSave({
               ...item,
               ingredient: selectedIngredient,
               quantity: Number(quantity),
               unit: selectedUnit,
-            })}
-          }
-        >
-          <Text style={styles.saveText}>Enregistrer</Text>
-        </TouchableOpacity>
-        
+            });
+          }}
+        />
 
-        <TouchableOpacity style={styles.cancelButton} onPress={onCancel}>
-          <Text style={styles.cancelText}>Annuler</Text>
-        </TouchableOpacity>
+        <ModalButton
+          title="Annuler"
+          variant="secondary"
+          onPress={onCancel}
+        />
       </View>
       </>
       )}
@@ -200,34 +201,9 @@ const styles = StyleSheet.create({
   buttonRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    gap: 12,
   },
-  saveButton: {
-    flex: 1,
-    backgroundColor: '#3f51b5',
-    paddingVertical: 12,
-    borderRadius: 8,
-    marginRight: 10,
-    alignItems: 'center',
-  },
-  cancelButton: {
-    flex: 1,
-    backgroundColor: '#ccc',
-    paddingVertical: 12,
-    borderRadius: 8,
-    marginLeft: 10,
-    alignItems: 'center',
-  },
-  saveText: {
-    color: '#fff',
-    fontWeight: '600',
-    fontSize: 16,
-  },
-  cancelText: {
-    color: '#333',
-    fontWeight: '600',
-    fontSize: 16,
-  },
-    changeIngredientButton: {
+  changeIngredientButton: {
     flexDirection: 'row',
     alignItems: 'center',
     marginLeft: 10,

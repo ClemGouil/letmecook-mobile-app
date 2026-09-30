@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native'
 import { useUser } from '../hooks/useUser'
 import { useNavigation} from '@react-navigation/native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Ionicons';
 
 export default function Register() {
@@ -64,134 +65,138 @@ export default function Register() {
 
   if (success) { 
     return ( 
-      <View style={styles.screen}> 
-        <View style={styles.container}> 
-        <Text style={styles.title}> Vérifiez votre email </Text>
-        <Icon name="mail-outline" size={52} color="rgb(180, 180, 230)" style={styles.icon} /> 
-          <Text style={styles.subtitle}> Votre compte a bien été créé. Un email de vérification a été envoyé à :
-            <Text style={styles.emailText}> {email} </Text> 
-          </Text> 
-         <Text style={styles.subtitle}> Cliquez sur le lien présent dans cet email pour activer votre compte. </Text> 
-         <TouchableOpacity 
-            style={styles.button} 
-            onPress={() => navigation.navigate('Login', { email: email, }) } >
-            <Text style={styles.buttonText}> Aller à la connexion </Text> 
-         </TouchableOpacity> 
+      <SafeAreaView style={{ flex: 1 }}>
+        <View style={styles.screen}> 
+          <View style={styles.container}> 
+          <Text style={styles.title}> Vérifiez votre email </Text>
+          <Icon name="mail-outline" size={52} color="rgb(180, 180, 230)" style={styles.icon} /> 
+            <Text style={styles.subtitle}> Votre compte a bien été créé. Un email de vérification a été envoyé à :
+              <Text style={styles.emailText}> {email} </Text> 
+            </Text> 
+          <Text style={styles.subtitle}> Cliquez sur le lien présent dans cet email pour activer votre compte. </Text> 
+          <TouchableOpacity 
+              style={styles.button} 
+              onPress={() => navigation.navigate('Login', { email: email, }) } >
+              <Text style={styles.buttonText}> Aller à la connexion </Text> 
+          </TouchableOpacity> 
+          </View> 
         </View> 
-      </View> 
+      </SafeAreaView>
     ); 
   }
 
   return (
-    <View style={styles.screen}>
-        <View style={styles.container}>
-        <Text style={styles.title}>S'enregistrer</Text>
+    <SafeAreaView style={{ flex: 1 }}>
+      <View style={styles.screen}>
+          <View style={styles.container}>
+          <Text style={styles.title}>S'enregistrer</Text>
 
-        <TextInput
-            placeholder="Nom d'utilisateur"
-            style={styles.input}
-            value={username} 
-            onChangeText={(text) => {
-              setUsername(text);
-              setError('');
-            }}
-        />
-
-        <TextInput
-            placeholder="Prénom"
-            style={styles.input}
-            value={firstName} 
-            onChangeText={(text) => {
-              setFirstName(text);
-              setError('');
-            }}
-        />
-
-        <TextInput
-            placeholder="Nom de famille"
-            style={styles.input}
-            value={lastName} 
-            onChangeText={(text) => {
-              setLastName(text);
-              setError('');
-            }}
-        />
-
-        <TextInput
-            placeholder="Email"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            autoCorrect={false}
-            style={styles.input}
-            value={email} 
-            onChangeText={(text) => {
-              setEmail(text);
-              setError('');
-            }}
-        />
-
-        <View style={styles.passwordContainer}>
           <TextInput
-            placeholder="Mot de passe"
-            secureTextEntry = {!showPassword}
-            style={styles.input}
-            value={password} 
-            onChangeText={(text) => {
-              setPassword(text);
-              setError('');
-            }}
+              placeholder="Nom d'utilisateur"
+              style={styles.input}
+              value={username} 
+              onChangeText={(text) => {
+                setUsername(text);
+                setError('');
+              }}
           />
-          <TouchableOpacity
-            onPress={() => setShowPassword(prev => !prev)}
-            style={styles.eyeButton}
-          >
-            <Icon
-              name={showPassword ? "eye-off-outline" : "eye-outline"}
-              size={22}
-              color="rgb(180, 180, 230)"
-            />
-          </TouchableOpacity>
-        </View>
-        
-        <View style={styles.passwordContainer}>
+
           <TextInput
-            placeholder="Confirmez le mot de passe"
-            secureTextEntry = {!showConfirmPassword}
-            style={styles.input}
-            value={confirmPassword} 
-            onChangeText={(text) => {
-              setConfirmPassword(text);
-              setError('');
-            }}
+              placeholder="Prénom"
+              style={styles.input}
+              value={firstName} 
+              onChangeText={(text) => {
+                setFirstName(text);
+                setError('');
+              }}
           />
-          <TouchableOpacity
-            onPress={() => setShowConfirmPassword(prev => !prev)}
-            style={styles.eyeButton}
-          >
-            <Icon
-              name={showConfirmPassword ? "eye-off-outline" : "eye-outline"}
-              size={22}
-              color="rgb(180, 180, 230)"
+
+          <TextInput
+              placeholder="Nom de famille"
+              style={styles.input}
+              value={lastName} 
+              onChangeText={(text) => {
+                setLastName(text);
+                setError('');
+              }}
+          />
+
+          <TextInput
+              placeholder="Email"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+              style={styles.input}
+              value={email} 
+              onChangeText={(text) => {
+                setEmail(text);
+                setError('');
+              }}
+          />
+
+          <View style={styles.passwordContainer}>
+            <TextInput
+              placeholder="Mot de passe"
+              secureTextEntry = {!showPassword}
+              style={styles.input}
+              value={password} 
+              onChangeText={(text) => {
+                setPassword(text);
+                setError('');
+              }}
             />
+            <TouchableOpacity
+              onPress={() => setShowPassword(prev => !prev)}
+              style={styles.eyeButton}
+            >
+              <Icon
+                name={showPassword ? "eye-off-outline" : "eye-outline"}
+                size={22}
+                color="rgb(180, 180, 230)"
+              />
+            </TouchableOpacity>
+          </View>
+          
+          <View style={styles.passwordContainer}>
+            <TextInput
+              placeholder="Confirmez le mot de passe"
+              secureTextEntry = {!showConfirmPassword}
+              style={styles.input}
+              value={confirmPassword} 
+              onChangeText={(text) => {
+                setConfirmPassword(text);
+                setError('');
+              }}
+            />
+            <TouchableOpacity
+              onPress={() => setShowConfirmPassword(prev => !prev)}
+              style={styles.eyeButton}
+            >
+              <Icon
+                name={showConfirmPassword ? "eye-off-outline" : "eye-outline"}
+                size={22}
+                color="rgb(180, 180, 230)"
+              />
+            </TouchableOpacity>
+          </View>
+          
+
+          {error ? (
+            <Text style={styles.errorText}>{error}</Text>
+          ) : null}
+
+          <TouchableOpacity style={styles.button} disabled={isLoading} onPress={handleSubmit}>
+              <Text style={styles.buttonText}>S'enregistrer</Text>
           </TouchableOpacity>
-        </View>
-        
 
-        {error ? (
-          <Text style={styles.errorText}>{error}</Text>
-        ) : null}
-
-        <TouchableOpacity style={styles.button} disabled={isLoading} onPress={handleSubmit}>
-            <Text style={styles.buttonText}>S'enregistrer</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-            <Text style={styles.signUpText}>
-            Vous avez déjà un compte ? <Text style={styles.signUpLink}>Connectez-vous ici</Text>
-            </Text>
-        </TouchableOpacity>
-        </View>
-    </View>
+          <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+              <Text style={styles.signUpText}>
+              Vous avez déjà un compte ? <Text style={styles.signUpLink}>Connectez-vous ici</Text>
+              </Text>
+          </TouchableOpacity>
+          </View>
+      </View>
+    </SafeAreaView>
   )
 }
 

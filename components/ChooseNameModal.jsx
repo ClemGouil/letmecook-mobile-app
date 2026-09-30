@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef  } from "react";
 import { View, Text, Modal, TextInput, TouchableOpacity, StyleSheet } from "react-native";
+import ModalButton from "./ModalButton";
 
 const ChooseNameModal = ({ visible, title, initialValue = '', placeholder, onSubmit, onCancel }) => {
 
@@ -48,31 +49,18 @@ const ChooseNameModal = ({ visible, title, initialValue = '', placeholder, onSub
           />
 
           <View style={styles.buttonRow}>
-            <TouchableOpacity
-              style={[styles.button, styles.cancelButton]}
+            <ModalButton
+              title="Annuler"
+              variant="secondary"
               onPress={handleCancel}
-            >
-              <Text style={styles.cancelText}>Annuler</Text>
-            </TouchableOpacity>
+            />
 
-            <TouchableOpacity
-              style={[
-                styles.button,
-                styles.submitButton,
-                !name.trim() && styles.disabledButton,
-              ]}
+            <ModalButton
+              title="Valider"
+              variant="primary"
               onPress={handleSubmit}
               disabled={!name.trim()}
-            >
-              <Text
-                style={[
-                  styles.submitText,
-                  !name.trim() && styles.disabledText,
-                ]}
-              >
-                Valider
-              </Text>
-            </TouchableOpacity>
+            />
           </View>
         </View>
       </View>
@@ -117,37 +105,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 12,
     marginTop: 18,
-  },
-  button: {
-    flex: 1,
-    minHeight: 48,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 10,
-  },
-  submitButton: {
-    backgroundColor: "rgb(180, 180, 230)",
-  },
-  cancelButton: {
-    backgroundColor: "#FFFFFF",
-    borderWidth: 1,
-    borderColor: "rgb(180, 180, 230)",
-  },
-  submitText: {
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize : 16
-  },
-  cancelText: {
-    color: "#555555",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  disabledButton: {
-    backgroundColor: '#ccc',
-  },
-  disabledText: {
-    color: '#888',
   },
 });
 

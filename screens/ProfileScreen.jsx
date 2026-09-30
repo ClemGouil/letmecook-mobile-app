@@ -49,14 +49,13 @@ export default function ProfileScreen() {
   };
 
   const pickImage = async () => {
-    // Demande la permission
+
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
       alert("Permission refusée pour accéder aux images.");
       return;
     }
 
-    // Ouvre la galerie
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
@@ -72,7 +71,21 @@ export default function ProfileScreen() {
     }
   };
 
+  const profileHasChanges = () => {
+    return (
+      editedUser.username !== user.username ||
+      editedUser.firstName !== user.firstName ||
+      editedUser.lastName !== user.lastName ||
+      editedUser.profilePhotoUrl !== user.profilePhotoUrl
+    );
+  };
+
   const handleEditProfile = async () => {
+    if (!profileHasChanges()) {
+      setEditingProfile(false);
+      return;
+    }
+
     try {
       let finalImageUrl = editedUser.profilePhotoUrl;
 
@@ -80,8 +93,12 @@ export default function ProfileScreen() {
         finalImageUrl = await uploadImage(editedUser.profilePhotoUrl);
       }
       
-      setEditedUser({ ...editedUser, profilePhotoUrl: finalImageUrl })
-      await updateUser(user.id, editedUser);
+      const updatedUser = {
+        ...editedUser,
+        profilePhotoUrl: finalImageUrl,
+      };
+      await updateUser(user.id, updatedUser);
+      setEditedUser(updatedUser);
 
       setEditingProfile(!editingProfile)
     } catch (err) {
@@ -90,7 +107,21 @@ export default function ProfileScreen() {
     }
   };
 
+  const preferencesHaveChanges = () => {
+    return (
+      editedPreferences.langue !== user.preferences?.langue ||
+      editedPreferences.notifications !== user.preferences?.notifications ||
+      editedPreferences.allergies !== user.preferences?.allergies
+    );
+  };
+
   const handleEditPreferences = async () => {
+    if (!preferencesHaveChanges()) {
+      console.log("ICI")
+      setEditingPreferences(false);
+      return;
+    }
+
     try {
 
       const updatedUser = { ...editedUser, preferences: editedPreferences };
